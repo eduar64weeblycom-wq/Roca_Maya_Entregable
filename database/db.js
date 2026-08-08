@@ -4,7 +4,7 @@ require("dotenv").config();
 const pool = mysql.createPool({
   host: process.env.DB_HOST || process.env.MYSQLHOST || "mysql.railway.internal",
   user: process.env.DB_USER || process.env.MYSQLUSER || "root",
-  password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || process.env.MYSQL_ROOT_PASSWORD,
+  password: process.env.DB_PASSWORD || process.env.MYSQL_ROOT_PASSWORD || process.env.MYSQLPASSWORD,
   database: process.env.DB_NAME || process.env.MYSQLDATABASE || "railway", 
   port: Number(process.env.DB_PORT || process.env.MYSQLPORT) || 3306,
   waitForConnections: true,
