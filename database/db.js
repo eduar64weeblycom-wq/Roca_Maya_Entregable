@@ -2,7 +2,7 @@ const mysql = require("mysql2/promise");
 require("dotenv").config();
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "mysql.railway.internal",
+  host: process.env.DB_HOST && process.env.DB_HOST !== "el_valor_de_MYSQLHOST" ? process.env.DB_HOST : "mysql.railway.internal",
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || process.env.MYSQL_ROOT_PASSWORD || "jWgLAGkmXFfYUhaoYKGGAxBUYLCUQsAk",
   database: process.env.DB_NAME || "railway", 
