@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tabla - Consulta Médica</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;margin:20px;background:#fff;color:#111}
+  .wrap{max-width:1400px;margin:0 auto}
+  h1{color:rgb(0,140,255);margin-bottom:12px}
+  .controls{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+  input[type="text"]{padding:8px;border:1px solid #ccc;border-radius:6px;width:360px}
+  button{padding:8px 12px;border-radius:6px;border:none;background:rgb(0,140,255);color:#fff;cursor:pointer}
+  button.secondary{background:#6c757d}
+  table{width:100%;border-collapse:collapse;min-width:1100px}
+  thead{background:rgb(0,140,255);color:#fff}
+  th,td{padding:10px;border:1px solid #e6e6e6;text-align:left;vertical-align:top}
+  tbody tr:nth-child(even){background:#f7f7f7}
+  .muted{color:#666;font-size:13px}
+  .note{margin-top:8px;color:#444;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Tabla - Consulta Médica</h1>
+  <div class="controls">
+    <label class="muted">Base URL:</label>
+    <input id="baseUrl" value="http://localhost:3000" />
+    <button id="btnLoad">Cargar</button>
+    <button id="btnDownload" class="secondary">Descargar CSV</button>
+    <div style="margin-left:auto" class="muted">Ruta por defecto: <code>/consulta-medica</code> o <code>/api/consulta-medica</code></div>
+  </div>
+
+  <table id="tbl" aria-label="Tabla Consulta Medica">
+    <thead>
+      <tr>
+        <th>ID_CONSULTA</th>
+        <th>ID_CITA</th>
+        <th>ID_PACIENTE</th>
+        <th>PACIENTE</th>
+        <th>ID_DOCTOR</th>
+        <th>DOCTOR</th>
+        <th>FECHA_CONSULTA</th>
+        <th>TIPO_CONSULTA</th>
+        <th>MOTIVO_CONSULTA</th>
+        <th>DIAGNOSTICO_PRINCIPAL</th>
+        <th>COD_CIE10_P</th>
+        <th>DIAGNOSTICO_SECUNDARIO</th>
+        <th>COD_CIE10_S</th>
+        <th>TRATAMIENTO</th>
+        <th>RECOMENDACIONES</th>
+        <th>PROXIMA_CITA</th>
+        <th>OBSERVACIONES</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="17" class="muted">Pulsa "Cargar" para traer registros desde la API.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    Si la API devuelve <code>{ "registros": [ ... ] }</code> o un arreglo directo, la tabla intentará mapear los campos.
+  </div>
+</div>
+
+<script>
+function safe(v){ if(v===null||v===undefined) return ''; return v; }
+function formatDate(v){
+  try{
+    if(!v) return '';
+    const d = new Date(v);
+    if(isNaN(d)) return String(v);
+    const iso = d.toISOString();
+    return iso.slice(0,19).replace('T',' ');
+  }catch(e){ return String(v); }
+}
+function arrayFromResponse(json){
+  if(Array.isArray(json)) return json;
+  if(json && Array.isArray(json.registros)) return json.registros;
+  if(json && Array.isArray(json.data)) return json.data;
+  return null;
+}
+async function fetchData(url){
+  const res = await fetch(url, {credentials:'same-origin'});
+  const contentType = res.headers.get('content-type') || '';
+  if(contentType.includes('application/json')) return await res.json();
+  // try to parse text as json
+  const text = await res.text();
+  try { return JSON.parse(text); } catch(e){ throw new Error('Respuesta no JSON: ' + res.status); }
+}
+
+function renderRows(rows){
+  const tbody = document.querySelector('#tbl tbody');
+  tbody.innerHTML = '';
+  if(!rows || !rows.length){ tbody.innerHTML = '<tr><td colspan="17" class="muted">No hay registros.</td></tr>'; return; }
+  for(const r of rows){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${safe(r.ID_CONSULTA)}</td>
+      <td>${safe(r.ID_CITA)}</td>
+      <td>${safe(r.ID_PACIENTE)}</td>
+      <td>${safe(r.PACIENTE ?? r.NOMBRE_PACIENTE ?? '')}</td>
+      <td>${safe(r.ID_DOCTOR)}</td>
+      <td>${safe(r.DOCTOR ?? r.NOMBRE_USUARIO ?? '')}</td>
+      <td>${formatDate(r.FECHA_CONSULTA)}</td>
+      <td>${safe(r.TIPO_CONSULTA)}</td>
+      <td>${safe(r.MOTIVO_CONSULTA)}</td>
+      <td>${safe(r.DIAGNOSTICO_PRINCIPAL)}</td>
+      <td>${safe(r.CODIGO_CIE10_PRINCIPAL)}</td>
+      <td>${safe(r.DIAGNOSTICO_SECUNDARIO)}</td>
+      <td>${safe(r.CODIGO_CIE10_SECUNDARIO)}</td>
+      <td>${safe(r.TRATAMIENTO)}</td>
+      <td>${safe(r.RECOMENDACIONES)}</td>
+      <td>${safe(r.PROXIMA_CITA_RECOMENDADA)}</td>
+      <td>${safe(r.OBSERVACIONES)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function convertToCSV(rows){
+  if(!rows || !rows.length) return '';
+  const headers = ["ID_CONSULTA","ID_CITA","ID_PACIENTE","PACIENTE","ID_DOCTOR","DOCTOR","FECHA_CONSULTA","TIPO_CONSULTA","MOTIVO_CONSULTA","DIAGNOSTICO_PRINCIPAL","CODIGO_CIE10_PRINCIPAL","DIAGNOSTICO_SECUNDARIO","CODIGO_CIE10_SECUNDARIO","TRATAMIENTO","RECOMENDACIONES","PROXIMA_CITA_RECOMENDADA","OBSERVACIONES"];
+  const csv = [headers.join(',')];
+  for(const r of rows){
+    const line = [
+      r.ID_CONSULTA, r.ID_CITA, r.ID_PACIENTE,
+      (r.PACIENTE ?? r.NOMBRE_PACIENTE ?? ''),
+      r.ID_DOCTOR,
+      (r.DOCTOR ?? r.NOMBRE_USUARIO ?? ''),
+      (r.FECHA_CONSULTA ? new Date(r.FECHA_CONSULTA).toISOString().slice(0,19).replace('T',' ') : ''),
+      r.TIPO_CONSULTA, r.MOTIVO_CONSULTA, r.DIAGNOSTICO_PRINCIPAL, r.CODIGO_CIE10_PRINCIPAL,
+      r.DIAGNOSTICO_SECUNDARIO, r.CODIGO_CIE10_SECUNDARIO, r.TRATAMIENTO, r.RECOMENDACIONES,
+      r.PROXIMA_CITA_RECOMENDADA, r.OBSERVACIONES
+    ].map(v => typeof v === 'string' ? '"' + v.replace(/"/g,'""') + '"' : (v==null ? '' : v));
+    csv.push(line.join(','));
+  }
+  return csv.join('\n');
+}
+
+document.getElementById('btnLoad').addEventListener('click', async ()=>{
+  const base = document.getElementById('baseUrl').value.replace(/\/$/,'');
+  const candidates = [base + '/api/consulta-medica', base + '/consulta-medica', base + '/api/consultaMedica', base + '/consulta-medica/list'];
+  const tbody = document.querySelector('#tbl tbody');
+  tbody.innerHTML = '<tr><td colspan="17" class="muted">Cargando...</td></tr>';
+  for(const url of candidates){
+    try{
+      const json = await fetchData(url);
+      const arr = arrayFromResponse(json);
+      if(arr){ renderRows(arr); window._lastRows = arr; return; }
+    }catch(err){
+      // try next
+    }
+  }
+  tbody.innerHTML = '<tr><td colspan="17" class="muted">No se pudo obtener datos desde la API. Revisa la URL o que la ruta devuelva JSON.</td></tr>';
+});
+
+document.getElementById('btnDownload').addEventListener('click', ()=>{
+  const rows = window._lastRows || [];
+  if(!rows.length){ alert('No hay datos cargados para descargar.'); return; }
+  const csv = convertToCSV(rows);
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'consulta_medica_export.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>

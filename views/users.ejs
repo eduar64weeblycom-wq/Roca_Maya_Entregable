@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="usuario-logueado" content="<%= usuarioLogueado || 'SISTEMA' %>">
+  <title>Usuarios - Clínicas Roca Maya</title>
+  
+  <link rel="icon" href="/ICONO.jpg" type="image/jpeg">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  
+  <style>
+/* ============================================================
+   ESTILOS PARA LA PÁGINA DE USUARIOS
+   ============================================================ */
+:root {
+  --primary-color: #2c3e50;
+  --secondary-color: #3498db;
+  --accent-color: #e74c3c;
+  --light-bg: #f8f9fa;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #eaf6ff;
+  color: #333;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+  border-bottom: 2px solid #8ecae6;
+  padding-bottom: 15px;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.logo-btn:hover { transform: scale(1.05); }
+.logo-btn img {
+  height: 60px;
+  border-radius: 10px;
+  border: 2px solid #219ebc;
+  padding: 3px;
+}
+
+.clinic-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #023047;
+}
+
+.title-wrap h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #023047;
+  margin: 0;
+}
+.title-wrap h1 i { color: #219ebc; margin-right: 8px; }
+.title-wrap p {
+  margin: 4px 0 0 0;
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+.actions-right {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ============================================================
+   FILTROS
+   ============================================================ */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f0f9ff;
+  border-radius: 12px;
+  border: 1px solid #d4e9f7;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 150px;
+}
+.filter-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #023047;
+}
+.filter-input, .filter-select {
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: white;
+}
+.filter-input:focus, .filter-select:focus {
+  border-color: #219ebc;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(33, 158, 188, 0.2);
+}
+
+/* ============================================================
+   BOTONES GENERALES
+   ============================================================ */
+.btn {
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn-primary { background: #219ebc; color: white; }
+.btn-primary:hover { background: #1a7a94; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(33,158,188,0.3); }
+.btn-secondary { background: #6c757d; color: white; }
+.btn-secondary:hover { background: #5a6268; }
+.btn-success { background: #28a745; color: white; }
+.btn-success:hover { background: #1e7e34; }
+.btn-danger { background: #dc3545; color: white; }
+.btn-danger:hover { background: #bd2130; }
+.btn-warning { background: #ffc107; color: #212529; }
+.btn-warning:hover { background: #e0a800; }
+.btn-outline-secondary { background: transparent; border: 1px solid #6c757d; color: #6c757d; }
+.btn-outline-secondary:hover { background: #6c757d; color: white; }
+.btn-excel { background-color: #217346; color: white; }
+.btn-excel:hover { background-color: #1a5c38; color: white; }
+.btn-excel i { margin-right: 6px; }
+
+/* ============================================================
+   TABLA DE USUARIOS
+   ============================================================ */
+.table-container {
+  overflow-x: auto;
+  margin-top: 10px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.table thead {
+  background: #023047;
+  color: white;
+}
+.table th {
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.table td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+.table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+/* ============================================================
+   ESTADOS DE USUARIO
+   ============================================================ */
+.estado-activo { background: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+.estado-inactivo { background: #dc3545; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+.estado-bloqueado { background: #ffc107; color: #212529; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+
+.acciones-td {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.btn-accion {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-editar { background: #3498db; color: white; }
+.btn-editar:hover { background: #2980b9; }
+.btn-eliminar { background: #e74c3c; color: white; }
+.btn-eliminar:hover { background: #c0392b; }
+.btn-activar { background: #28a745; color: white; }
+.btn-activar:hover { background: #1e7e34; }
+.btn-eliminar-permanente { background: #6c757d; color: white; }
+.btn-eliminar-permanente:hover { background: #5a6268; }
+
+.no-results-message {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+/* ============================================================
+   MODALES GENERALES
+   ============================================================ */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 1050;
+  align-items: center;
+  justify-content: center;
+}
+.modal[style*="display: block"] {
+  display: flex !important;
+}
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  max-width: 650px;
+  width: 95%;
+  padding: 25px 30px;
+  position: relative;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-close-x {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  background: transparent;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #6c757d;
+  transition: color 0.2s;
+}
+.modal-close-x:hover { color: #333; }
+
+.modal h2 {
+  margin-top: 0;
+  color: #023047;
+  border-bottom: 2px solid #8ecae6;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+/* ============================================================
+   FORMULARIOS DE MODALES
+   ============================================================ */
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #023047;
+}
+.form-input, .form-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+.form-input:focus, .form-select:focus {
+  border-color: #219ebc;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(33,158,188,0.2);
+}
+.form-text {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-top: 4px;
+}
+.form-text kbd {
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e9ecef;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer {
+  margin-top: 30px;
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+  border-top: 1px solid #e9ecef;
+  padding-top: 15px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .header { flex-direction: column; align-items: stretch; gap: 10px; }
+  .actions-right { justify-content: flex-start; width: 100%; }
+  .filters { flex-direction: column; }
+  .filter-group { flex: 1; }
+}
+
+/* ============================================================
+   MODAL DE REGISTRO - ESTILOS COMPLETOS
+   ============================================================ */
+#modalRegister .modal-content {
+  max-width: 550px;
+  padding: 30px;
+}
+
+#modalRegister .form-group {
+  margin-bottom: 18px;
+}
+
+#modalRegister .form-group label {
+  font-weight: 600;
+  color: #023047;
+  display: block;
+  margin-bottom: 4px;
+}
+
+#modalRegister .form-group label i {
+  color: #219ebc;
+  margin-right: 6px;
+}
+
+#modalRegister .form-input,
+#modalRegister .form-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+#modalRegister .form-input:focus,
+#modalRegister .form-select:focus {
+  border-color: #219ebc;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(33, 158, 188, 0.2);
+}
+
+#modalRegister .input-error {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+}
+
+#modalRegister .field-error {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+#modalRegister .modal-close-x {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  background: transparent;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #6c757d;
+  transition: color 0.2s;
+}
+
+#modalRegister .modal-close-x:hover {
+  color: #333;
+}
+
+#modalRegister .password-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+#modalRegister .password-wrapper .form-input {
+  padding-right: 45px;
+}
+
+#modalRegister .toggle-password-modal {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6c757d;
+  font-size: 1.1rem;
+  padding: 5px;
+}
+
+#modalRegister .toggle-password-modal:hover {
+  color: #333;
+}
+
+#modalRegister .progress {
+  height: 5px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #e9ecef;
+  margin-top: 4px;
+}
+
+#modalRegister .progress-bar {
+  height: 100%;
+  transition: width 0.3s;
+}
+
+#modalRegister .progress-bar.bg-danger { background: #dc3545; }
+#modalRegister .progress-bar.bg-warning { background: #ffc107; }
+#modalRegister .progress-bar.bg-info { background: #17a2b8; }
+#modalRegister .progress-bar.bg-success { background: #28a745; }
+
+#modalRegister .alert {
+  padding: 10px 15px;
+  border-radius: 8px;
+}
+
+#modalRegister .alert-danger {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+#modalRegister .alert-success {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+#modalRegister .btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+#modalRegister .btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+#modalRegister .btn-secondary:hover {
+  background: #5a6268;
+}
+
+#modalRegister .btn-primary {
+  background: #219ebc;
+  color: white;
+}
+
+#modalRegister .btn-primary:hover {
+  background: #1a7a94;
+}
+
+#modalRegister .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   BOTÓN GENERAR CONTRASEÑA ALEATORIA
+   ============================================================ */
+.btn-generate-password {
+  transition: all 0.3s ease;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  background: #f8f9fa;
+  color: #495057;
+  width: 100%;
+  cursor: pointer;
+}
+
+.btn-generate-password:hover {
+  background: #e9ecef;
+  border-color: #1a5276;
+  color: #1a5276;
+}
+
+.btn-generate-password i {
+  margin-right: 4px;
+}
+
+.btn-generate-password:active {
+  transform: scale(0.98);
+}
+
+.btn-generate-password .fa-dice {
+  transition: transform 0.3s ease;
+}
+
+.btn-generate-password:hover .fa-dice {
+  transform: rotate(180deg);
+}
+
+/* ============================================================
+   BOTÓN DE AGREGAR NUEVO ROL
+   ============================================================ */
+#btnAgregarNuevoRol {
+  transition: all 0.3s ease;
+}
+
+#btnAgregarNuevoRol:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+}
+
+/* ============================================================
+   ESTILOS DE IMPRESIÓN
+   ============================================================ */
+@media print {
+  .filters, .footer, .modal, .actions-right, div[style*="display: flex; justify-content: space-between;"] {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+  .container {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  .header {
+    display: flex !important;
+    border-bottom: 2px solid #023047 !important;
+    margin-bottom: 20px !important;
+    padding-bottom: 10px !important;
+  }
+  .header-left {
+    display: flex !important;
+  }
+  .title-wrap p {
+    color: #333 !important;
+  }
+  .table th:nth-child(5), .table td:nth-child(5),
+  .table th:nth-child(6), .table td:nth-child(6) {
+    display: none !important;
+  }
+  .fila-usuario[style*="display: none"] {
+    display: none !important;
+  }
+  .table-container {
+    border: none !important;
+    overflow: visible !important;
+  }
+  .table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  .table th {
+    background-color: #023047 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact; 
+    print-color-adjust: exact;
+    border: 1px solid #023047 !important;
+  }
+  .table td {
+    border: 1px solid #dee2e6 !important;
+    padding: 8px 12px !important;
+  }
+  .estado-activo, .estado-inactivo, .estado-bloqueado {
+    background: transparent !important;
+    color: black !important;
+    padding: 0 !important;
+    font-weight: bold;
+  }
+}
+
+/* ============================================================
+   SCROLLBAR PERSONALIZADO
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- ============================================================
+       HEADER
+       ============================================================ -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-container">
+        <button class="logo-btn" id="logoBtn" title="Volver al Dashboard">
+          <img src="/roca-maya-oct.jpg" alt="Clínicas Roca Maya">
+        </button>
+        <div class="clinic-name">Clínicas Roca Maya</div>
+      </div>
+
+      <div class="title-wrap">
+        <h1><i class="fas fa-users-cog"></i> Gestión de Usuarios</h1>
+        <p>Administra las cuentas de usuario, roles de acceso y estados dentro de la plataforma</p>
+      </div>
+    </div>
+
+    <div class="actions-right">
+      <button id="btnNuevoUsuario" class="btn btn-primary" type="button">
+        <i class="fas fa-user-plus"></i> Nuevo Usuario
+      </button>
+      <a href="/roles" class="btn btn-warning" type="button" title="Gestionar roles del sistema">
+        <i class="fas fa-user-tag"></i> Gestionar Roles
+      </a>
+      <button id="btnImprimir" class="btn btn-outline-secondary" type="button" title="Imprimir listado">
+        <i class="fas fa-print"></i> Imprimir
+      </button>
+      <a href="/excel/usuarios" class="btn btn-excel">
+        <i class="fas fa-file-excel"></i> Descargar Excel
+      </a>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       FILTROS
+       ============================================================ -->
+  <div class="filters">
+    <div class="filter-group">
+      <label for="usuarioFilter"><i class="fas fa-user"></i> Usuario</label>
+      <input id="usuarioFilter" class="filter-input" placeholder="Buscar usuario...">
+    </div>
+    <div class="filter-group">
+      <label for="nombreFilter"><i class="fas fa-user-tag"></i> Nombre</label>
+      <input id="nombreFilter" class="filter-input" placeholder="Nombre completo...">
+    </div>
+    <div class="filter-group">
+      <label for="estadoFilter"><i class="fas fa-circle"></i> Estado</label>
+      <select id="estadoFilter" class="filter-select">
+        <option value="">Todos</option>
+        <option value="ACTIVO">Activo</option>
+        <option value="INACTIVO">Inactivo</option>
+        <option value="BLOQUEADO">Bloqueado</option>
+      </select>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <button id="btnAplicarFiltros" class="btn btn-primary"><i class="fas fa-filter"></i> Aplicar</button>
+      <button id="btnLimpiarFiltros" class="btn btn-secondary"><i class="fas fa-times"></i> Limpiar</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TABLA DE USUARIOS
+       ============================================================ -->
+  <div class="table-container">
+    <table class="table" id="usuariosTable">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Nombre</th>
+          <th>Rol</th>
+          <th>Teléfono</th>   <!-- NUEVA COLUMNA -->
+          <th>Estado</th>
+          <th>Última Conexión</th>
+          <th style="text-align:center;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (usuarios && usuarios.length > 0) { %>
+          <% usuarios.forEach(u => { %>
+            <tr class="fila-usuario" data-id="<%= u.ID_USUARIO %>" data-id-rol="<%= u.ID_ROL %>">
+              <td class="usuario"><%= u.USUARIO %></td>
+              <td class="nombre"><%= u.NOMBRE_USUARIO %></td>
+              <td class="rol"><%= u.NOMBRE_ROL %></td>
+              <td class="telefono"><%= u.TELEFONO_PROFESIONAL || '' %></td>   <!-- NUEVA CELDA -->
+              <td class="estado-td">
+                <span class="<%= u.ESTADO === 'ACTIVO' ? 'estado-activo' : u.ESTADO === 'INACTIVO' ? 'estado-inactivo' : 'estado-bloqueado' %>">
+                  <%= u.ESTADO %>
+                </span>
+              </td>
+              <td><%= u.FECHA_ULTIMA_CONEXION ? new Date(u.FECHA_ULTIMA_CONEXION).toLocaleString() : 'Nunca' %></td>
+              <td class="acciones-td" style="justify-content:center;">
+                <button class="btn-accion btn-editar" title="Editar usuario"><i class="fas fa-edit"></i> Editar</button>
+                <% if (u.ESTADO === 'ACTIVO') { %>
+                  <button class="btn-accion btn-eliminar" title="Desactivar usuario"><i class="fas fa-user-slash"></i> Desactivar</button>
+                <% } else { %>
+                  <button class="btn-accion btn-activar" title="Activar usuario"><i class="fas fa-user-check"></i> Activar</button>
+                <% } %>
+                <button class="btn-accion btn-eliminar-permanente" title="Eliminar usuario"><i class="fas fa-trash"></i> Eliminar</button>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="7" class="no-results-message">
+              <i class="fas fa-users fa-2x mb-2"></i><br>
+              No se encontraron usuarios registrados.
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============================================================
+       CONTADORES
+       ============================================================ -->
+  <div style="display: flex; justify-content: space-between; flex-wrap: wrap; margin-top: 15px; font-size: 0.95rem; color: #495057;">
+    <div><strong>Total:</strong> <span id="totalUsuarios"><%= usuarios ? usuarios.length : 0 %></span></div>
+    <div><strong>Mostrados:</strong> <span id="usuariosMostrados"><%= usuarios ? usuarios.length : 0 %></span></div>
+    <div><strong>Última actualización:</strong> <span id="ultimaActualizacion"><%= new Date().toLocaleString() %></span></div>
+  </div>
+
+  <!-- ============================================================
+       MODAL DE EDICIÓN DE USUARIO
+       ============================================================ -->
+  <div id="modalUsuario" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <button class="modal-close-x" data-dismiss="modal" id="btnCerrarModalEdicion">&times;</button>
+      <h2 id="modalTitulo">Editar Usuario</h2>
+      <form id="formUsuario">
+        <input type="hidden" id="inputId">
+
+        <div class="form-group">
+          <label for="inputUsuario"><i class="fas fa-user"></i> Usuario</label>
+          <input id="inputUsuario" type="text" class="form-input" required placeholder="Nombre de usuario">
+        </div>
+
+        <div class="form-group">
+          <label for="inputNombre"><i class="fas fa-user-tag"></i> Nombre completo</label>
+          <input id="inputNombre" type="text" class="form-input" required placeholder="Nombre completo del usuario">
+        </div>
+
+        <!-- NUEVO CAMPO TELÉFONO -->
+        <div class="form-group">
+          <label for="inputTelefono"><i class="fas fa-phone"></i> Teléfono profesional</label>
+          <input id="inputTelefono" type="text" class="form-input" placeholder="Número de teléfono (opcional)">
+          <small class="form-text text-muted">Solo para doctores</small>
+        </div>
+
+        <div class="form-group">
+          <label for="selectRol"><i class="fas fa-user-cog"></i> Rol</label>
+          <select id="selectRol" class="form-select">
+            <% if (roles && roles.length > 0) { %>
+              <% roles.forEach(r => { %>
+                <option value="<%= r.ID_ROL %>"><%= r.ROL %></option>
+              <% }); %>
+            <% } else { %>
+              <option value="1">Administrador</option>
+              <option value="2">Doctor</option>
+              <option value="3">Enfermera</option>
+              <option value="4">Recepcionista</option>
+              <option value="5">Paciente</option>
+            <% } %>
+          </select>
+        </div>
+
+        <div class="form-group" id="especialidadesGroup" style="display: none;">
+          <label for="especialidadesSelect"><i class="fas fa-stethoscope"></i> Especialidades</label>
+          <select id="especialidadesSelect" class="form-select" multiple size="5">
+          </select>
+          <small class="form-text">
+            <i class="fas fa-info-circle"></i> Mantenga presionada la tecla <kbd>Ctrl</kbd> (Windows) o <kbd>Cmd</kbd> (Mac) para seleccionar múltiples especialidades.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="selectEstado"><i class="fas fa-circle"></i> Estado</label>
+          <select id="selectEstado" class="form-select">
+            <option value="ACTIVO">Activo</option>
+            <option value="INACTIVO">Inactivo</option>
+            <option value="BLOQUEADO">Bloqueado</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btnCancelar">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL DE CONFIRMACIÓN DE ELIMINACIÓN PERMANENTE
+       ============================================================ -->
+  <div id="modalEliminar" class="modal" aria-hidden="true">
+    <div class="modal-content" style="max-width: 500px;">
+      <button class="modal-close-x" data-dismiss="modal" id="btnCerrarModalEliminar">&times;</button>
+      <h2><i class="fas fa-exclamation-triangle text-danger"></i> Confirmar Eliminación</h2>
+      <p id="textoConfirmacion" style="font-size: 1.05rem; margin: 20px 0;"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btnCancelarEliminar">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmarEliminar"><i class="fas fa-trash"></i> Eliminar Permanentemente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL DE REGISTRO DE USUARIO (NUEVO)
+       ============================================================ -->
+  <div id="modalRegister" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <button class="modal-close-x" id="btnCerrarModalRegister" aria-label="Cerrar modal">&times;</button>
+      
+      <!-- Logo y título -->
+      <div style="text-align: center; margin-bottom: 25px;">
+        <img src="/roca-maya-oct.jpg" alt="Logo Roca Maya" style="height: 60px; margin-bottom: 10px; border-radius: 10px;">
+        <h2 style="margin: 0; color: #023047; font-size: 1.5rem;">
+          <i class="fas fa-user-plus" style="color: #219ebc;"></i> Nuevo Usuario
+        </h2>
+        <p style="color: #6c757d; margin: 5px 0 0 0; font-size: 0.9rem;">Registra un nuevo usuario en el sistema</p>
+      </div>
+
+      <!-- Contenedor de errores -->
+      <div id="regErrorContainer" class="alert alert-danger" style="display:none; margin-bottom:15px;">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span id="regErrorMessage"></span>
+      </div>
+
+      <!-- ============================================================
+           FORMULARIO DE REGISTRO
+           ============================================================ -->
+      <form id="formRegisterModal">
+        <!-- NOMBRE COMPLETO -->
+        <div class="form-group">
+          <label for="regNombreCompleto">
+            <i class="fas fa-id-card"></i> Nombre completo *
+          </label>
+          <input type="text" id="regNombreCompleto" class="form-input" 
+                 placeholder="Nombre completo" required minlength="3" maxlength="60"
+                 autocomplete="off">
+          <small class="form-text text-muted">Solo letras y espacios, mínimo 3 caracteres</small>
+        </div>
+
+        <!-- USUARIO -->
+        <div class="form-group">
+          <label for="regUsuario">
+            <i class="fas fa-user"></i> Usuario *
+          </label>
+          <input type="text" id="regUsuario" class="form-input" 
+                 placeholder="Usuario" required minlength="5" maxlength="25"
+                 autocomplete="off">
+          <small class="form-text text-muted">Sin espacios, permite letras, números y símbolos (@ . _ - + * % $ # ! & = ?)</small>
+        </div>
+
+        <!-- CONTRASEÑA -->
+        <div class="form-group">
+          <label for="regPassword">
+            <i class="fas fa-lock"></i> Contraseña *
+          </label>
+          <div class="password-wrapper">
+            <input type="password" id="regPassword" class="form-input password-field-modal" 
+                   placeholder="Contraseña" required minlength="9" maxlength="15"
+                   autocomplete="new-password">
+            <button type="button" class="toggle-password-modal">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <div class="progress mt-1">
+            <div id="regPasswordStrength" class="progress-bar" style="width: 0%;"></div>
+          </div>
+          <small id="regPasswordHelp" class="form-text text-muted">
+            Mínimo 9 caracteres, máximo 15. Debe incluir letras, números y un símbolo (@$!%*#?&)
+          </small>
+        </div>
+
+        <!-- CONFIRMAR CONTRASEÑA -->
+        <div class="form-group">
+          <label for="regConfirmPassword">
+            <i class="fas fa-lock"></i> Confirmar contraseña *
+          </label>
+          <div class="password-wrapper">
+            <input type="password" id="regConfirmPassword" class="form-input password-field-modal" 
+                   placeholder="Confirmar contraseña" required minlength="9" maxlength="15"
+                   autocomplete="new-password">
+            <button type="button" class="toggle-password-modal">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <small id="regConfirmPasswordHelp" class="form-text text-muted">
+            Repite la contraseña para confirmar
+          </small>
+        </div>
+
+        <!-- CORREO ELECTRÓNICO -->
+        <div class="form-group">
+          <label for="regEmail">
+            <i class="fas fa-envelope"></i> Correo electrónico *
+          </label>
+          <input type="email" id="regEmail" class="form-input" 
+                 placeholder="correo@ejemplo.com" required maxlength="50"
+                 autocomplete="email">
+          <small class="form-text text-muted">Ejemplo: usuario@dominio.com</small>
+        </div>
+
+        <!-- NUEVO CAMPO TELÉFONO EN REGISTRO -->
+        <div class="form-group">
+          <label for="regTelefono"><i class="fas fa-phone"></i> Teléfono profesional</label>
+          <input type="text" id="regTelefono" class="form-input" placeholder="Número de teléfono (opcional)">
+          <small class="form-text text-muted">Solo para doctores</small>
+        </div>
+
+        <!-- ROL -->
+        <div class="form-group">
+          <label for="regRol"><i class="fas fa-user-cog"></i> Rol</label>
+          <select id="regRol" class="form-select" style="margin-bottom: 10px;">
+            <% if (roles && roles.length > 0) { %>
+              <% roles.forEach(r => { %>
+                <option value="<%= r.ID_ROL %>"><%= r.ROL %></option>
+              <% }); %>
+            <% } else { %>
+              <option value="1">Administrador</option>
+              <option value="2">Doctor</option>
+              <option value="3">Enfermera</option>
+              <option value="4">Recepcionista</option>
+              <option value="5">Paciente</option>
+            <% } %>
+          </select>
+          
+          <!-- Campo para nuevo rol -->
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="regNuevoRolInput" class="form-input" 
+                   placeholder="Escribe un nuevo rol..." 
+                   style="flex: 1; padding: 8px 12px; border: 2px solid #ced4da; border-radius: 8px;">
+            <button type="button" id="btnAgregarNuevoRol" class="btn btn-success btn-sm" 
+                    title="Agregar nuevo rol" style="white-space: nowrap; padding: 8px 14px;">
+              <i class="fas fa-plus"></i> Agregar Rol
+            </button>
+          </div>
+          <small class="form-text text-muted">
+            <i class="fas fa-info-circle"></i> 
+            Escribe el nombre del nuevo rol y haz clic en "Agregar Rol" para crearlo.
+            <a href="/roles" target="_blank" style="color: #219ebc;">Gestionar roles</a>
+          </small>
+        </div>
+
+        <!-- ============================================================
+             BOTONES DEL FORMULARIO
+             ============================================================ -->
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px; padding-top: 15px; border-top: 1px solid #e9ecef;">
+          <button type="button" id="btnCancelarRegister" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" id="btnGuardarRegister" class="btn btn-primary">
+            <i class="fas fa-save"></i> Registrar Usuario
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <div class="footer">
+    Clínicas Roca Maya &copy; 2025 - Sistema de Gestión
+  </div>
+</div>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/users.js"></script>
+<script src="/js/modal-register.js"></script>
+
+</body>
+</html>

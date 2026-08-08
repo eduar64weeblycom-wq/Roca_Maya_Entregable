@@ -1,0 +1,101 @@
+:root{
+  --bg:#308fee;
+  --card:#f7f4f4;
+  --muted:#6b7280;
+  --accent:#fef08a; /* Light Yellow for Buttons */
+  --danger:#fde68a; /* Slightly darker yellow/orange for danger */
+  --shadow:0 8px 24px rgba(240, 240, 250, 0.06);
+  font-family: Inter, system-ui, Arial;
+}
+
+body{
+  margin:0;
+  background:linear-gradient(180deg,var(--bg),#f9fafa 70%);
+  min-height:100vh;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:36px;
+  color:#060c18;
+}
+
+.wrap{width:100%; max-width:980px;}
+
+.header{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; margin-bottom:18px;
+}
+
+.header h1{margin:0; font-size:22px;}
+
+.meta{font-size:14px; color:var(--muted);}
+
+.card{
+  background:var(--card); padding:16px; border-radius:12px;
+  box-shadow:var(--shadow);
+}
+
+.form-pacientes{
+  display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  /* Making 'pacientes' elements blue */
+  color: var(--bg);
+}
+
+input[type="text"], input[type="number"]{
+  padding:10px 12px; border-radius:10px;
+  border:1px solid #e6eef6; min-width:180px;
+}
+
+.btn{
+  border:0; background:var(--accent); 
+  color:#374151; /* Darker text for contrast on light yellow */
+  padding:10px 14px; border-radius:10px; cursor:pointer;
+}
+
+.btn.ghost{
+  background:transparent; color:var(--accent);
+  border:1px solid var(--accent); /* Border matching accent */
+}
+
+.logo-btn {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.logo-btn:hover {
+    transform: scale(1.05);
+}
+
+.list{margin-top:12px;}
+
+.item{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px; border-bottom:1px solid #f3f6fa; padding:12px 0;
+}
+
+.item-left{
+  display:flex; gap:12px; align-items:center;
+}
+
+.avatar{
+  width:44px; height:44px; border-radius:999px;
+  background:#faeef2; display:grid; place-items:center;
+  color:var(--bg); /* Avatar text to blue */
+  font-weight:700;
+}
+
+.name{font-weight:600;}
+
+.actions{display:flex; gap:8px;}
+
+.btn.danger{
+  background:var(--danger);
+  color:#374151; /* Darker text for contrast */
+}
+
+.empty{color:var(--muted); padding:18px 0;}
+
+@media (max-width:640px){
+  .header{flex-direction:column; align-items:flex-start;}
+  .topbar{flex-direction:column;}
+}

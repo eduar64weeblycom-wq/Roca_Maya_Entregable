@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Especialidades Médicas - Clínicas Roca Maya</title>
+
+  <link
+    rel="icon"
+    href="/ICONO.jpg"
+    type="image/jpeg"
+  >
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  >
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+  >
+  <link
+    rel="stylesheet"
+    href="/css/especialidades.css"
+  >
+  <script
+    src="/js/especialidades.js"
+    defer
+  ></script>
+</head>
+
+<body>
+
+  <!-- =====================================================
+       ENCABEZADO PRINCIPAL
+  ====================================================== -->
+  <header class="navbar-especialidades">
+
+    <button
+      type="button"
+      class="logo-btn"
+      id="logoBtn"
+      data-url="/dashboard"
+      title="Volver al Dashboard"
+      aria-label="Volver al Dashboard"
+    >
+      <img
+        src="/roca-maya-oct.jpg"
+        alt="Logo de Clínicas Médicas Roca Maya"
+        class="logo-clinica"
+        onerror="this.onerror=null; this.src='/img/roca-maya-oct.jpg';"
+      >
+    </button>
+
+    <div class="navbar-title">
+      <h1>
+        <i class="fas fa-stethoscope" aria-hidden="true"></i>
+        Especialidades Médicas
+      </h1>
+
+      <p>Gestión de médicos y pacientes por especialidad</p>
+    </div>
+
+    <div class="navbar-spacer" aria-hidden="true"></div>
+
+  </header>
+
+
+  <!-- =====================================================
+       CONTENEDOR PRINCIPAL
+  ====================================================== -->
+  <main class="contenedor-principal animate__animated animate__fadeIn">
+
+    <!-- =====================================================
+         MENSAJES DEL SISTEMA
+    ====================================================== -->
+    <section
+      class="mensajes-container"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+
+      <div
+        id="alertSuccess"
+        class="alert alert-success"
+        role="alert"
+        hidden
+      >
+        <i class="fas fa-circle-check" aria-hidden="true"></i>
+
+        <span id="successMessage"></span>
+
+        <button
+          type="button"
+          class="alert-close"
+          data-close-alert="alertSuccess"
+          aria-label="Cerrar mensaje"
+        >
+          <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div
+        id="alertError"
+        class="alert alert-error"
+        role="alert"
+        hidden
+      >
+        <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+
+        <span id="errorMessage"></span>
+
+        <button
+          type="button"
+          class="alert-close"
+          data-close-alert="alertError"
+          aria-label="Cerrar mensaje"
+        >
+          <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         BARRA SUPERIOR
+    ====================================================== -->
+    <section class="barra-superior">
+
+      <div class="titulo-seccion">
+
+        <div class="titulo-icono">
+          <i class="fas fa-user-doctor" aria-hidden="true"></i>
+        </div>
+
+        <div>
+          <h2>Directorio de especialidades</h2>
+        </div>
+
+      </div>
+
+
+      <div class="acciones-superiores">
+
+        <button
+          type="button"
+          class="btn btn-warning"
+          id="btnNuevaEspecialidadHeader"
+        >
+          <i class="fas fa-plus" aria-hidden="true"></i>
+          <span>Nueva especialidad</span>
+        </button>
+
+        <a
+          href="/especialidades/excel"
+          class="btn btn-excel"
+          id="btnDescargarExcel"
+        >
+          <i class="fas fa-file-excel" aria-hidden="true"></i>
+          <span>Descargar Excel</span>
+        </a>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="btnImprimir"
+        >
+          <i class="fas fa-print" aria-hidden="true"></i>
+          <span>Imprimir</span>
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         FILTROS
+    ====================================================== -->
+    <section
+      class="panel-filtros"
+      aria-labelledby="tituloFiltros"
+    >
+
+      <div class="panel-filtros-header">
+
+        <div>
+          <h3 id="tituloFiltros">
+            <i class="fas fa-filter" aria-hidden="true"></i>
+            Filtros de búsqueda
+          </h3>
+
+          <p>
+            Localice una especialidad o médico por nombre, correo o número de registro.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div class="filtros-grid">
+
+        <!-- Buscar especialidad -->
+        <div class="form-group">
+
+          <label for="filterNombre">
+            <i class="fas fa-notes-medical" aria-hidden="true"></i>
+            Especialidad
+          </label>
+
+          <div class="input-icon-wrapper">
+
+            <i
+              class="fas fa-magnifying-glass input-icon"
+              aria-hidden="true"
+            ></i>
+
+            <input
+              type="search"
+              id="filterNombre"
+              class="form-control"
+              placeholder="Buscar especialidad..."
+              autocomplete="off"
+            >
+
+          </div>
+
+        </div>
+
+
+        <!-- Buscar doctor -->
+        <div class="form-group">
+
+          <label for="filterDoctor">
+            <i class="fas fa-user-doctor" aria-hidden="true"></i>
+            Médico
+          </label>
+
+          <div class="input-icon-wrapper">
+
+            <i
+              class="fas fa-magnifying-glass input-icon"
+              aria-hidden="true"
+            ></i>
+
+            <input
+              type="search"
+              id="filterDoctor"
+              class="form-control"
+              placeholder="Nombre, correo o número del médico..."
+              autocomplete="off"
+            >
+
+          </div>
+
+        </div>
+
+
+        <!-- Estado -->
+        <div class="form-group">
+
+          <label for="filterEstado">
+            <i class="fas fa-toggle-on" aria-hidden="true"></i>
+            Estado
+          </label>
+
+          <select
+            id="filterEstado"
+            class="form-control"
+          >
+            <option value="">Todos los estados</option>
+            <option value="ACTIVA">Activas</option>
+            <option value="INACTIVA">Inactivas</option>
+          </select>
+
+        </div>
+
+
+        <!-- Botones -->
+        <div class="filter-actions">
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="btnAplicarFiltros"
+          >
+            <i class="fas fa-filter" aria-hidden="true"></i>
+            Aplicar
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="btnLimpiarFiltros"
+          >
+            <i class="fas fa-rotate-left" aria-hidden="true"></i>
+            Limpiar
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         TARJETAS ESTADÍSTICAS
+    ====================================================== -->
+    <section
+      class="estadisticas-grid"
+      aria-label="Resumen de especialidades"
+    >
+
+      <article class="stat-card">
+
+        <div class="stat-icon stat-icon-blue">
+          <i class="fas fa-notes-medical" aria-hidden="true"></i>
+        </div>
+
+        <div class="stat-content">
+          <span
+            class="stat-number"
+            id="totalEspecialidades"
+          >
+            0
+          </span>
+
+          <span class="stat-label">
+            Especialidades
+          </span>
+        </div>
+
+      </article>
+
+
+      <article class="stat-card">
+
+        <div class="stat-icon stat-icon-green">
+          <i class="fas fa-user-doctor" aria-hidden="true"></i>
+        </div>
+
+        <div class="stat-content">
+          <span
+            class="stat-number"
+            id="totalDoctores"
+          >
+            0
+          </span>
+
+          <span class="stat-label">
+            Médicos con especialidad asignada
+          </span>
+
+          <small class="stat-description">
+            Profesionales vinculados formalmente a una especialidad médica.
+          </small>
+        </div>
+
+      </article>
+
+
+      <article class="stat-card">
+
+        <div class="stat-icon stat-icon-purple">
+          <i class="fas fa-hospital-user" aria-hidden="true"></i>
+        </div>
+
+        <div class="stat-content">
+          <span
+            class="stat-number"
+            id="totalPacientes"
+          >
+            0
+          </span>
+
+          <span class="stat-label">
+            Pacientes asociados a médicos
+          </span>
+
+          <small class="stat-description">
+            Pacientes únicos con citas válidas, sin duplicarlos entre especialidades.
+          </small>
+        </div>
+
+      </article>
+
+
+      <article class="stat-card">
+
+        <div class="stat-icon stat-icon-orange">
+          <i class="fas fa-circle-check" aria-hidden="true"></i>
+        </div>
+
+        <div class="stat-content">
+          <span
+            class="stat-number"
+            id="especialidadesActivas"
+          >
+            0
+          </span>
+
+          <span class="stat-label">
+            Especialidades activas
+          </span>
+        </div>
+
+      </article>
+
+    </section>
+
+
+    <!-- =====================================================
+         PANEL DE ESPECIALIDADES
+    ====================================================== -->
+    <section
+      class="especialidades-panel"
+      id="tablaContenido"
+      aria-labelledby="tituloListado"
+    >
+
+      <div class="listado-header">
+
+        <div>
+          <h3 id="tituloListado">
+            <i class="fas fa-layer-group" aria-hidden="true"></i>
+            Especialidades registradas
+          </h3>
+
+          <p>
+            Cada bloque corresponde a una especialidad. Los médicos se muestran
+            según su asignación registrada y, cuando un profesional pertenece a
+            varias especialidades, sus pacientes se presentan una sola vez en una
+            especialidad de referencia para evitar información duplicada.
+          </p>
+        </div>
+
+
+        <div class="listado-indicador">
+
+          <span class="indicador-punto"></span>
+
+          <span id="estadoCargaTexto">
+            Actualizando información
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- Estado de carga -->
+      <div
+        id="loadingState"
+        class="loading-state"
+      >
+
+        <div class="loading-spinner">
+          <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+        </div>
+
+        <h4>Cargando especialidades</h4>
+
+        <p>
+          Espere mientras se consultan los médicos y pacientes.
+        </p>
+
+      </div>
+
+
+      <!-- Estado sin resultados -->
+      <div
+        id="emptyState"
+        class="empty-state"
+        hidden
+      >
+
+        <div class="empty-icon">
+          <i class="fas fa-folder-open" aria-hidden="true"></i>
+        </div>
+
+        <h4>No se encontraron resultados</h4>
+
+        <p>
+          No existen especialidades que coincidan con los filtros seleccionados.
+        </p>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          id="btnLimpiarDesdeVacio"
+        >
+          <i class="fas fa-rotate-left" aria-hidden="true"></i>
+          Restablecer filtros
+        </button>
+
+      </div>
+
+
+      <!-- Las tarjetas se insertarán con JavaScript -->
+      <div
+        id="especialidadesGrid"
+        class="especialidades-grid"
+        aria-live="polite"
+      ></div>
+
+
+      <!-- Compatibilidad temporal con la estructura anterior -->
+      <table
+        id="especialidadesTable"
+        class="tabla-compatibilidad"
+        aria-hidden="true"
+      >
+        <tbody id="tablaBody"></tbody>
+      </table>
+
+    </section>
+
+
+    <!-- =====================================================
+         RESUMEN INFERIOR
+    ====================================================== -->
+    <footer class="info-summary-bar">
+
+      <div class="summary-item">
+
+        <i class="fas fa-database" aria-hidden="true"></i>
+
+        <span>
+          <strong>Total:</strong>
+          <span id="totalRegistros">0</span>
+        </span>
+
+      </div>
+
+
+      <div class="summary-item">
+
+        <i class="fas fa-eye" aria-hidden="true"></i>
+
+        <span>
+          <strong>Mostradas:</strong>
+          <span id="registrosMostrados">0</span>
+        </span>
+
+      </div>
+
+
+      <div class="summary-item">
+
+        <i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
+
+        <span>
+          <strong>Última actualización:</strong>
+          <span id="ultimaActualizacion">--</span>
+        </span>
+
+      </div>
+
+    </footer>
+
+  </main>
+
+
+  <!-- =====================================================
+       MODAL NUEVA / EDITAR ESPECIALIDAD
+  ====================================================== -->
+  <div
+    id="modalEspecialidad"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modalTitle"
+    aria-hidden="true"
+    tabindex="-1"
+  >
+
+    <div class="modal-container">
+
+      <header class="modal-header">
+
+        <div class="modal-title-group">
+
+          <div class="modal-title-icon">
+            <i class="fas fa-notes-medical" aria-hidden="true"></i>
+          </div>
+
+          <div>
+            <h2 id="modalTitle">Nueva Especialidad</h2>
+
+            <p>
+              Complete la información solicitada.
+            </p>
+          </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="modal-close"
+          id="btnCloseModal"
+          aria-label="Cerrar ventana"
+          title="Cerrar"
+        >
+          <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+
+      </header>
+
+
+      <div class="modal-body">
+
+        <div
+          id="modalError"
+          class="alert alert-error"
+          role="alert"
+          hidden
+        >
+          <i
+            class="fas fa-circle-exclamation"
+            aria-hidden="true"
+          ></i>
+
+          <span id="modalErrorMessage"></span>
+        </div>
+
+
+        <form
+          id="formEspecialidad"
+          autocomplete="off"
+          novalidate
+        >
+
+          <!-- Nombre -->
+          <div class="form-group">
+
+            <label for="inputNombre">
+              Nombre de la especialidad
+              <span class="required">*</span>
+            </label>
+
+            <div class="input-icon-wrapper">
+
+              <i
+                class="fas fa-stethoscope input-icon"
+                aria-hidden="true"
+              ></i>
+
+              <input
+                id="inputNombre"
+                type="text"
+                class="form-control"
+                maxlength="100"
+                placeholder="Ejemplo: Cardiología"
+                required
+              >
+
+            </div>
+
+            <small class="form-help">
+              Utilice únicamente letras y espacios.
+            </small>
+
+          </div>
+
+
+          <!-- Descripción -->
+          <div class="form-group">
+
+            <label for="textareaDescripcion">
+              Descripción
+            </label>
+
+            <textarea
+              id="textareaDescripcion"
+              class="form-control"
+              rows="4"
+              maxlength="255"
+              placeholder="Escriba una breve descripción de la especialidad"
+            ></textarea>
+
+            <div class="field-footer">
+
+              <small class="form-help">
+                Describa el área médica que comprende.
+              </small>
+
+              <small id="contadorDescripcion">
+                0 / 255
+              </small>
+
+            </div>
+
+          </div>
+
+
+          <!-- Personalización -->
+          <fieldset class="personalizacion-fieldset">
+
+            <legend>
+              <i class="fas fa-palette" aria-hidden="true"></i>
+              Presentación visual
+            </legend>
+
+
+            <div class="personalizacion-grid">
+
+              <!-- Color -->
+              <div class="form-group">
+
+                <label for="inputColor">
+                  Color
+                </label>
+
+                <div class="color-selector">
+
+                  <input
+                    id="inputColor"
+                    type="color"
+                    value="#3498DB"
+                    aria-label="Seleccionar color"
+                  >
+
+                  <span id="colorValue">
+                    #3498DB
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <!-- Icono -->
+              <div class="form-group icon-selector-group">
+
+                <label for="inputIcono">
+                  Icono
+                </label>
+
+                <input
+                  id="inputIcono"
+                  type="text"
+                  class="form-control"
+                  value="fas fa-stethoscope"
+                  placeholder="fas fa-stethoscope"
+                  readonly
+                >
+
+                <div
+                  id="iconList"
+                  class="icon-list"
+                  aria-label="Lista de iconos disponibles"
+                ></div>
+
+              </div>
+
+
+              <!-- Vista previa -->
+              <div class="form-group preview-group">
+
+                <label>
+                  Vista previa
+                </label>
+
+                <div
+                  id="previewIcono"
+                  class="preview-icon-wrapper"
+                >
+                  <i
+                    id="previewIconElement"
+                    class="fas fa-stethoscope"
+                    aria-hidden="true"
+                  ></i>
+                </div>
+
+              </div>
+
+            </div>
+
+          </fieldset>
+
+
+          <!-- Estado -->
+          <div
+            id="estadoGroup"
+            class="form-group"
+            hidden
+          >
+
+            <label for="selectEstado">
+              Estado de la especialidad
+            </label>
+
+            <select
+              id="selectEstado"
+              class="form-control"
+            >
+              <option value="ACTIVA">Activa</option>
+              <option value="INACTIVA">Inactiva</option>
+            </select>
+
+          </div>
+
+
+          <!-- Acciones -->
+          <footer class="modal-actions">
+
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="btnCancelarModal"
+            >
+              <i class="fas fa-times" aria-hidden="true"></i>
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              class="btn btn-primary"
+              id="modalGuardarBtn"
+            >
+              <i class="fas fa-floppy-disk" aria-hidden="true"></i>
+              Guardar
+            </button>
+
+          </footer>
+
+        </form>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       INDICADOR PARA IMPRESIÓN
+  ====================================================== -->
+  <div
+    id="loadingPrint"
+    class="loading-overlay"
+    hidden
+  >
+
+    <div class="loading-overlay-card">
+
+      <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+
+      <h3>Preparando impresión</h3>
+
+      <p>Espere un momento...</p>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       PIE DE PÁGINA
+  ====================================================== -->
+  <footer class="footer-principal">
+
+    <span>
+      Clínicas Médicas Roca Maya
+    </span>
+
+    <span class="footer-separator">•</span>
+
+    <span>
+      Sistema de Gestión © 2026
+    </span>
+
+  </footer>
+
+</body>
+</html>

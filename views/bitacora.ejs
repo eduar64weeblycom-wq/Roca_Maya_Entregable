@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bitácora - Clínicas Roca Maya</title>
+  <link rel="icon" href="/ICONO.jpg" type="image/jpeg">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script src="/js/bitacora.js"></script>
+  <link rel="stylesheet" href="/css/bitacora.css">
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="header">
+      <div class="logo-container">
+        <button class="logo-btn" id="logoBtn" title="Volver al Dashboard">
+          <img src="/roca-maya-oct.jpg" alt="Clínicas Roca Maya" class="logo">
+        </button>
+        <div class="clinic-name">Clínicas Roca Maya</div>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">Bitácora del Sistema</h1>
+        <div class="actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
+          
+          <!-- BOTONES DE GESTIÓN NUEVOS -->
+          <button class="btn btn-warning" id="btnPausarActivar" data-pausada="<%= bitacoraPausada %>" title="Pausar o Activar registro en bitácora" style="background-color: #f39c12; color: white;">
+            <i class="fas fa-pause-circle" id="iconoPausarActivar"></i> <span id="textoPausarActivar">Pausar Bitácora</span>
+          </button>
+
+          <button class="btn btn-danger" id="btnLimpiarBitacora" title="Vaciar toda la tabla de bitácora" style="background-color: #e74c3c; color: white;">
+            <i class="fas fa-trash-alt"></i> Vaciar Bitácora
+          </button>
+
+          <!-- BOTONES EXISTENTES -->
+          <button class="btn btn-primary" id="btnImprimir">
+            <i class="fas fa-print"></i> Imprimir
+          </button>
+          
+          <a href="/excel/bitacora" class="btn btn-excel">
+            <i class="fas fa-file-excel"></i> Descargar Excel
+          </a>
+        </div>
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label class="filter-label">Fecha desde:</label>
+          <input type="date" class="filter-input" id="fechaDesde">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Fecha hasta:</label>
+          <input type="date" class="filter-input" id="fechaHasta">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Usuario:</label>
+          <input type="text" class="filter-input" id="usuarioFilter" placeholder="Filtrar por usuario...">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Módulo:</label>
+          <input type="text" class="filter-input" id="moduloFilter" placeholder="Filtrar por módulo...">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Descripción:</label>
+          <input type="text" class="filter-input" id="descripcionFilter" placeholder="Filtrar por descripción...">
+        </div>
+
+        <button class="btn btn-primary" id="btnAplicarFiltros">
+          <i class="fas fa-filter"></i> Aplicar Filtros
+        </button>
+        <button class="btn btn-secondary" id="btnLimpiarFiltros">
+          <i class="fas fa-times"></i> Limpiar
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table class="bitacora-table" id="bitacoraTable">
+          <thead>
+            <tr>
+              <th>Fecha y Hora</th>
+              <th>Usuario</th>
+              <th>Acción</th>
+              <th>Módulo</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody id="tablaBody">
+            <% if (registros && registros.length > 0) { %>
+              <% registros.forEach(r => { %>
+                <tr class="fila-registro">
+                  <td class="fecha-hora"><%= r.FECHA_HORA %></td>
+                  <td class="usuario"><%= r.USUARIO %></td>
+                  <td class="accion"><%= r.ACCION %></td>
+                  <td class="modulo"><%= r.MODULO %></td>
+                  <td class="descripcion"><%= r.DESCRIPCION %></td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="5" class="no-results no-results-message">
+                  No se encontraron registros de Bitácora en la base de datos.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="filters" style="justify-content: space-between;">
+        <div><strong>Total de registros:</strong> <span id="totalRegistros">0</span></div>
+        <div><strong>Registros mostrados:</strong> <span id="registrosMostrados">0</span></div>
+        <div><strong>Última actualización:</strong> <span id="ultimaActualizacion"></span></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Clínicas Roca Maya - Sistema de Gestión &copy; 2025
+    </div>
+  </div>
+
+  <div id="loading" class="loading" style="display:none;">
+    <div style="background: white; padding: 20px; border-radius: 10px; color: #333;">
+      <i class="fas fa-spinner fa-spin"></i> Procesando solicitud...
+    </div>
+  </div>
+
+ <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Redirección a parámetros
+        const btnParametros = document.getElementById('btnParametros');
+        if (btnParametros) {
+            btnParametros.addEventListener('click', function() {
+                window.location.href = '/bitacora/parametros';
+            });
+        }
+
+        // Sincronizar estado inicial leyendo de forma limpia el atributo del botón
+        const btnPausarActivar = document.getElementById('btnPausarActivar');
+        let bitacoraPausada = btnPausarActivar ? btnPausarActivar.getAttribute('data-pausada') === 'true' : false;
+        
+        // Aplicar estilos y textos correctos según el estado real al cargar
+        function actualizarVisualBoton() {
+            if (bitacoraPausada) {
+                document.getElementById('textoPausarActivar').innerText = 'Reanudar Bitácora';
+                document.getElementById('iconoPausarActivar').className = 'fas fa-play-circle';
+                btnPausarActivar.style.backgroundColor = '#27ae60'; // Verde
+            } else {
+                document.getElementById('textoPausarActivar').innerText = 'Pausar Bitácora';
+                document.getElementById('iconoPausarActivar').className = 'fas fa-pause-circle';
+                btnPausarActivar.style.backgroundColor = '#f39c12'; // Naranja
+            }
+        }
+
+        actualizarVisualBoton();
+
+        // Lógica para el clic en Pausar/Activar
+        if (btnPausarActivar) {
+            btnPausarActivar.addEventListener('click', async function() {
+                const accion = bitacoraPausada ? 'ACTIVAR' : 'PAUSAR';
+                if (!confirm(`¿Estás seguro de que deseas ${accion.toLowerCase()} la bitácora del sistema?`)) return;
+
+                try {
+                    const response = await fetch('/bitacora/gestion', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ accion: accion })
+                    });
+                    const data = await response.json();
+
+                    if (data.ok) {
+                        bitacoraPausada = !bitacoraPausada;
+                        btnPausarActivar.setAttribute('data-pausada', bitacoraPausada);
+                        actualizarVisualBoton();
+                        alert(data.mensaje);
+                    } else {
+                        alert('Error: ' + data.mensaje);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Error de conexión al cambiar el estado.');
+                }
+            });
+        }
+
+        // Lógica para Vaciar / Limpiar la Bitácora
+        const btnLimpiarBitacora = document.getElementById('btnLimpiarBitacora');
+        if (btnLimpiarBitacora) {
+            btnLimpiarBitacora.addEventListener('click', async function() {
+                if (!confirm('⚠️ ADVERTENCIA: ¿Estás seguro de vaciar por completo la tabla de bitácora? Esta acción no se puede deshacer.')) return;
+
+                try {
+                    const response = await fetch('/bitacora/gestion', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ accion: 'LIMPIAR' })
+                    });
+                    const data = await response.json();
+
+                    if (data.ok) {
+                        alert(data.mensaje);
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.mensaje);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Error de conexión al limpiar la bitácora.');
+                }
+            });
+        }
+    });
+  </script>
+</body>
+</html>

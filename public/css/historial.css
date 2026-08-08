@@ -1,0 +1,226 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --accent-color: #e74c3c;
+    --light-color: #ecf0f1;
+    --dark-color: #0f2134;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #abd0f6;
+    color: #f3f1f1;
+}
+
+.sidebar {
+    background-color: var(--primary-color);
+    min-height: 100vh;
+    padding-top: 20px;
+}
+
+.clinic-title {
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    border-bottom: 1px solid rgb(255, 255, 255);
+}
+
+.sidebar .nav-link {
+    color: #fff;
+}
+
+.sidebar .form-label {
+    color: #fff;
+}
+
+.sidebar .form-select {
+    margin-bottom: 20px;
+}
+
+.navbar-brand {
+    padding: 5px 15px;
+}
+
+.logo-btn {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.logo-btn:hover {
+    transform: scale(1.05);
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: 600;
+}
+
+.badge-status {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.patient-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--secondary-color);
+}
+
+.btn-primary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+.btn-success {
+    background-color: #27ae60;
+    border-color: #27ae60;
+}
+
+.section-title {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.json-data {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+.history-item {
+    border-left: 4px solid var(--secondary-color);
+    padding-left: 15px;
+    margin-bottom: 15px;
+}
+
+
+.modal-header {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+}
+
+
+.alert-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 300px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.bi-x-circle.text-danger {
+    color: var(--accent-color) !important;
+}
+
+.bi-heart-pulse.text-primary {
+    color: var(--secondary-color) !important;
+}
+
+.bi-capsule.text-info {
+    color: var(--secondary-color) !important;
+}
+
+.bi-person.text-secondary {
+    color: #6c757d !important;
+}
+
+.btn-outline-primary {
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-outline-primary:hover {
+    color: #fff;
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.alert {
+    border: none;
+    border-radius: 0.375rem;
+}
+
+.alert-info {
+    color: #055160;
+    background-color: #cff4fc;
+    border-color: #b6effb;
+}
+
+
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        min-height: auto;
+        padding-top: 10px;
+    }
+    
+    .patient-avatar {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .table-responsive {
+        font-size: 0.85rem;
+    }
+    
+    .clinic-title {
+        font-size: 1rem;
+        padding: 8px;
+    }
+}

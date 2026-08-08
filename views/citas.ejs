@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="es">  
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Citas Médicas - Roca Maya</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styleCitas.css" />
+  <style>
+    .ctmodal-cita { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:1000; }
+    .ctmodal-contenido { background:#fff; padding:20px; border-radius:10px; width:95%; max-width:700px; max-height:90vh; overflow:auto; }
+    .info-small { font-size:0.9rem; color:var(--color-text-light, #6c757d); }
+    .search-input { width:100%; padding:.375rem .75rem; border:1px solid #ced4da; border-radius:.25rem; margin-bottom:.5rem; }
+    .filters-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+    .ctfiltro-item { min-width:200px; flex:1; }
+
+    .btn-excel {
+      background-color: #217346;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .btn-excel:hover {
+      background-color: #1a5c38;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(33, 158, 188, 0.3);
+    }
+    .btn-excel i { margin-right: 4px; }
+
+    .date-range-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .date-range-group .ctinput-field {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; width: 100% !important; }
+    .calendar-header-days { text-align: center; font-weight: bold; padding: 10px 0; background: #f8f9fa; border-radius: 4px; margin-bottom: 5px;}
+    .calendar-day { border: 1px solid #e9ecef; min-height: 100px; padding: 5px; border-radius: 4px; background: #fff; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+    .calendar-day.empty { background: #f8f9fa; border: none; }
+    .day-number { display: block; text-align: right; font-weight: bold; font-size: 0.9em; color: #6c757d; margin-bottom: 5px; }
+    
+    .cita-badge {
+        font-size: 0.75rem;
+        padding: 4px;
+        margin-bottom: 3px;
+        border-radius: 4px;
+        color: white;
+        display: block;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: all 0.2s;
+    }
+    .cita-badge:hover { opacity: 0.8; transform: scale(1.02); }
+
+    .calendar-day .add-cita-quick {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: #0d6efd;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        font-size: 16px;
+        line-height: 20px;
+        cursor: pointer;
+        display: none;
+        padding: 0;
+        transition: all 0.2s;
+    }
+    .calendar-day:hover .add-cita-quick { display: block; }
+    .calendar-day .add-cita-quick:hover { background: #0b5ed7; transform: scale(1.1); }
+
+    .cita-badge.editable { cursor: pointer; }
+    .cita-badge.editable:hover { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0d6efd; }
+
+    .btn-editar-cita {
+        background: #ffc107;
+        color: #000;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-right: 4px;
+    }
+    .btn-editar-cita:hover { background: #e0a800; transform: translateY(-1px); }
+
+    .btn-eliminar-cita {
+        background: #dc3545;
+        color: #fff;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-right: 4px;
+    }
+    .btn-eliminar-cita:hover { background: #c82333; transform: translateY(-1px); }
+
+    .modal-editar-cita .ctmodal-contenido { max-width: 700px; }
+
+    /* Estilos para autocompletado */
+    .autocomplete-container {
+        position: relative;
+        width: 100%;
+    }
+    .autocomplete-container input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        background: white;
+        transition: all 0.2s;
+    }
+    .autocomplete-container input:focus {
+        outline: none;
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+    }
+    .autocomplete-container input.loading {
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="%236c757d" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15L17 12.23l-4-2.37V7z"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 20px;
+    }
+    .autocomplete-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 200px;
+        overflow-y: auto;
+        background: white;
+        border: 1px solid #ced4da;
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .autocomplete-list.show {
+        display: block;
+    }
+    .autocomplete-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: all 0.15s;
+        border-bottom: 1px solid #f8f9fa;
+        font-size: 0.9rem;
+    }
+    .autocomplete-item:hover {
+        background: #e7f1ff;
+    }
+    .autocomplete-item.active {
+        background: #0d6efd;
+        color: white;
+    }
+    .autocomplete-item .highlight {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+    .autocomplete-item.active .highlight {
+        color: white;
+    }
+    .autocomplete-item .sub-info {
+        display: block;
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 2px;
+    }
+    .autocomplete-item.active .sub-info {
+        color: rgba(255,255,255,0.8);
+    }
+    .autocomplete-item .no-results {
+        color: #6c757d;
+        text-align: center;
+        padding: 12px;
+        font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <main class="ctcontainer ctmy-4">
+    <div class="ctcitas-header">
+      <div class="header-left">
+        <div class="logo-container">
+          <button class="logo-btn" id="logoBtn" title="Volver al Dashboard" aria-label="Volver al Dashboard">
+            <img src="/roca-maya-oct.jpg" alt="Clínicas Roca Maya" class="logo">
+          </button>
+          <div class="clinic-name">Clínicas Roca Maya</div>
+        </div>
+
+        <div class="title-wrap">
+          <h1><i class="fas fa-calendar-check"></i> Gestión de Citas Médicas</h1>
+          <p>Administra y programa las citas de los pacientes</p>
+        </div>
+      </div>
+
+      <div class="actions-right">
+        <button id="btnImprimir" class="btn btn-outline-secondary me-2" type="button" title="Imprimir listado de citas">
+          <i class="fas fa-print"></i> Imprimir
+        </button>
+        <button id="btnNuevaCitaHeader" class="ctbtn-primary" type="button"><i class="fas fa-plus"></i> Nueva Cita</button>
+        <a href="/excel/citas" class="btn-excel"><i class="fas fa-file-excel"></i> Descargar Excel</a>
+      </div>
+    </div>
+
+    <div id="alertSuccess" class="ctalert ctalert-success" style="display:none;">
+      <i class="fas fa-check-circle"></i> <span id="successMessage"></span>
+    </div>
+    <div id="alertError" class="ctalert ctalert-error" style="display:none;">
+      <i class="fas fa-exclamation-circle"></i> <span id="errorMessage"></span>
+    </div>
+
+    <div class="ctfiltros-citas">
+      <div class="filters-row">
+        <div class="ctfiltro-item">
+          <label for="filtroBusqueda">Buscar paciente:</label>
+          <input id="filtroBusqueda" class="search-input" type="search" placeholder="Buscar por nombre..." aria-label="Buscar todo" />
+        </div>
+        <div class="ctfiltro-item">
+          <label for="filtroEstado">Filtrar por Estado:</label>
+          <select id="filtroEstado" class="ctinput-field">
+            <option value="">Todos los estados</option>
+            <option value="PROGRAMADA">Programada</option>
+            <option value="CONFIRMADA">Confirmada</option>
+            <option value="FINALIZADA">Finalizada</option>
+            <option value="CANCELADA">Cancelada</option>
+            <option value="NO_ASISTIO">No Asistió</option>
+          </select>
+        </div>
+        <div class="ctfiltro-item">
+          <label for="filtroDoctor">Filtrar por Doctor:</label>
+          <select id="filtroDoctor" class="ctinput-field">
+            <option value="">Todos los doctores</option>
+          </select>
+        </div>
+        <div class="ctfiltro-item">
+          <label>Filtrar por Fecha:</label>
+          <div class="date-range-group">
+            <input id="filtroFechaDesde" type="date" class="ctinput-field" placeholder="Desde" />
+            <span style="color: #6c757d;">-</span>
+            <input id="filtroFechaHasta" type="date" class="ctinput-field" placeholder="Hasta" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="citas-view-toolbar" aria-label="Herramientas de visualización">
+      <div class="citas-view-toolbar__info">
+        <div class="citas-view-toolbar__icon" aria-hidden="true">
+          <i class="fas fa-eye"></i>
+        </div>
+        <div>
+          <h2>Visualización de información</h2>
+          <p>Consulte el calendario de citas o revise el directorio de pacientes en modo de solo lectura.</p>
+        </div>
+      </div>
+
+      <div class="citas-view-toolbar__actions">
+        <button id="btn-vista-calendario" class="citas-view-button citas-view-button--calendar" type="button">
+          <span class="citas-view-button__icon"><i class="fas fa-calendar-alt"></i></span>
+          <span class="citas-view-button__content">
+            <strong>Vista Calendario</strong>
+            <small>Consultar citas por fecha</small>
+          </span>
+        </button>
+
+        <button id="btnVerPacientes" class="citas-view-button citas-view-button--patients" type="button">
+          <span class="citas-view-button__icon"><i class="fas fa-users"></i></span>
+          <span class="citas-view-button__content">
+            <strong>Ver pacientes</strong>
+            <small>Solo visualización de datos</small>
+          </span>
+          <span id="contadorPacientes" class="citas-view-button__count">0</span>
+        </button>
+      </div>
+    </section>
+
+    <div class="cttabla-citas">
+      <div id="tablaContenido">
+        <div class="ctsin-citas">
+          <i class="fas fa-calendar-times"></i>
+          <h3>No hay citas programadas</h3>
+          <p>Comienza creando una nueva cita médica.</p>
+          <button class="ctbtn-primary" id="btnCrearPrimera"><i class="fas fa-plus"></i> Crear Primera Cita</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Nueva Cita -->
+  <div id="modalNuevaCita" class="ctmodal-cita" aria-hidden="true">
+    <div class="ctmodal-contenido">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4><i class="fas fa-plus"></i> Nueva Cita</h4>
+        <button type="button" class="ctclose-modal" id="btnCloseModal" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <div id="modalError" class="ctalert ctalert-error" style="display:none; margin-bottom:10px;">
+        <i class="fas fa-exclamation-circle"></i> <span id="modalErrorMessage"></span>
+      </div>
+
+      <form id="formNuevaCita" class="ctform">
+        <div class="mb-3">
+          <label>Paciente *</label>
+          <div class="autocomplete-container">
+            <input type="hidden" id="pacienteSeleccionado" value="" />
+            <input type="text" id="buscarPacienteNueva" 
+                   placeholder="Escriba para buscar paciente por nombre, teléfono o identidad..." 
+                   autocomplete="off" />
+            <div id="autocompletePacientes" class="autocomplete-list"></div>
+          </div>
+          <div id="pacienteInfo" class="info-small mt-1"></div>
+        </div>
+
+        <div class="mb-3">
+          <label>Doctor *</label>
+          <div class="autocomplete-container">
+            <input type="hidden" id="doctorSeleccionado" value="" />
+            <input type="text" id="buscarDoctorNueva" 
+                   placeholder="Escriba para buscar doctor por nombre, especialidad o identidad..." 
+                   autocomplete="off" />
+            <div id="autocompleteDoctores" class="autocomplete-list"></div>
+          </div>
+          <div id="doctorInfo" class="info-small mt-1"></div>
+        </div>
+
+        <div class="mb-3 especialidad-cita-box">
+          <label for="selectEspecialidadCita">
+            <i class="fas fa-stethoscope"></i>
+            Especialidad de la cita *
+          </label>
+          <select
+            id="selectEspecialidadCita"
+            class="ctinput-field"
+            required
+            disabled
+          >
+            <option value="">Seleccione primero un doctor</option>
+          </select>
+          <div
+            id="especialidadCitaInfo"
+            class="info-small especialidad-cita-info mt-1"
+          >
+            Solo se mostrarán las especialidades asignadas al médico seleccionado.
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-5">
+            <label>Fecha *</label>
+            <input id="inputFecha" type="date" class="ctinput-field" required />
+          </div>
+          <div class="col-md-4">
+            <label>Hora *</label>
+            <input id="inputHora" type="time" class="ctinput-field" required />
+          </div>
+          <div class="col-md-3">
+            <label>Duración (min)</label>
+            <select id="selectDuracion" class="ctinput-field">
+              <option value="15">15</option>
+              <option value="20">20</option>
+              <option value="30" selected>30</option>
+              <option value="45">45</option>
+              <option value="60">60</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="registroAtendidoPasado" class="registro-atendido-panel" style="display:none;">
+          <div class="registro-atendido-panel__icon">
+            <i class="fas fa-user-check"></i>
+          </div>
+
+          <div class="registro-atendido-panel__content">
+            <label for="checkRegistroAtendido">
+              <input id="checkRegistroAtendido" type="checkbox" />
+              <span>Registrar como paciente atendido</span>
+            </label>
+
+            <p>
+              La fecha seleccionada ya pasó. La cita se guardará como
+              <strong>FINALIZADA</strong> y aparecerá la nota
+              <strong>ATENDIDO</strong> junto al nombre del paciente.
+            </p>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label>Tipo de Cita</label>
+            <select id="selectTipoCita" class="ctinput-field"></select>
+          </div>
+          <div class="col-md-6">
+            <label>Prioridad</label>
+            <select id="selectPrioridad" class="ctinput-field"></select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label>Canal</label>
+          <select id="selectCanal" class="ctinput-field"></select>
+        </div>
+
+        <div class="mb-3">
+          <label>Motivo</label>
+          <textarea id="textareaMotivo" class="ctinput-field" rows="6" maxlength="500" placeholder="Ingrese el motivo de la consulta..." style="resize: vertical; min-height: 140px; width: 100%;"></textarea>
+        </div>
+
+        <div class="mb-2 info-small">Hora estimada fin: <strong id="finEstimado">-</strong></div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="ctbtn-secondary" id="btnCancelarModal">CERRAR</button>
+          <button type="button" class="ctbtn-primary" id="btnGuardarCita">CONFIRMAR CITA</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Edición de Cita -->
+  <div id="modalEditarCita" class="ctmodal-cita modal-editar-cita" aria-hidden="true">
+    <div class="ctmodal-contenido">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4><i class="fas fa-edit"></i> Editar Cita</h4>
+        <button type="button" class="ctclose-modal" id="btnCloseModalEditar" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <div id="modalErrorEditar" class="ctalert ctalert-error" style="display:none; margin-bottom:10px;">
+        <i class="fas fa-exclamation-circle"></i> <span id="modalErrorMessageEditar"></span>
+      </div>
+
+      <form id="formEditarCita" class="ctform">
+        <input type="hidden" id="editIdCita" />
+        
+        <div class="mb-3">
+          <label>Paciente *</label>
+          <div class="autocomplete-container">
+            <input type="hidden" id="editPacienteSeleccionado" value="" />
+            <input type="text" id="buscarPacienteEditar" 
+                   placeholder="Escriba para buscar paciente por nombre, teléfono o identidad..." 
+                   autocomplete="off" />
+            <div id="autocompletePacientesEditar" class="autocomplete-list"></div>
+          </div>
+          <div id="editPacienteInfo" class="info-small mt-1"></div>
+        </div>
+
+        <div class="mb-3">
+          <label>Doctor *</label>
+          <div class="autocomplete-container">
+            <input type="hidden" id="editDoctorSeleccionado" value="" />
+            <input type="text" id="buscarDoctorEditar" 
+                   placeholder="Escriba para buscar doctor por nombre, especialidad o identidad..." 
+                   autocomplete="off" />
+            <div id="autocompleteDoctoresEditar" class="autocomplete-list"></div>
+          </div>
+          <div id="editDoctorInfo" class="info-small mt-1"></div>
+        </div>
+
+        <div class="mb-3 especialidad-cita-box">
+          <label for="editSelectEspecialidadCita">
+            <i class="fas fa-stethoscope"></i>
+            Especialidad de la cita *
+          </label>
+          <select
+            id="editSelectEspecialidadCita"
+            class="ctinput-field"
+            required
+            disabled
+          >
+            <option value="">Seleccione primero un doctor</option>
+          </select>
+          <div
+            id="editEspecialidadCitaInfo"
+            class="info-small especialidad-cita-info mt-1"
+          >
+            Solo se mostrarán las especialidades asignadas al médico seleccionado.
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-5">
+            <label>Fecha *</label>
+            <input id="editInputFecha" type="date" class="ctinput-field" required />
+          </div>
+          <div class="col-md-4">
+            <label>Hora *</label>
+            <input id="editInputHora" type="time" class="ctinput-field" required />
+          </div>
+          <div class="col-md-3">
+            <label>Duración (min)</label>
+            <select id="editSelectDuracion" class="ctinput-field">
+              <option value="15">15</option>
+              <option value="20">20</option>
+              <option value="30" selected>30</option>
+              <option value="45">45</option>
+              <option value="60">60</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="editRegistroPasadoInfo" class="registro-atendido-panel registro-atendido-panel--edit" style="display:none;">
+          <div class="registro-atendido-panel__icon">
+            <i class="fas fa-history"></i>
+          </div>
+
+          <div class="registro-atendido-panel__content">
+            <strong>Registro de atención pasada</strong>
+            <p>
+              Para conservar una fecha anterior, el estado de la cita debe ser
+              <strong>FINALIZADA</strong>.
+            </p>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label>Tipo de Cita</label>
+            <select id="editSelectTipoCita" class="ctinput-field"></select>
+          </div>
+          <div class="col-md-6">
+            <label>Prioridad</label>
+            <select id="editSelectPrioridad" class="ctinput-field"></select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label>Canal</label>
+          <select id="editSelectCanal" class="ctinput-field"></select>
+        </div>
+
+        <div class="mb-3">
+          <label>Estado</label>
+          <select id="editSelectEstado" class="ctinput-field">
+            <option value="PROGRAMADA">Programada</option>
+            <option value="CONFIRMADA">Confirmada</option>
+            <option value="FINALIZADA">Finalizada</option>
+            <option value="CANCELADA">Cancelada</option>
+            <option value="NO_ASISTIO">No Asistió</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label>Motivo</label>
+          <textarea id="editTextareaMotivo" class="ctinput-field" rows="6" maxlength="500" placeholder="Ingrese el motivo de la consulta..." style="resize: vertical; min-height: 140px; width: 100%;"></textarea>
+        </div>
+
+        <div class="mb-2 info-small">Hora estimada fin: <strong id="editFinEstimado">-</strong></div>
+
+        <div class="d-flex justify-content-between gap-2">
+          <div>
+            <button type="button" class="btn-eliminar-cita" id="btnEliminarCita">
+              <i class="fas fa-trash"></i> ELIMINAR CITA
+            </button>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="ctbtn-secondary" id="btnCancelarEditar">CERRAR</button>
+            <button type="button" class="ctbtn-primary" id="btnGuardarEdicion">GUARDAR CAMBIOS</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Calendario de Citas -->
+  <div id="modalCalendario" class="ctmodal-cita" aria-hidden="true">
+    <div class="ctmodal-contenido" style="max-width:900px;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4><i class="fas fa-calendar-alt"></i> Calendario de Citas</h4>
+        <button type="button" class="ctclose-modal" id="btnCerrarCalendario">&times;</button>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <button id="prev-month" class="btn btn-sm btn-secondary">&laquo; Anterior</button>
+        <h4 id="calendar-month-year"></h4>
+        <button id="next-month" class="btn btn-sm btn-secondary">Siguiente &raquo;</button>
+      </div>
+
+      <div class="calendar-grid calendar-header-days">
+        <div>Dom</div>
+        <div>Lun</div>
+        <div>Mar</div>
+        <div>Mié</div>
+        <div>Jue</div>
+        <div>Vie</div>
+        <div>Sáb</div>
+      </div>
+      <div id="calendar-days" class="calendar-grid"></div>
+    </div>
+  </div>
+
+
+
+  <!-- Modal de Pacientes: directorio y ficha completa en solo lectura -->
+  <div id="modalPacientes" class="ctmodal-cita" aria-hidden="true">
+    <div
+      class="ctmodal-contenido modal-pacientes-contenido"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tituloModalPacientes"
+    >
+      <div class="modal-pacientes-header">
+        <div class="modal-pacientes-title">
+          <span class="modal-pacientes-title__icon" aria-hidden="true">
+            <i class="fas fa-users"></i>
+          </span>
+
+          <div>
+            <h4 id="tituloModalPacientes">Directorio de pacientes</h4>
+            <p id="subtituloModalPacientes">
+              Consulte pacientes y abra su ficha completa sin modificar información.
+            </p>
+          </div>
+        </div>
+
+        <div class="modal-pacientes-header__actions">
+          <button
+            type="button"
+            class="btn-volver-pacientes"
+            id="btnVolverListaPacientes"
+            style="display:none;"
+          >
+            <i class="fas fa-arrow-left"></i>
+            Volver al directorio
+          </button>
+
+          <button
+            type="button"
+            class="ctclose-modal"
+            id="btnCerrarPacientes"
+            aria-label="Cerrar directorio de pacientes"
+          >
+            &times;
+          </button>
+        </div>
+      </div>
+
+      <div id="vistaListaPacientes">
+        <div class="pacientes-readonly-alert">
+          <i class="fas fa-lock"></i>
+          <span>
+            <strong>Modo solo lectura:</strong>
+            puede consultar la ficha completa, pero no editar ni eliminar datos.
+          </span>
+        </div>
+
+        <div class="pacientes-summary-grid">
+          <article class="pacientes-summary-card">
+            <span class="pacientes-summary-card__icon">
+              <i class="fas fa-users"></i>
+            </span>
+            <div>
+              <small>Total registrados</small>
+              <strong id="totalPacientesModal">0</strong>
+            </div>
+          </article>
+
+          <article class="pacientes-summary-card">
+            <span class="pacientes-summary-card__icon">
+              <i class="fas fa-phone"></i>
+            </span>
+            <div>
+              <small>Con teléfono</small>
+              <strong id="pacientesTelefonoModal">0</strong>
+            </div>
+          </article>
+
+          <article class="pacientes-summary-card">
+            <span class="pacientes-summary-card__icon">
+              <i class="fas fa-envelope"></i>
+            </span>
+            <div>
+              <small>Con correo</small>
+              <strong id="pacientesCorreoModal">0</strong>
+            </div>
+          </article>
+        </div>
+
+        <div class="pacientes-search-panel">
+          <label for="buscarPacienteModal">
+            <i class="fas fa-search"></i>
+            Buscar paciente
+          </label>
+
+          <div class="pacientes-search-box">
+            <i class="fas fa-search" aria-hidden="true"></i>
+
+            <input
+              id="buscarPacienteModal"
+              type="search"
+              autocomplete="off"
+              placeholder="Buscar por nombre, identidad, teléfono o correo..."
+            />
+
+            <button
+              id="btnLimpiarBusquedaPacientes"
+              type="button"
+              title="Limpiar búsqueda"
+              aria-label="Limpiar búsqueda"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <p id="resultadoPacientesModal" class="pacientes-search-result">
+            Mostrando 0 pacientes
+          </p>
+        </div>
+
+        <div
+          id="listaPacientesModal"
+          class="pacientes-readonly-content"
+          aria-live="polite"
+        >
+          <div class="pacientes-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            Cargando pacientes...
+          </div>
+        </div>
+
+        <div class="modal-pacientes-footer">
+          <span>
+            <i class="fas fa-shield-alt"></i>
+            Información protegida de uso interno.
+          </span>
+
+          <button
+            type="button"
+            class="ctbtn-secondary"
+            id="btnCerrarPacientesFooter"
+          >
+            <i class="fas fa-times"></i>
+            CERRAR
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="vistaDetallePaciente"
+        class="paciente-detail-view"
+        style="display:none;"
+        aria-live="polite"
+      >
+        <div id="detallePacienteContenido">
+          <div class="pacientes-loading paciente-detail-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            Cargando información completa del paciente...
+          </div>
+        </div>
+
+        <div class="modal-pacientes-footer paciente-detail-footer paciente-detail-footer--info">
+          <span>
+            <i class="fas fa-lock"></i>
+            Ficha mostrada únicamente para consulta.
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal para asignar la especialidad faltante de una cita -->
+  <div
+    id="modalAsignarEspecialidad"
+    class="ctmodal-cita"
+    aria-hidden="true"
+  >
+    <div
+      class="ctmodal-contenido modal-asignar-especialidad"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tituloAsignarEspecialidad"
+    >
+      <div class="modal-asignar-especialidad__header">
+        <div>
+          <span class="modal-asignar-especialidad__icon">
+            <i class="fas fa-stethoscope"></i>
+          </span>
+
+          <div>
+            <h4 id="tituloAsignarEspecialidad">
+              Asignar especialidad
+            </h4>
+            <p>
+              Seleccione la especialidad real de esta cita.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="ctclose-modal"
+          id="btnCerrarAsignarEspecialidad"
+          aria-label="Cerrar"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div
+        id="errorAsignarEspecialidad"
+        class="ctalert ctalert-error"
+        style="display:none; margin:14px 0;"
+      >
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="mensajeErrorAsignarEspecialidad"></span>
+      </div>
+
+      <input
+        type="hidden"
+        id="idCitaAsignarEspecialidad"
+      />
+
+      <div class="asignar-especialidad-resumen">
+        <div>
+          <small>Paciente</small>
+          <strong id="pacienteAsignarEspecialidad">—</strong>
+        </div>
+
+        <div>
+          <small>Médico</small>
+          <strong id="doctorAsignarEspecialidad">—</strong>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="selectAsignarEspecialidad">
+          Especialidad de la cita *
+        </label>
+
+        <select
+          id="selectAsignarEspecialidad"
+          class="ctinput-field"
+        >
+          <option value="">
+            Seleccione una especialidad
+          </option>
+        </select>
+
+        <p class="asignar-especialidad-ayuda">
+          Solo aparecen las especialidades activas
+          asignadas al médico de esta cita.
+        </p>
+      </div>
+
+      <div class="modal-asignar-especialidad__footer">
+        <button
+          type="button"
+          class="ctbtn-secondary"
+          id="btnCancelarAsignarEspecialidad"
+        >
+          CANCELAR
+        </button>
+
+        <button
+          type="button"
+          class="ctbtn-primary"
+          id="btnGuardarAsignarEspecialidad"
+        >
+          <i class="fas fa-save"></i>
+          GUARDAR ESPECIALIDAD
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/citas.js" defer></script>
+</body>
+</html>

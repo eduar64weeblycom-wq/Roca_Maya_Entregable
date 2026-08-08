@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pacientes - Clínicas Roca Maya</title>
+
+  <!-- Librerías para PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="/css/bitacora.css">
+
+  <style>
+    /* ============================================================
+       ESTILOS GENERALES
+       ============================================================ */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e9ecef;
+      padding-bottom: 15px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-btn img {
+      height: 60px;
+      border-radius: 10px;
+      border: 2px solid #219ebc;
+      padding: 3px;
+    }
+
+    .clinic-name {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #023047;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .page-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #023047;
+      margin: 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: #219ebc;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #1a7a94;
+      transform: translateY(-1px);
+    }
+
+    .btn-excel {
+      background-color: #217346;
+      color: white;
+    }
+    .btn-excel:hover {
+      background-color: #1a5c38;
+      color: white;
+    }
+
+    /* ============================================================
+       FILTROS
+       ============================================================ */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      align-items: flex-end;
+      margin-bottom: 20px;
+      padding: 30px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border: 1px solid #e9ecef;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1 1 150px;
+    }
+
+    .filter-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #495057;
+    }
+
+    .filter-input, .filter-select {
+      padding: 6px 10px;
+      border: 1px solid #ced4da;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: white;
+      width: 100%;
+    }
+
+    /* ============================================================
+       TABLA
+       ============================================================ */
+    .table-container {
+      overflow-x: auto;
+      margin-top: 10px;
+      border-radius: 12px;
+      border: 1px solid #e9ecef;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .table thead {
+      background: #023047;
+      color: white;
+    }
+
+    .table th {
+      padding: 12px 15px;
+      text-align: left;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .table td {
+      padding: 10px 15px;
+      border-bottom: 1px solid #e9ecef;
+      vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    /* ============================================================
+       ESTADOS
+       ============================================================ */
+    .estado-activo {
+      background: #28a745;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .estado-inactivo {
+      background: #dc3545;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .estado-bloqueado {
+      background: #ffc107;
+      color: #212529;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    /* ============================================================
+       ACCIONES
+       ============================================================ */
+    .acciones-td {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-accion {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-editar {
+      background: #3498db;
+      color: white;
+    }
+    .btn-editar:hover {
+      background: #2980b9;
+    }
+
+    .btn-eliminar {
+      background: #e74c3c;
+      color: white;
+    }
+    .btn-eliminar:hover {
+      background: #c0392b;
+    }
+
+    /*  NUEVO: botón para descargar la ficha médica (PDF del historial) */
+    .btn-descargar {
+      background: #27ae60;
+      color: white;
+      text-decoration: none;
+    }
+    .btn-descargar:hover {
+      background: #1e8449;
+      color: white;
+    }
+
+    .btn-citas {
+      background: #8e44ad;
+      color: white;
+    }
+    .btn-citas:hover {
+      background: #732d91;
+      color: white;
+    }
+
+    /* ============================================================
+       BADGES PARA CITAS
+       ============================================================ */
+    .badge-programada { background: #17a2b8; color: white; }
+    .badge-confirmada { background: #007bff; color: white; }
+    .badge-preclinica { background: #ffc107; color: #212529; }
+    .badge-consulta_medica { background: #28a745; color: white; }
+    .badge-finalizada { background: #6c757d; color: white; }
+    .badge-cancelada { background: #dc3545; color: white; }
+    .badge-no_asistio { background: #343a40; color: white; }
+    .badge-alta { background: #dc3545; color: white; }
+    .badge-urgente { background: #fd7e14; color: white; }
+    .badge-normal { background: #28a745; color: white; }
+    .badge-secondary { background: #6c757d; color: white; }
+
+    /* ============================================================
+       MODAL CITAS
+       ============================================================ */
+    .modal-citas-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-citas-overlay.active {
+      display: flex !important;
+    }
+
+    .modal-citas-overlay.closed {
+      display: none !important;
+    }
+
+    .modal-citas-box {
+      background: white;
+      border-radius: 12px;
+      max-width: 1000px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-citas-header {
+      background: #023047;
+      color: white;
+      padding: 18px 25px;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .modal-citas-header h5 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .modal-citas-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 10px;
+      transition: transform 0.3s;
+    }
+
+    .modal-citas-close:hover {
+      transform: rotate(90deg);
+    }
+
+    .modal-citas-body {
+      padding: 25px;
+      background: #f8f9fa;
+    }
+
+    .modal-citas-footer {
+      padding: 15px 25px;
+      border-top: 1px solid #e9ecef;
+      background: white;
+      border-radius: 0 0 12px 12px;
+      text-align: right;
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+    }
+
+    /* ============================================================
+       MODAL PACIENTE
+       ============================================================ */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .modal[aria-hidden="false"] {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      max-width: 980px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 25px 35px;
+      position: relative;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #023047;
+      font-size: 0.95rem;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ced4da;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: #219ebc;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(33,158,188,0.2);
+    }
+
+    .form-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 25px;
+      padding-top: 18px;
+      border-top: 1px solid #e9ecef;
+    }
+
+    .btn-cancelar {
+      background: #95a5a6;
+      color: white;
+    }
+    .btn-cancelar:hover {
+      background: #7f8c8d;
+    }
+
+    .historial-section {
+      margin-top: 25px;
+      border-top: 2px solid #e5e7eb;
+      padding-top: 20px;
+    }
+    .historial-section h3 {
+      color: #1e3a8a;
+      margin-bottom: 20px;
+    }
+
+    /* ============================================================
+       FOOTER
+       ============================================================ */
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      color: #6c757d;
+      font-size: 0.9rem;
+      border-top: 1px solid #e9ecef;
+      padding-top: 15px;
+    }
+
+    .edad-calculada {
+      font-style: italic;
+      color: #666;
+    }
+
+    .input-error {
+      border-color: #b91c1c !important;
+      box-shadow: 0 0 0 3px rgba(185,28,28,0.06);
+    }
+
+    .field-error {
+      color: #b91c1c;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .no-results-message {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+    }
+
+    /* ============================================================
+       LOADING
+       ============================================================ */
+    .loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+    }
+
+    .loading > div {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 1.1rem;
+      color: #333;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .loading .fa-spinner {
+      font-size: 1.5rem;
+      color: #219ebc;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .filters {
+        flex-direction: column;
+      }
+      .filter-group {
+        flex: 1;
+      }
+      .form-columns {
+        grid-template-columns: 1fr;
+      }
+      .modal-content {
+        padding: 16px;
+      }
+      .actions {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- HEADER -->
+    <div class="header">
+      <div class="logo-container">
+        <a href="/dashboard" class="logo-btn" id="logoBtn">
+          <img src="/roca-maya-oct.jpg" alt="Clínicas Roca Maya">
+        </a>
+        <div class="clinic-name">Clínicas Roca Maya</div>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main-content">
+      <div class="page-header">
+        <h1 class="page-title"><i class="fas fa-users"></i> Gestión de Pacientes</h1>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="btnNuevoPaciente">
+            <i class="fas fa-plus"></i> Nuevo Paciente
+          </button>
+
+          <button class="btn btn-primary" id="btnImprimir">
+            <i class="fas fa-print"></i> Imprimir
+          </button>
+
+          <a href="/excel/pacientes" class="btn btn-excel">
+            <i class="fas fa-file-excel"></i> Descargar Excel
+          </a>
+        </div>
+      </div>
+
+      <!-- FILTROS -->
+      <div class="filters">
+        <div class="filter-group">
+          <label for="nombresFilter">Nombres</label>
+          <input type="text" id="nombresFilter" class="filter-input" placeholder="Buscar por nombres...">
+        </div>
+        <div class="filter-group">
+          <label for="apellidosFilter">Apellidos</label>
+          <input type="text" id="apellidosFilter" class="filter-input" placeholder="Buscar por apellidos...">
+        </div>
+        <div class="filter-group">
+          <label for="documentoFilter">Documento</label>
+          <input type="text" id="documentoFilter" class="filter-input" placeholder="Buscar por documento...">
+        </div>
+        <div class="filter-group">
+          <label for="estadoFilter">Estado</label>
+          <select id="estadoFilter" class="filter-select">
+            <option value="">Todos</option>
+            <option value="ACTIVO">Activo</option>
+            <option value="INACTIVO">Inactivo</option>
+            <option value="BLOQUEADO">Bloqueado</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="generoFilter">Género</label>
+          <select id="generoFilter" class="filter-select">
+            <option value="">Todos</option>
+            <option value="MASCULINO">Masculino</option>
+            <option value="FEMENINO">Femenino</option>
+            <option value="OTRO">Otro</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="edadDesdeFilter">Edad desde</label>
+          <input type="number" id="edadDesdeFilter" class="filter-input" min="0" placeholder="Ej: 18">
+        </div>
+        <div class="filter-group">
+          <label for="edadHastaFilter">Edad hasta</label>
+          <input type="number" id="edadHastaFilter" class="filter-input" min="0" placeholder="Ej: 60">
+        </div>
+        <div class="filter-group">
+          <label for="mesFiltro">Filtrar por Mes (Edad)</label>
+          <select id="mesFiltro" class="filter-select">
+            <option value="">Todos los meses</option>
+            <option value="1">1 mes</option>
+            <option value="2">2 meses</option>
+            <option value="3">3 meses</option>
+            <option value="4">4 meses</option>
+            <option value="5">5 meses</option>
+            <option value="6">6 meses</option>
+            <option value="7">7 meses</option>
+            <option value="8">8 meses</option>
+            <option value="9">9 meses</option>
+            <option value="10">10 meses</option>
+            <option value="11">11 meses</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="telefonoFilter">Teléfono</label>
+          <input type="text" id="telefonoFilter" class="filter-input" placeholder="Buscar por teléfono...">
+        </div>
+        <div class="filter-group">
+          <label for="correoFilter">Correo</label>
+          <input type="text" id="correoFilter" class="filter-input" placeholder="Buscar por correo...">
+        </div>
+
+        <button id="btnAplicarFiltros" class="btn btn-primary">
+          <i class="fas fa-filter"></i> Aplicar
+        </button>
+        <button id="btnLimpiarFiltros" class="btn btn-primary" style="background:#6c757d;">
+          <i class="fas fa-times"></i> Limpiar
+        </button>
+      </div>
+
+      <!-- TABLA -->
+      <div class="table-container">
+        <table class="table" id="pacientesTable">
+          <thead>
+            <tr>
+              <th>Nombres</th>
+              <th>Apellidos</th>
+              <th>Documento</th>
+              <th>Edad</th>
+              <th>Meses</th>
+              <th>Género</th>
+              <th>Teléfono</th>
+              <th>Correo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody id="tablaBody">
+            <% if (pacientes && pacientes.length > 0) { %>
+              <% pacientes.forEach(p => { 
+                // Calcular edad y meses
+                let edadTexto = 'N/A';
+                let mesesTexto = '0 meses';
+                let edadNumerica = 0;
+                let mesesNumericos = 0;
+                
+                if (p.FECHA_NACIMIENTO) {
+                  const nacimiento = new Date(p.FECHA_NACIMIENTO);
+                  const hoy = new Date();
+                  let años = hoy.getFullYear() - nacimiento.getFullYear();
+                  let mes = hoy.getMonth() - nacimiento.getMonth();
+                  if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) años--;
+                  
+                  let mesesTotales = (hoy.getFullYear() - nacimiento.getFullYear()) * 12 + (hoy.getMonth() - nacimiento.getMonth());
+                  if (hoy.getDate() < nacimiento.getDate()) mesesTotales--;
+                  
+                  const anios = Math.max(0, años);
+                  const meses = Math.max(0, mesesTotales);
+                  
+                  edadNumerica = anios;
+                  mesesNumericos = meses;
+                  
+                  if (anios === 0) {
+                    edadTexto = `${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+                    mesesTexto = `${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+                  } else {
+                    edadTexto = `${anios} ${anios === 1 ? 'año' : 'años'}`;
+                    mesesTexto = `${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+                  }
+                }
+              %>
+                <tr class="fila-paciente" data-id="<%= p.ID_PACIENTE %>" data-edad="<%= edadNumerica %>" data-meses="<%= mesesNumericos %>">
+                  <td class="nombres"><%= p.NOMBRES || '' %></td>
+                  <td class="apellidos"><%= p.APELLIDOS || '' %></td>
+                  <td class="documento">
+                    <strong><%= p.TIPO_DOCUMENTO_IDENTIDAD || 'DNI' %>:</strong> <%= p.NUMERO_DOCUMENTO_IDENTIDAD || '' %>
+                  </td>
+                  <td class="edad"><%= edadTexto %></td>
+                  <td class="meses"><%= mesesTexto %></td>
+                  <td class="genero"><%= p.GENERO || 'N/A' %></td>
+                  <td class="telefono"><%= p.TELEFONO || 'N/A' %></td>
+                  <td class="correo"><%= p.CORREO_ELECTRONICO || 'N/A' %></td>
+                  <td class="estado-td">
+                    <span class="<%=
+                      p.ESTADO === 'ACTIVO' ? 'estado-activo' :
+                      p.ESTADO === 'INACTIVO' ? 'estado-inactivo' :
+                      'estado-bloqueado'
+                    %>">
+                      <%= p.ESTADO || 'ACTIVO' %>
+                    </span>
+                  </td>
+                  <td class="acciones-td">
+                    <button class="btn-accion btn-editar" data-id="<%= p.ID_PACIENTE %>"><i class="fas fa-edit"></i> Editar</button>
+                    <a class="btn-accion btn-descargar" href="/historial/<%= p.ID_PACIENTE %>/exportar-pdf" title="Descargar ficha médica"><i class="fas fa-file-download"></i> Ficha Médica</a>
+                    <button class="btn-accion btn-eliminar" data-id="<%= p.ID_PACIENTE %>"><i class="fas fa-trash"></i> Eliminar</button>
+                    <button class="btn-accion btn-citas" data-id="<%= p.ID_PACIENTE %>" data-nombre="<%= p.NOMBRES %> <%= p.APELLIDOS %>">
+                      <i class="fas fa-calendar-check"></i> Citas
+                    </button>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="10" class="no-results-message">
+                  <i class="fas fa-users fa-2x mb-2"></i><br>
+                  No se encontraron pacientes.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer counters -->
+      <div class="filters" style="justify-content: space-between; margin-top:10px;">
+        <div><strong>Total:</strong> <span id="totalPacientes"><%= pacientes ? pacientes.length : 0 %></span></div>
+        <div><strong>Mostrados:</strong> <span id="pacientesMostrados"><%= pacientes ? pacientes.length : 0 %></span></div>
+        <div><strong>Última actualización:</strong> <span id="ultimaActualizacion"></span></div>
+      </div>
+    </div>
+
+    <div class="footer">Clínicas Roca Maya © 2025</div>
+  </div>
+
+  <!-- ============================================================
+       MODAL: CITAS DEL PACIENTE
+       ============================================================ -->
+  <div class="modal-citas-overlay" id="modalCitasOverlay" style="display:none;">
+    <div class="modal-citas-box">
+      <div class="modal-citas-header">
+        <h5 id="modalCitasTitulo">
+          <i class="fas fa-calendar-check me-2"></i>Citas del Paciente
+        </h5>
+        <button class="modal-citas-close" id="modalCitasClose">&times;</button>
+      </div>
+      <div class="modal-citas-body" id="modalCitasCuerpo">
+        <div class="text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-2 text-muted">Cargando citas...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL PACIENTE
+       ============================================================ -->
+  <div id="modalPaciente" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div class="modal-content">
+      <h2 id="modalTitulo">Nuevo Paciente</h2>
+
+      <form id="formPaciente">
+        <input type="hidden" id="idPaciente">
+
+        <div class="form-columns">
+          <div>
+            <h3>Información Personal</h3>
+
+            <div class="form-group">
+              <label for="nombres">Nombres *</label>
+              <input id="nombres" type="text" maxlength="60" required class="form-input" autocomplete="given-name">
+            </div>
+
+            <div class="form-group">
+              <label for="apellidos">Apellidos *</label>
+              <input id="apellidos" type="text" maxlength="60" required class="form-input" autocomplete="family-name">
+            </div>
+
+            <div class="form-group">
+              <label for="fechaNacimiento">Fecha de Nacimiento</label>
+              <input id="fechaNacimiento" type="date" class="form-input" autocomplete="bday">
+              <small id="edadCalculada" class="edad-calculada"></small>
+            </div>
+
+            <div class="form-group">
+              <label>Edad del Paciente</label>
+              <div style="display: flex; gap: 10px;">
+                <select id="tipoEdad" class="form-select" style="max-width: 120px;">
+                  <option value="anios">Años</option>
+                  <option value="meses">Meses</option>
+                </select>
+                <input id="edad" type="number" min="0" step="1" class="form-input" placeholder="Cantidad">
+              </div>
+              <small id="edadHelpText">Para bebés, selecciona "Meses". La fecha de nacimiento se ajustará automáticamente.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="genero">Género</label>
+              <select id="genero" class="form-select" autocomplete="sex">
+                <option value="MASCULINO">Masculino</option>
+                <option value="FEMENINO">Femenino</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="estadoCivil">Estado Civil</label>
+              <select id="estadoCivil" class="form-select">
+                <option value="SOLTERO">Soltero</option>
+                <option value="CASADO">Casado</option>
+                <option value="DIVORCIADO">Divorciado</option>
+                <option value="VIUDO">Viudo</option>
+                <option value="UNION_LIBRE">Unión Libre</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="ocupacion">Ocupación</label>
+              <input id="ocupacion" type="text" maxlength="20" class="form-input" autocomplete="organization">
+            </div>
+          </div>
+
+          <div>
+            <h3>Información de Contacto</h3>
+
+            <div class="form-group">
+              <label for="direccion">Dirección</label>
+              <textarea id="direccion" class="form-input" rows="2" maxlength="255" placeholder="Dirección completa..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="telefono">Teléfono</label>
+              <input id="telefono" type="text" inputmode="numeric" class="form-input" autocomplete="tel">
+            </div>
+
+            <div class="form-group">
+              <label for="correo">Correo</label>
+              <input id="correo" type="email" maxlength="30" class="form-input" autocomplete="email">
+            </div>
+
+            <h3>Documentación</h3>
+
+            <div class="form-group">
+              <label for="tipoDocumento">Tipo *</label>
+              <select id="tipoDocumento" class="form-select" required>
+                <option value="DNI">DNI</option>
+                <option value="PASAPORTE">Pasaporte</option>
+                <option value="LICENCIA">Licencia</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="numeroDocumento">Número *</label>
+              <input id="numeroDocumento" type="text" inputmode="numeric" minlength="13" maxlength="13" required class="form-input" autocomplete="on">
+            </div>
+
+            <div class="form-group">
+              <label for="rtn">RTN</label>
+              <input id="rtn" type="text" inputmode="numeric" minlength="14" maxlength="14" class="form-input">
+            </div>
+
+            <h3>Emergencia</h3>
+
+            <div class="form-group">
+              <label for="nombreContactoEmergencia">Nombre</label>
+              <input id="nombreContactoEmergencia" type="text" class="form-input" autocomplete="name">
+            </div>
+
+            <div class="form-group">
+              <label for="telefonoContactoEmergencia">Teléfono</label>
+              <input id="telefonoContactoEmergencia" type="text" inputmode="numeric" class="form-input" autocomplete="tel">
+            </div>
+
+            <div class="form-group">
+              <label for="parentescoContactoEmergencia">Parentesco</label>
+              <select id="parentescoContactoEmergencia" class="form-input">
+                <option value="">Seleccione...</option>
+                <option value="PADRE">Padre</option>
+                <option value="MADRE">Madre</option>
+                <option value="ESPOSO/A">Esposo/a</option>
+                <option value="HIJO/A">Hijo/a</option>
+                <option value="HERMANO/A">Hermano/a</option>
+                <option value="ABUELO/A">Abuelo/a</option>
+                <option value="NIETO/A">Nieto/a</option>
+                <option value="TÍO/A">Tío/a</option>
+                <option value="PRIMO/A">Primo/a</option>
+                <option value="SOBRINO/A">Sobrino/a</option>
+                <option value="SUEGRO/A">Suegro/a</option>
+                <option value="CUÑADO/A">Cuñado/a</option>
+                <option value="AMIGO/A">Amigo/a</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+
+            <h3>Estado</h3>
+
+            <div class="form-group">
+              <label for="estado">Estado</label>
+              <select id="estado" class="form-select">
+                <option value="ACTIVO">Activo</option>
+                <option value="INACTIVO">Inactivo</option>
+                <option value="BLOQUEADO">Bloqueado</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historial Médico -->
+<div class="historial-section">
+  <h3>Historial Médico</h3>
+  <div class="form-columns">
+    <!-- Columna izquierda -->
+    <div>
+      <div class="form-group">
+        <label for="alergias">Alergias (separadas por coma)</label>
+        <textarea id="alergias" class="form-input" rows="2" placeholder="Ej: Penicilina, Mariscos, Polen"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="enfermedadesCronicas">Enfermedades Crónicas (separadas por coma)</label>
+        <textarea id="enfermedadesCronicas" class="form-input" rows="2" placeholder="Ej: Hipertensión, Diabetes, Asma"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="cirugiasPrevias">Cirugías Previas (separadas por coma)</label>
+        <textarea id="cirugiasPrevias" class="form-input" rows="2" placeholder="Ej: Apendicectomía (2010), Colecistectomía (2015)"></textarea>
+      </div>
+    </div>
+    <!-- Columna derecha -->
+    <div>
+      <div class="form-group">
+        <label for="medicamentosActuales">Medicamentos Actuales (separados por coma)</label>
+        <textarea id="medicamentosActuales" class="form-input" rows="2" placeholder="Ej: Losartan 100mg, Metformina 850mg"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="vacunas">Vacunas (separadas por coma)</label>
+        <textarea id="vacunas" class="form-input" rows="2" placeholder="Ej: Influenza 2023, COVID-19, Tétanos 2018"></textarea>
+      </div>
+      <!-- NUEVOS CAMPOS: Antecedentes Familiares y Hábitos -->
+      <div class="form-group">
+        <label for="antecedentesFamiliares">Antecedentes Familiares</label>
+        <textarea id="antecedentesFamiliares" class="form-input" rows="2" placeholder="Ej: Diabetes, Hipertensión, Cáncer"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="habitos">Hábitos</label>
+        <textarea id="habitos" class="form-input" rows="2" placeholder="Ej: Fumador, Consumo ocasional de alcohol, Sedentario"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+        <div class="modal-actions">
+          <button type="button" id="btnCancelar" class="btn btn-cancelar">Cancelar</button>
+          <button type="submit" id="btnGuardar" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading" class="loading" style="display:none;">
+    <div>
+      <i class="fas fa-spinner fa-spin"></i> <span id="loadingText">Procesando...</span>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/pacientes.js"></script>
+  <script src="/js/citas-paciente-visualizar.js"></script>
+
+  <script>
+    // Actualizar la fecha de última actualización
+    document.addEventListener('DOMContentLoaded', function() {
+      const fecha = document.getElementById('ultimaActualizacion');
+      if (fecha) {
+        fecha.textContent = new Date().toLocaleString();
+      }
+    });
+  </script>
+
+</body>
+</html>

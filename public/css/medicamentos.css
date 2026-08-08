@@ -1,0 +1,151 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --accent-color: #e74c3c;
+    --light-color: #ecf0f1;
+    --dark-color: #0f2134;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #abd0f6;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar-custom {
+    background-color: var(--primary-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    padding: 10px 0;
+}
+
+.logo-btn {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    height: 60px;
+    width: auto;
+}
+
+.logo-btn:hover {
+    transform: scale(1.05);
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: 600;
+}
+
+.badge-status {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.btn-primary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+.section-title {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.modal-header {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.alert-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 300px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+.search-box {
+    border-radius: 25px;
+    padding: 10px 20px;
+    border: 2px solid var(--secondary-color);
+}
+
+.stats-card {
+    text-align: center;
+    padding: 20px;
+    transition: transform 0.2s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.stats-label {
+    color: #666;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.clinic-title {
+    color: white;
+    font-weight: bold;
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.navbar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.btn-action {
+    margin: 0 2px;
+}
+
+.stock-bajo {
+    background-color: #fff3cd !important;
+}
+
+.vencimiento-proximo {
+    background-color: #f8d7da !important;
+}
+
+/* Estilos para la tabla filtrada */
+.filtro-activo {
+    display: table-row;
+}
+
+.filtro-oculto {
+    display: none;
+}

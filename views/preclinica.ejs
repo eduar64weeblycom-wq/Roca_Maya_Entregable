@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Preclínica - Clínicas Roca Maya</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- IMPORTAR FONT AWESOME PARA LOS ICONOS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <link rel="stylesheet" href="/css/preclinica.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+</head>
+<body>
+  <main class="ctcontainer ctmy-4">
+    <div class="ctcitas-header">
+      <div class="header-left">
+        <div class="logo-container">
+          <button id="logoBtn" class="logo-btn" type="button" onclick="window.location.href='/'">
+            <img src="/roca-maya-oct.jpg" class="logo" alt="logo">
+          </button>
+          <div class="clinic-name">Clínicas Roca Maya</div>
+        </div>
+        <div class="title-wrap">
+          <h1><i class="fas fa-stethoscope"></i> Preclínica</h1>
+          <p class="ctsmall">Registro, control y seguimiento de signos vitales</p>
+        </div>
+      </div>
+
+      <div class="actions-right">
+        <a href="/preclinica/excel" class="btn btn-excel">
+          <i class="fas fa-file-excel"></i> Descargar Excel
+        </a>
+        <button class="btn btn-primary" id="btnImprimirPreclinica" type="button">
+          <i class="fas fa-print"></i> Imprimir
+        </button>
+        <button id="btnNuevaPreclinica" class="ctbtn-primary" type="button">
+          <i class="fas fa-plus"></i> Nueva Preclínica
+        </button>
+      </div>
+    </div>
+
+    <div id="alertSuccessPre" class="ctalert ctalert-success" style="display:none;">
+      <i class="fas fa-check-circle"></i> <span id="successMessagePre"></span>
+    </div>
+    <div id="alertErrorPre" class="ctalert ctalert-error" style="display:none;">
+      <i class="fas fa-exclamation-circle"></i> <span id="errorMessagePre"></span>
+    </div>
+
+    <div class="ctfiltros-preclinica">
+      <div class="ctfiltro-item">
+        <label for="filtroPaciente">Buscar</label>
+        <input id="filtroPaciente" class="ctinput-field" placeholder="Paciente, doctor, teléfono o ID" />
+      </div>
+      <div class="ctfiltro-item">
+        <label for="filtroDoctor">Doctor</label>
+        <select id="filtroDoctor" class="ctinput-field">
+          <option value="">Todos los doctores</option>
+        </select>
+      </div>
+      <div class="ctfiltro-item">
+        <label for="filtroFecha">Fecha</label>
+        <input id="filtroFecha" type="date" class="ctinput-field" />
+      </div>
+      <div class="ctfiltro-item">
+        <label for="filtroEstadoCita">Estado</label>
+        <select id="filtroEstadoCita" class="ctinput-field">
+          <option value="">Todos</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="pre-list-summary" aria-live="polite">
+      <i class="fas fa-list"></i>
+      <strong id="totalRegistros">0</strong> registros visibles
+    </div>
+
+    <div class="cttabla-preclinica">
+      <div id="tablaContenidoPreclinica" class="ctmy-4">
+        <div class="ctsin-citas">
+          <i class="fas fa-stethoscope"></i>
+          <h3>No hay registros</h3>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Nueva / Editar Preclínica -->
+  <div id="modalPreclinica" class="ctmodal-preclinica" aria-hidden="true" style="display:none;">
+    <div class="pre-modal-shell" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="pre-modal-header">
+        <div>
+          <h2 id="modalTitle"><i class="fas fa-stethoscope"></i> Nueva Preclínica</h2>
+          <p id="modalSubtitle" class="pre-modal-subtitle">Complete los datos clínicos y revise su estado antes de guardar.</p>
+        </div>
+        <button id="btnCerrarModalPreclinica" class="pre-close-btn" title="Cerrar" type="button" aria-label="Cerrar modal">&times;</button>
+      </div>
+
+      <form id="formPreclinica" class="ctform" onsubmit="return false;">
+        <input type="hidden" id="idPreclinica" />
+
+        <div class="pre-modal-body">
+          <div id="modalError" class="ctalert ctalert-error" style="display:none; margin-bottom:14px;"></div>
+
+          <div class="pre-overview-grid">
+            <div class="pre-overview-card">
+              <div class="pre-field-head">
+                <label for="selectCita" class="pre-field-label"><i class="fas fa-calendar-check"></i> Cita y paciente</label>
+                <span id="selectCita-status" class="field-status status-empty">Pendiente</span>
+              </div>
+              <select id="selectCita" class="ctinput-field"></select>
+              <div id="selectCita-error" class="error-text" style="display:none;"></div>
+              <div id="pacienteInfo" class="ctsmall" style="margin-top:8px;"></div>
+            </div>
+
+            <div class="pre-overview-card pre-status-overview">
+              <span class="pre-field-label"><i class="fas fa-clipboard-check"></i> Estado del registro</span>
+              <span id="registroEstadoBadge" class="record-status status-empty">Incompleto</span>
+              <p id="registroEstadoTexto" class="pre-status-caption">Seleccione una cita e ingrese peso y talla.</p>
+            </div>
+          </div>
+
+          <div
+            id="alertaSignosVitales"
+            class="pre-vital-alert"
+            style="display:none;"
+            aria-live="polite"
+          >
+            <div class="pre-vital-alert-header">
+              <div class="pre-vital-alert-title">
+                <i id="alertaSignosVitalesIcono" class="fas fa-triangle-exclamation"></i>
+                <div>
+                  <strong id="alertaSignosVitalesTitulo">Signos vitales que requieren atención</strong>
+                  <span id="alertaSignosVitalesResumen">Revise los valores antes de continuar.</span>
+                </div>
+              </div>
+              <span id="alertaSignosVitalesNivel" class="pre-vital-level">Alerta</span>
+            </div>
+            <ul id="listaAlertasVitales"></ul>
+            <p class="pre-vital-alert-note">
+              Los rangos son referenciales para personas adultas y no sustituyen el criterio del personal médico.
+            </p>
+          </div>
+
+          <section class="pre-form-section">
+            <div class="pre-section-heading">
+              <h3 class="pre-section-title"><i class="fas fa-heartbeat"></i> Signos vitales</h3>
+              <span class="pre-section-note">Los indicadores se actualizan al escribir.</span>
+            </div>
+
+            <div class="pre-fields-grid">
+              <div class="pre-field-card">
+                <div class="pre-field-head">
+                  <label for="temperatura" class="pre-field-label">Temperatura (°C)</label>
+                  <span id="temperatura-status" class="field-status status-empty">Sin registrar</span>
+                </div>
+                <input id="temperatura" class="ctinput-field" type="number" step="0.1" />
+                <div id="temperatura-error" class="error-text" style="display:none;"></div>
+              </div>
+
+              <div class="pre-field-card">
+                <div class="pre-field-head">
+                  <label for="presionSistolica" class="pre-field-label">Presión sistólica</label>
+                  <span id="presionSistolica-status" class="field-status status-empty">Pendiente</span>
+                </div>
+                <input id="presionSistolica" class="ctinput-field" type="number" />
+                <div id="presionSistolica-error" class="error-text" style="display:none;"></div>
+              </div>
+
+              <div class="pre-field-card">
+                <div class="pre-field-head">
+                  <label for="presionDiastolica" class="pre-field-label">Presión diastólica</label>
+                  <span id="presionDiastolica-status" class="field-status status-empty">Pendiente</span>
+                </div>
+                <input id="presionDiastolica" class="ctinput-field" type="number" />
+                <div id="presionDiastolica-error" class="error-text" style="display:none;"></div>
+              </div>
+
+              <div class="pre-field-card">
+                <div class="pre-field-head">
+                  <label for="frecuenciaCardiaca" class="pre-field-label">Frecuencia cardíaca (FC)</label>
+                  <span id="frecuenciaCardiaca-status" class="field-status status-empty">Sin registrar</span>
+                </div>
+                <input id="frecuenciaCardiaca" class="ctinput-field" type="number" />
+                <div id="frecuenciaCardiaca-error" class="error-text" style="display:none;"></div>
+              </div>
+
+              <div class="pre-field-card">
+                <div class="pre-field-head">
+                  <label for="frecuenciaRespiratoria" class="pre-field-label">Frecuencia respiratoria (FR)</label>
+                  <span id="frecuenciaRespiratoria-status" class="field-status status-empty">Sin registrar</span>
+                </div>
+                <input id="frecuenciaRespiratoria" class="ctinput-field" type="number" />
+                <div id="frecuenciaRespiratoria-error" class="error-text" style="display:none;"></div>
+              </div>
+
+              <div class="pre-field-card">
+                <div class="pre-field-head">
+                  <label for="saturacionOxigeno" class="pre-field-label">Saturación O₂ (%)</label>
+                  <span id="saturacionOxigeno-status" class="field-status status-empty">Sin registrar</span>
+                </div>
+                <input id="saturacionOxigeno" class="ctinput-field" type="number" step="0.1" />
+                <div id="saturacionOxigeno-error" class="error-text" style="display:none;"></div>
+              </div>
+
+              <div class="pre-field-card">
+                <div class="pre-field-head">
+                  <label for="glucosa" class="pre-field-label">Glucosa (mg/dL)</label>
+                  <span id="glucosa-status" class="field-status status-empty">Sin registrar</span>
+                </div>
+                <input id="glucosa" class="ctinput-field" type="number" step="0.1" />
+                <div id="glucosa-error" class="error-text" style="display:none;"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="pre-form-section">
+            <div class="pre-section-heading">
+              <h3 class="pre-section-title"><i class="fas fa-weight"></i> Medidas antropométricas</h3>
+              <span class="pre-section-note">Peso y talla son obligatorios.</span>
+            </div>
+
+            <div class="pre-fields-grid">
+              <div class="pre-field-card">
+                <div class="pre-field-head">
+                  <label for="peso" class="pre-field-label">Peso (kg)</label>
+                  <span id="peso-status" class="field-status status-empty">Pendiente</span>
+                </div>
+                <input id="peso" class="ctinput-field" type="number" step="0.01" />
+                <div id="peso-error" class="error-text" style="display:none;"></div>
+              </div>
+
+              <div class="pre-field-card">
+                <div class="pre-field-head">
+                  <label for="talla" class="pre-field-label">Talla (metros)</label>
+                  <span id="talla-status" class="field-status status-empty">Pendiente</span>
+                </div>
+                <input id="talla" class="ctinput-field" type="number" step="0.01" />
+                <div id="talla-error" class="error-text" style="display:none;"></div>
+                <div class="help-small">Ejemplo: 1.80 m. Si escribe 180, se convierte automáticamente a 1.80 m.</div>
+                <div id="talla-info" class="info-text" style="display:none;"></div>
+              </div>
+
+              <div class="pre-field-card">
+                <div class="pre-field-head">
+                  <label for="imc" class="pre-field-label">IMC calculado</label>
+                  <span id="imc-status" class="field-status status-empty">Pendiente</span>
+                </div>
+                <input id="imc" class="ctinput-field" type="text" readonly />
+                <div class="pre-imc-result">
+                  <span>Resultado</span>
+                  <strong id="finIMC">-</strong>
+                </div>
+              </div>
+
+              <div class="pre-field-card">
+                <div class="pre-field-head">
+                  <label for="perimetroAbdominal" class="pre-field-label">Perímetro abdominal (cm)</label>
+                  <span id="perimetroAbdominal-status" class="field-status status-empty">Sin registrar</span>
+                </div>
+                <input id="perimetroAbdominal" class="ctinput-field" type="number" step="0.1" />
+                <div id="perimetroAbdominal-error" class="error-text" style="display:none;"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="pre-form-section">
+            <div class="pre-section-heading">
+              <h3 class="pre-section-title"><i class="fas fa-notes-medical"></i> Evaluación general</h3>
+              <span class="pre-section-note">Complete la valoración y observaciones.</span>
+            </div>
+
+            <div class="pre-fields-grid two-columns">
+              <div class="pre-field-card">
+                <div class="pre-field-head">
+                  <label for="estadoGeneral" class="pre-field-label">Estado general</label>
+                  <span id="estadoGeneral-status" class="field-status status-info">BUENO</span>
+                </div>
+                <select id="estadoGeneral" class="ctinput-field">
+                  <option value="BUENO">BUENO</option>
+                  <option value="REGULAR">REGULAR</option>
+                  <option value="MALO">MALO</option>
+                </select>
+              </div>
+
+              <div class="pre-field-card full">
+                <div class="pre-field-head">
+                  <label for="observaciones" class="pre-field-label">Observaciones</label>
+                  <span id="observaciones-status" class="field-status status-empty">Opcional</span>
+                </div>
+                <textarea id="observaciones" rows="4" class="ctinput-field" placeholder="Escriba hallazgos, comentarios o indicaciones relevantes."></textarea>
+                <div id="observaciones-error" class="error-text" style="display:none;"></div>
+              </div>
+            </div>
+          </section>
+
+          <div id="validationMessages" aria-live="polite"></div>
+        </div>
+
+        <div class="pre-modal-footer">
+          <div class="pre-footer-actions" style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+            
+            <!-- Botón de Eliminar (oculto por defecto, se muestra al editar) -->
+            <button
+  type="button"
+  id="btnEliminarPreclinica"
+  class="ctbtn-danger"
+  style="display: none; margin-right: auto;"
+  title="Eliminar Preclínica"
+>
+  <i class="fas fa-trash-can"></i>
+  Eliminar
+</button>
+            
+            <div style="display: flex; gap: 10px;">
+              <button type="button" id="btnCancelarPreclinica" class="ctbtn-secondary">Cancelar</button>
+              <button type="button" id="btnGuardarPreclinica" class="ctbtn-primary">
+                <i class="fas fa-save"></i> Guardar Preclínica
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación -->
+  <div id="confirmPreclinicaModal" class="ctmodal-preclinica" aria-hidden="true" style="display:none;">
+    <div class="pre-modal-shell" style="width:min(720px, 94vw);" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="pre-modal-header">
+        <div>
+          <h2 id="confirmTitle"><i class="fas fa-clipboard-check"></i> Confirmar Preclínica</h2>
+          <p class="pre-modal-subtitle">Revise los datos antes de realizar el registro.</p>
+        </div>
+        <button id="btnCloseConfirm" class="pre-close-btn" title="Cerrar" type="button" aria-label="Cerrar confirmación">&times;</button>
+      </div>
+
+      <div class="pre-modal-body" style="padding-bottom:20px;">
+        <p style="margin:0 0 12px; color:#475569;">Si necesita corregir algún dato, pulse <strong>Editar</strong>.</p>
+        <div id="confirmVitalAlerts" class="confirm-vital-alerts" style="display:none;"></div>
+        <div id="confirmSummary" style="max-height:55vh; overflow:auto; background:#fff; padding:14px; border-radius:12px; border:1px solid #e2e8f0;"></div>
+      </div>
+
+      <div class="pre-modal-footer">
+        <div class="pre-footer-message">La preclínica se guardará y la cita podrá pasar a Consulta Médica.</div>
+        <div class="pre-footer-actions">
+          <button type="button" id="btnEditPreclinica" class="ctbtn-secondary">Editar</button>
+          <button type="button" id="btnGuardarSinEnviar" class="ctbtn-secondary" style="display:none;">
+            <i class="fas fa-floppy-disk"></i> Guardar sin enviar
+          </button>
+          <button type="button" id="btnConfirmPreclinica" class="ctbtn-primary">
+            <i class="fas fa-paper-plane"></i> Guardar y enviar a consulta
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/preclinica.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<form action="/auth/login" method="POST" id="form-login">
+    <div class="form-group">
+        <input
+            type="text"
+            id="username"
+            name="username"
+            class="input-field"
+            placeholder="Ingresa tu nombre de usuario"
+            required
+            maxlength="25"
+            data-pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]+$" title="Solo letras y números."
+        >
+        <i class="fas fa-user input-icon"></i>
+        <span class="validation-error" id="error-username"></span>
+    </div>
+    
+    <div class="form-group">
+        <input
+            type="password"
+            id="password"
+            name="password"
+            class="input-field"
+            placeholder="Ingresa tu contraseña"
+            required
+            minlength="8"
+            maxlength="8"
+            oncopy="return false"
+            onpaste="return false"
+        >
+        <i class="fas fa-lock input-icon"></i>
+        <i class="fas fa-eye-slash toggle-password" id="toggle-password-icon"></i>
+    </div>
+    
+    <button type="submit" class="btn-primary">
+        Ingresa
+    </button>
+    
+</form>
+
+    <!-- Código QR en esquina inferior izquierda (oculto en móviles) -->
+    <div class="qr-fixed">
+        <img src="<%= data_url %>" alt="QR Code" />
+        <p>Secreto: <%= secret %></p>
+    </div>
+
+    <!-- Logo en esquina inferior derecha -->
+    <img src="/roca-maya-oct.png" class="logo-fixed" alt="Logo">
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>Verificación <span class="clinic-name">2FA</span></h1>
+        </div>
+        <div class="auth-forms">
+            <div class="auth-form active">
+                <!-- En móviles, mostramos el QR aquí -->
+                <div class="qr-mobile">
+                    <img src="<%= data_url %>" alt="QR Code" />
+                    <p>Secreto: <%= secret %></p>
+                </div>
+                <p>Escanea el código QR con Google Authenticator (usando la app en tu móvil).</p>
+                <form method="POST" action="/2fa/verify">
+                    <input type="hidden" name="userId" value="<%= userId %>" />
+                    <div class="mb-3">
+                        <input class="form-control" name="token" placeholder="Código 6 dígitos" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Verificar</button>
+                    <% if (error) { %><p style="color:red; margin-top:10px;"><%= error %></p><% } %>
+                </form>
+                <p class="text-center mt-3"><a href="/auth/login" class="text-link">Volver</a></p>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('form-login');
+        const usernameInput = document.getElementById('username');
+        function displayError(elementId, message) {
+            const errorElement = document.getElementById(`error-${elementId}`);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = message ? 'block' : 'none';
+                document.getElementById(elementId).classList.toggle('error-border', !!message);
+            }
+        }
+
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                let isValid = true;
+                const usernameValue = usernameInput.value;
+                const usernamePattern = new RegExp(usernameInput.getAttribute('data-pattern'));
+                
+                if (!usernamePattern.test(usernameValue)) {
+                    displayError('username', 'El usuario solo debe contener letras y números.');
+                    isValid = false;
+                } else {
+                    displayError('username', '');
+                }
+
+                const trimmedUsername = usernameValue.trim();
+                if (usernameValue !== trimmedUsername) {
+                }
+
+                if (!isValid) {
+                    e.preventDefault(); 
+                }
+            });
+            
+            usernameInput.addEventListener('input', () => {
+                const usernamePattern = new RegExp(usernameInput.getAttribute('data-pattern'));
+                if (usernamePattern.test(usernameInput.value)) {
+                    displayError('username', '');
+                }
+            });
+        }
+    });
+</script>

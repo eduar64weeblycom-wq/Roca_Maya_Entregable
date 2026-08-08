@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario de Medicamentos - Clínicas Roca Maya</title>
+    <link rel="icon" href="/ICONO.jpg" type="image/jpeg">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #ff6b8b;
+            --accent-color: #4ecdc4;
+            --light-bg: #f8fafc;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e3c72 100%);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-btn img {
+            height: 50px;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-btn:hover img {
+            transform: scale(1.05);
+        }
+
+        .contenedor-principal {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            margin: 30px auto;
+            padding: 30px;
+            max-width: 1600px;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3a7bd5 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        .btn-primary-custom:hover { transform: translateY(-2px); box-shadow: var(--hover-shadow); color: white; }
+
+        .btn-warning-custom {
+            background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #212529;
+        }
+        .btn-warning-custom:hover { transform: translateY(-2px); box-shadow: var(--hover-shadow); }
+
+        .btn-danger-custom {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        .btn-danger-custom:hover { transform: translateY(-2px); box-shadow: var(--hover-shadow); color: white; }
+
+        .btn-success-custom {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        .btn-success-custom:hover { transform: translateY(-2px); box-shadow: var(--hover-shadow); color: white; }
+
+        .btn-info-custom {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        .btn-info-custom:hover { transform: translateY(-2px); box-shadow: var(--hover-shadow); color: white; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            border-top: 4px solid var(--primary-color);
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: var(--hover-shadow); }
+        .stat-card.warning { border-top-color: #f39c12; }
+        .stat-card.danger { border-top-color: #e74c3c; }
+        .stat-card.success { border-top-color: #27ae60; }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3a7bd5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-card.warning .stat-number {
+            background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-card.danger .stat-number {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-card.success .stat-number {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: #6c757d;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .table-container {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            background: white;
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e3c72 100%);
+            color: white;
+            font-weight: 600;
+            border: none;
+            padding: 18px 15px;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table tbody td {
+            padding: 18px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(44, 90, 160, 0.05);
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+
+        .badge-custom {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .filtro-card {
+            background: var(--light-bg);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .search-box {
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .search-box:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+        }
+
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e3c72 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+        }
+        .modal-header.bg-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%) !important;
+            color: #212529 !important;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+        }
+
+        .stock-bajo { 
+            background-color: #fff9e6 !important; 
+            border-left: 4px solid #f39c12;
+        }
+        .vencimiento-proximo { 
+            background-color: #ffe6e6 !important; 
+            border-left: 4px solid #e74c3c;
+        }
+
+        .btn-action {
+            margin: 0 3px;
+            border-radius: 8px;
+            padding: 8px 12px;
+            transition: all 0.2s ease;
+        }
+        .btn-action:hover { transform: scale(1.1); }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+
+        .is-invalid {
+            border-color: #e74c3c !important;
+        }
+        .invalid-feedback {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .contenedor-principal { margin: 15px; padding: 20px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-number { font-size: 1.8rem; }
+        }
+
+        /* Loading overlay */
+        #loadingOverlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.7);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOADING -->
+    <div id="loadingOverlay">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-custom navbar-expand-lg">
+        <div class="container-fluid">
+            <a href="/dashboard" class="logo-btn border-0 bg-transparent text-decoration-none">
+                <img src="/roca-maya-oct.jpg" alt="Clínicas Roca Maya" 
+                     onerror="this.onerror=null; this.src='/img/roca-maya-oct.jpg';">
+            </a>
+            <div class="navbar-brand text-white mx-auto">
+                <h4 class="mb-0"><i class="fas fa-pills me-2"></i>Inventario de Medicamentos</h4>
+                <small class="opacity-75">Gestión Integral de Farmacia</small>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="contenedor-principal animate__animated animate__fadeIn">
+        
+        <!-- BOTONES SUPERIORES -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <h5 class="mb-0 text-primary"><i class="fas fa-warehouse me-2"></i>Control de Inventario</h5>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-success-custom" id="btnNuevoMedicamento">
+                    <i class="fas fa-plus me-2"></i>Nuevo Medicamento
+                </button>
+                <button class="btn btn-info-custom" id="btnExportarExcel">
+                    <i class="fas fa-file-excel me-2"></i>Exportar Excel
+                </button>
+                <button id="btnImprimir" class="btn btn-primary-custom">
+                    <i class="fas fa-print me-2"></i>Imprimir
+                </button>
+            </div>
+        </div>
+
+        <!-- ESTADÍSTICAS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalMedicamentos"><%= estadisticas.totalMedicamentos || 0 %></div>
+                <div class="stat-label">Total Medicamentos</div>
+                <small class="text-muted">Registrados en sistema</small>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-number" id="stockBajo"><%= estadisticas.stockBajo || 0 %></div>
+                <div class="stat-label">Stock Bajo</div>
+                <small class="text-muted">Por debajo del mínimo</small>
+            </div>
+            <div class="stat-card danger">
+                <div class="stat-number" id="proximoVencer"><%= estadisticas.proximoVencer || 0 %></div>
+                <div class="stat-label">Próximo a Vencer</div>
+                <small class="text-muted">30 días o menos</small>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-number" id="activos"><%= estadisticas.activos || 0 %></div>
+                <div class="stat-label">Activos</div>
+                <small class="text-muted">Disponibles para uso</small>
+            </div>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="filtro-card">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label"><i class="fas fa-search me-2 text-primary"></i>Búsqueda</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-primary text-white"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control search-box" id="searchInput" 
+                               placeholder="Nombre, genérico, laboratorio o lote...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label"><i class="fas fa-filter me-2 text-primary"></i>Estado</label>
+                    <select class="form-select" id="filterEstado">
+                        <option value="">Todos los estados</option>
+                        <option value="ACTIVO">Activo</option>
+                        <option value="INACTIVO">Inactivo</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label"><i class="fas fa-boxes me-2 text-primary"></i>Stock</label>
+                    <select class="form-select" id="filterStock">
+                        <option value="">Todo el stock</option>
+                        <option value="BAJO">Stock Bajo</option>
+                        <option value="OPTIMO">Stock Óptimo</option>
+                        <option value="SIN_STOCK">Sin Stock</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-outline-secondary w-100" id="btnLimpiarFiltros" title="Limpiar filtros">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLA -->
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="table table-hover" id="tablaMedicamentos">
+                    <thead>
+                        <tr>
+                            <th>Nombre Comercial</th>
+                            <th>Genérico</th>
+                            <th>Laboratorio</th>
+                            <th>Lote</th>
+                            <th>Presentación</th>
+                            <th width="100">Stock</th>
+                            <th width="110">Precio</th>
+                            <th width="130">Vencimiento</th>
+                            <th width="100">Estado</th>
+                            <th width="160">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyMedicamentos">
+                        <% if (medicamentos && medicamentos.length > 0) { %>
+                            <% medicamentos.forEach(med => { %>
+                                <%
+                                    const hoy = new Date();
+                                    const vencimiento = med.FECHA_VENCIMIENTO ? new Date(med.FECHA_VENCIMIENTO) : null;
+                                    let diffDays = null;
+                                    let claseFila = '';
+                                    let infoVencimiento = '';
+
+                                    if (vencimiento) {
+                                        const diffTime = vencimiento - hoy;
+                                        diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                        if (diffDays < 0) {
+                                            claseFila = 'vencimiento-proximo';
+                                            infoVencimiento = `<br><small class="text-danger"><i class="fas fa-times-circle me-1"></i>Vencido</small>`;
+                                        } else if (diffDays <= 30) {
+                                            claseFila = 'vencimiento-proximo';
+                                            infoVencimiento = `<br><small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>${diffDays} días</small>`;
+                                        }
+                                    }
+
+                                    if (med.STOCK_ACTUAL <= med.STOCK_MINIMO && med.ESTADO === 'ACTIVO') {
+                                        claseFila = claseFila ? claseFila + ' stock-bajo' : 'stock-bajo';
+                                    }
+
+                                    const precioVenta = med.PRECIO_VENTA ? parseFloat(med.PRECIO_VENTA).toFixed(2) : '0.00';
+                                %>
+                                <tr class="<%= claseFila %> fila-medicamento" 
+                                    data-id="<%= med.ID_MEDICAMENTO %>"
+                                    data-nombre="<%= med.NOMBRE_MEDICAMENTO %>"
+                                    data-generico="<%= med.NOMBRE_GENERICO || '' %>"
+                                    data-proveedor="<%= med.PROVEEDOR || '' %>"
+                                    data-lote="<%= med.LOTE || '' %>"
+                                    data-estado="<%= med.ESTADO %>"
+                                    data-stock="<%= med.STOCK_ACTUAL %>"
+                                    data-stock-minimo="<%= med.STOCK_MINIMO %>">
+                                    <td>
+                                        <strong class="text-primary"><%= med.NOMBRE_MEDICAMENTO %></strong>
+                                    </td>
+                                    <td><%= med.NOMBRE_GENERICO || '-' %></td>
+                                    <td><span class="badge bg-light text-dark border"><%= med.PROVEEDOR || '-' %></span></td>
+                                    <td><%= med.LOTE || '-' %></td>
+                                    <td><span class="badge bg-info text-dark"><%= med.PRESENTACION || '-' %></span></td>
+                                    <td>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <span class="badge <%= med.STOCK_ACTUAL <= med.STOCK_MINIMO ? 'bg-warning text-dark' : 'bg-success' %> badge-custom">
+                                                <%= med.STOCK_ACTUAL %>
+                                            </span>
+                                            <% if (med.STOCK_MINIMO) { %>
+                                                <small class="text-muted ms-2">/ <%= med.STOCK_MINIMO %></small>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">L. <%= precioVenta %></strong>
+                                    </td>
+                                    <td>
+                                        <div class="<%= diffDays !== null && diffDays <= 30 ? 'text-danger fw-bold' : '' %>">
+                                            <%= med.FECHA_VENCIMIENTO ? new Date(med.FECHA_VENCIMIENTO).toLocaleDateString('es-ES') : '-' %>
+                                        </div>
+                                        <%- infoVencimiento %>
+                                    </td>
+                                    <td>
+                                        <span class="badge <%= med.ESTADO === 'ACTIVO' ? 'bg-success' : 'bg-secondary' %> badge-custom">
+                                            <i class="fas <%= med.ESTADO === 'ACTIVO' ? 'fa-check-circle' : 'fa-ban' %> me-1"></i>
+                                            <%= med.ESTADO %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-primary-custom btn-action btn-editar" 
+                                                    data-id="<%= med.ID_MEDICAMENTO %>" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-warning-custom btn-action btn-ajustar-stock" 
+                                                    data-id="<%= med.ID_MEDICAMENTO %>" 
+                                                    data-nombre="<%= med.NOMBRE_MEDICAMENTO %>" 
+                                                    data-stock="<%= med.STOCK_ACTUAL %>" title="Ajustar Stock">
+                                                <i class="fas fa-boxes"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger-custom btn-action btn-eliminar" 
+                                                    data-id="<%= med.ID_MEDICAMENTO %>" 
+                                                    data-nombre="<%= med.NOMBRE_MEDICAMENTO %>" title="Eliminar">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr id="filaVacia">
+                                <td colspan="10" class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <h5>No se encontraron medicamentos</h5>
+                                    <p class="text-muted">Haz clic en "Nuevo Medicamento" para agregar uno</p>
+                                </td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL MEDICAMENTO (COMPLETO) ==================== -->
+    <div class="modal fade" id="modalMedicamento" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="fas fa-pills me-2"></i>Nuevo Medicamento
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formMedicamento" novalidate>
+                        <input type="hidden" id="idMedicamento">
+
+                        <div class="row">
+                            <!-- Columna izquierda -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-capsule me-2 text-primary"></i>Nombre Comercial *</label>
+                                    <input type="text" class="form-control" id="nombreMedicamento" required>
+                                    <div class="invalid-feedback">El nombre comercial es obligatorio</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-flask me-2 text-info"></i>Nombre Genérico</label>
+                                    <input type="text" class="form-control" id="nombreGenerico">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-industry me-2 text-secondary"></i>Laboratorio / Proveedor</label>
+                                    <input type="text" class="form-control" id="proveedor">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-barcode me-2 text-dark"></i>Lote *</label>
+                                    <input type="text" class="form-control" id="lote" required>
+                                    <div class="invalid-feedback">El lote es obligatorio</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-prescription-bottle me-2 text-warning"></i>Presentación</label>
+                                    <input type="text" class="form-control" id="presentacion" placeholder="Ej: Tabletas, Jarabe, Ampolla...">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-tint me-2 text-info"></i>Concentración</label>
+                                    <input type="text" class="form-control" id="concentracion" placeholder="Ej: 500 mg, 250 mg/5 ml">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-syringe me-2 text-danger"></i>Vía de Administración</label>
+                                    <select class="form-select" id="viaAdministracion">
+                                        <option value="">Seleccione...</option>
+                                        <option value="Oral">Oral</option>
+                                        <option value="Intravenosa">Intravenosa</option>
+                                        <option value="Intramuscular">Intramuscular</option>
+                                        <option value="Subcutánea">Subcutánea</option>
+                                        <option value="Tópica">Tópica</option>
+                                        <option value="Inhalatoria">Inhalatoria</option>
+                                        <option value="Rectal">Rectal</option>
+                                        <option value="Oftálmica">Oftálmica</option>
+                                        <option value="Ótica">Ótica</option>
+                                        <option value="Otra">Otra</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Columna derecha -->
+                            <div class="col-md-6">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label"><i class="fas fa-box me-2 text-success"></i>Stock Actual</label>
+                                            <input type="number" class="form-control" id="stockActual" value="0" min="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label"><i class="fas fa-bell me-2 text-danger"></i>Stock Mínimo</label>
+                                            <input type="number" class="form-control" id="stockMinimo" value="10" min="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label"><i class="fas fa-warehouse me-2 text-primary"></i>Stock Máximo</label>
+                                            <input type="number" class="form-control" id="stockMaximo" value="100" min="0">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label"><i class="fas fa-shopping-cart me-2 text-secondary"></i>Precio Compra</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">L.</span>
+                                                <input type="number" step="0.01" class="form-control" id="precioCompra" min="0" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label"><i class="fas fa-tag me-2 text-success"></i>Precio Venta *</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-success text-white">L.</span>
+                                                <input type="number" step="0.01" class="form-control" id="precioVenta" min="0" required>
+                                            </div>
+                                            <div class="invalid-feedback">El precio de venta es obligatorio</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-calendar-alt me-2 text-danger"></i>Fecha de Vencimiento *</label>
+                                    <input type="date" class="form-control" id="fechaVencimiento" required>
+                                    <div class="invalid-feedback" id="fechaFeedback">La fecha de vencimiento es obligatoria y no puede ser pasada</div>
+                                    <small class="text-muted" id="fechaAyuda"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-align-left me-2 text-secondary"></i>Descripción</label>
+                                    <textarea class="form-control" id="descripcion" rows="2" placeholder="Observaciones adicionales..."></textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label"><i class="fas fa-toggle-on me-2 text-primary"></i>Estado</label>
+                                            <select class="form-select" id="estado">
+                                                <option value="ACTIVO">Activo</option>
+                                                <option value="INACTIVO">Inactivo</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3 mt-4">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="requiereReceta" checked>
+                                                <label class="form-check-label" for="requiereReceta">
+                                                    <i class="fas fa-file-prescription me-1"></i>Requiere Receta
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success-custom" id="btnGuardarMedicamento">
+                        <i class="fas fa-save me-2"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL AJUSTAR STOCK ==================== -->
+    <div class="modal fade" id="modalStock" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title"><i class="fas fa-boxes me-2"></i>Ajustar Stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="idMedicamentoStock">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Medicamento</label>
+                        <input type="text" class="form-control form-control-lg" id="nombreMedicamentoStock" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Stock Actual</label>
+                        <input type="text" class="form-control" id="stockActualMostrar" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Acción *</label>
+                        <select class="form-select" id="accionStock" required>
+                            <option value="agregar">Agregar stock (+)</option>
+                            <option value="quitar">Quitar stock (-)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cantidad *</label>
+                        <input type="number" class="form-control" id="cantidadStock" min="1" value="1" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning-custom" id="btnConfirmarStock">
+                        <i class="fas fa-check me-2"></i>Aplicar Ajuste
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+   // ==================== EXPORTAR EXCEL (estándar backend) ====================
+document.getElementById('btnExportarExcel').addEventListener('click', function () {
+    // Descarga directa usando el servicio estándar
+    window.location.href = '/inventario/medicamentos/exportar-excel';
+});
+        // ==================== MODALES ====================
+        const modalMedicamento = new bootstrap.Modal(document.getElementById('modalMedicamento'));
+        const modalStock = new bootstrap.Modal(document.getElementById('modalStock'));
+
+        // ==================== HELPERS ====================
+        function mostrarLoading(mostrar) {
+            document.getElementById('loadingOverlay').style.display = mostrar ? 'flex' : 'none';
+        }
+
+        function mostrarAlerta(mensaje, tipo = 'success') {
+            Swal.fire({
+                icon: tipo === 'error' ? 'error' : 'success',
+                title: tipo === 'error' ? 'Error' : 'Éxito',
+                text: mensaje,
+                timer: tipo === 'success' ? 2500 : undefined,
+                showConfirmButton: tipo === 'error'
+            });
+        }
+
+        function hoyISO() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // ==================== VALIDACIÓN FECHA VENCIMIENTO ====================
+        const inputFecha = document.getElementById('fechaVencimiento');
+        const fechaAyuda = document.getElementById('fechaAyuda');
+
+        inputFecha.addEventListener('change', function () {
+            const valor = this.value;
+            this.classList.remove('is-invalid');
+            fechaAyuda.textContent = '';
+
+            if (!valor) return;
+
+            const fecha = new Date(valor + 'T00:00:00');
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+
+            if (fecha < hoy) {
+                this.classList.add('is-invalid');
+                fechaAyuda.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> No se permite fecha de vencimiento pasada</span>';
+                return;
+            }
+
+            const diffDays = Math.ceil((fecha - hoy) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 30) {
+                fechaAyuda.innerHTML = `<span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Atención: vence en ${diffDays} día(s)</span>`;
+            } else {
+                fechaAyuda.innerHTML = `<span class="text-success"><i class="fas fa-check-circle"></i> Válida (${diffDays} días restantes)</span>`;
+            }
+        });
+
+        // Establecer mínimo de fecha (hoy)
+        inputFecha.min = hoyISO();
+
+        // ==================== NUEVO MEDICAMENTO ====================
+        document.getElementById('btnNuevoMedicamento').addEventListener('click', function () {
+            document.getElementById('formMedicamento').reset();
+            document.getElementById('idMedicamento').value = '';
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-pills me-2"></i>Nuevo Medicamento';
+            document.getElementById('requiereReceta').checked = true;
+            document.getElementById('estado').value = 'ACTIVO';
+            document.getElementById('stockActual').value = 0;
+            document.getElementById('stockMinimo').value = 10;
+            document.getElementById('stockMaximo').value = 100;
+            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            fechaAyuda.textContent = '';
+            modalMedicamento.show();
+        });
+
+        // ==================== EDITAR ====================
+        document.querySelectorAll('.btn-editar').forEach(btn => {
+            btn.addEventListener('click', async function () {
+                const id = this.dataset.id;
+                mostrarLoading(true);
+
+                try {
+                    const res = await fetch(`/inventario/medicamentos/${id}`);
+                    const data = await res.json();
+
+                    if (!data.success) {
+                        mostrarAlerta(data.message || 'No se pudo cargar el medicamento', 'error');
+                        return;
+                    }
+
+                    const med = data.data;
+                    document.getElementById('idMedicamento').value = med.ID_MEDICAMENTO;
+                    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Editar Medicamento';
+
+                    document.getElementById('nombreMedicamento').value = med.NOMBRE_MEDICAMENTO || '';
+                    document.getElementById('nombreGenerico').value = med.NOMBRE_GENERICO || '';
+                    document.getElementById('proveedor').value = med.PROVEEDOR || '';
+                    document.getElementById('lote').value = med.LOTE || '';
+                    document.getElementById('presentacion').value = med.PRESENTACION || '';
+                    document.getElementById('concentracion').value = med.CONCENTRACION || '';
+                    document.getElementById('viaAdministracion').value = med.VIA_ADMINISTRACION || '';
+                    document.getElementById('stockActual').value = med.STOCK_ACTUAL ?? 0;
+                    document.getElementById('stockMinimo').value = med.STOCK_MINIMO ?? 10;
+                    document.getElementById('stockMaximo').value = med.STOCK_MAXIMO ?? 100;
+                    document.getElementById('precioCompra').value = med.PRECIO_COMPRA ?? 0;
+                    document.getElementById('precioVenta').value = med.PRECIO_VENTA ?? 0;
+                    document.getElementById('fechaVencimiento').value = med.FECHA_VENCIMIENTO || '';
+                    document.getElementById('descripcion').value = med.DESCRIPCION || '';
+                    document.getElementById('estado').value = med.ESTADO || 'ACTIVO';
+                    document.getElementById('requiereReceta').checked = !!med.REQUIERE_RECETA;
+
+                    // Disparar validación de fecha
+                    inputFecha.dispatchEvent(new Event('change'));
+
+                    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                    modalMedicamento.show();
+                } catch (err) {
+                    console.error(err);
+                    mostrarAlerta('Error de conexión al cargar el medicamento', 'error');
+                } finally {
+                    mostrarLoading(false);
+                }
+            });
+        });
+
+        // ==================== GUARDAR (CREAR / ACTUALIZAR) ====================
+        document.getElementById('btnGuardarMedicamento').addEventListener('click', async function () {
+            const form = document.getElementById('formMedicamento');
+            let valido = true;
+
+            // Validaciones básicas
+            const camposRequeridos = [
+                { id: 'nombreMedicamento', msg: 'Nombre comercial' },
+                { id: 'lote', msg: 'Lote' },
+                { id: 'precioVenta', msg: 'Precio de venta' },
+                { id: 'fechaVencimiento', msg: 'Fecha de vencimiento' }
+            ];
+
+            camposRequeridos.forEach(c => {
+                const el = document.getElementById(c.id);
+                if (!el.value || (c.id === 'precioVenta' && parseFloat(el.value) < 0)) {
+                    el.classList.add('is-invalid');
+                    valido = false;
+                } else {
+                    el.classList.remove('is-invalid');
+                }
+            });
+
+            // Validación específica de fecha
+            const fechaVal = inputFecha.value;
+            if (fechaVal) {
+                const fecha = new Date(fechaVal + 'T00:00:00');
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                if (fecha < hoy) {
+                    inputFecha.classList.add('is-invalid');
+                    valido = false;
+                }
+            }
+
+            if (!valido) {
+                mostrarAlerta('Por favor complete los campos obligatorios y corrija los errores', 'error');
+                return;
+            }
+
+            const id = document.getElementById('idMedicamento').value;
+            const payload = {
+                NOMBRE_MEDICAMENTO: document.getElementById('nombreMedicamento').value.trim(),
+                NOMBRE_GENERICO: document.getElementById('nombreGenerico').value.trim() || null,
+                DESCRIPCION: document.getElementById('descripcion').value.trim() || null,
+                PRESENTACION: document.getElementById('presentacion').value.trim() || null,
+                CONCENTRACION: document.getElementById('concentracion').value.trim() || null,
+                VIA_ADMINISTRACION: document.getElementById('viaAdministracion').value || null,
+                STOCK_ACTUAL: parseInt(document.getElementById('stockActual').value) || 0,
+                STOCK_MINIMO: parseInt(document.getElementById('stockMinimo').value) || 10,
+                STOCK_MAXIMO: parseInt(document.getElementById('stockMaximo').value) || 100,
+                PRECIO_COMPRA: parseFloat(document.getElementById('precioCompra').value) || 0,
+                PRECIO_VENTA: parseFloat(document.getElementById('precioVenta').value) || 0,
+                LOTE: document.getElementById('lote').value.trim(),
+                FECHA_VENCIMIENTO: document.getElementById('fechaVencimiento').value || null,
+                PROVEEDOR: document.getElementById('proveedor').value.trim() || null,
+                REQUIERE_RECETA: document.getElementById('requiereReceta').checked,
+                ESTADO: document.getElementById('estado').value
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/inventario/medicamentos/${id}` : '/inventario/medicamentos';
+
+            mostrarLoading(true);
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    modalMedicamento.hide();
+                    mostrarAlerta(data.message || 'Medicamento guardado correctamente');
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    mostrarAlerta(data.message || 'Error al guardar', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                mostrarAlerta('Error de conexión al guardar', 'error');
+            } finally {
+                mostrarLoading(false);
+            }
+        });
+
+        // ==================== ELIMINAR ====================
+        document.querySelectorAll('.btn-eliminar').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const id = this.dataset.id;
+                const nombre = this.dataset.nombre;
+
+                Swal.fire({
+                    title: '¿Eliminar medicamento?',
+                    html: `Se inactivará: <strong>${nombre}</strong>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e74c3c',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then(async (result) => {
+                    if (!result.isConfirmed) return;
+
+                    mostrarLoading(true);
+                    try {
+                        const res = await fetch(`/inventario/medicamentos/${id}`, { method: 'DELETE' });
+                        const data = await res.json();
+
+                        if (data.success) {
+                            mostrarAlerta(data.message || 'Medicamento eliminado');
+                            setTimeout(() => location.reload(), 1200);
+                        } else {
+                            mostrarAlerta(data.message || 'Error al eliminar', 'error');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        mostrarAlerta('Error de conexión', 'error');
+                    } finally {
+                        mostrarLoading(false);
+                    }
+                });
+            });
+        });
+
+        // ==================== AJUSTAR STOCK ====================
+        document.querySelectorAll('.btn-ajustar-stock').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.getElementById('idMedicamentoStock').value = this.dataset.id;
+                document.getElementById('nombreMedicamentoStock').value = this.dataset.nombre;
+                document.getElementById('stockActualMostrar').value = this.dataset.stock;
+                document.getElementById('accionStock').value = 'agregar';
+                document.getElementById('cantidadStock').value = 1;
+                modalStock.show();
+            });
+        });
+
+        document.getElementById('btnConfirmarStock').addEventListener('click', async function () {
+            const id = document.getElementById('idMedicamentoStock').value;
+            const accion = document.getElementById('accionStock').value;
+            const cantidad = parseInt(document.getElementById('cantidadStock').value);
+
+            if (!cantidad || cantidad <= 0) {
+                mostrarAlerta('Ingrese una cantidad válida mayor a 0', 'error');
+                return;
+            }
+
+            mostrarLoading(true);
+            try {
+                const res = await fetch(`/inventario/medicamentos/${id}/stock`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accion, cantidad })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    modalStock.hide();
+                    mostrarAlerta(`Stock actualizado. Nuevo stock: ${data.data.nuevoStock}`);
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    mostrarAlerta(data.message || 'Error al ajustar stock', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                mostrarAlerta('Error de conexión', 'error');
+            } finally {
+                mostrarLoading(false);
+            }
+        });
+
+        // ==================== FILTROS ====================
+        function filtrarTabla() {
+            const texto = document.getElementById('searchInput').value.toLowerCase();
+            const estadoVal = document.getElementById('filterEstado').value;
+            const stockVal = document.getElementById('filterStock').value;
+            const filas = document.querySelectorAll('#tbodyMedicamentos tr.fila-medicamento');
+
+            filas.forEach(fila => {
+                const nombre = (fila.dataset.nombre || '').toLowerCase();
+                const generico = (fila.dataset.generico || '').toLowerCase();
+                const proveedor = (fila.dataset.proveedor || '').toLowerCase();
+                const lote = (fila.dataset.lote || '').toLowerCase();
+                const estado = fila.dataset.estado || '';
+                const stock = parseInt(fila.dataset.stock) || 0;
+                const stockMin = parseInt(fila.dataset.stockMinimo) || 0;
+
+                const coincideTexto = !texto || 
+                    nombre.includes(texto) || 
+                    generico.includes(texto) || 
+                    proveedor.includes(texto) || 
+                    lote.includes(texto);
+
+                const coincideEstado = !estadoVal || estado === estadoVal;
+
+                let coincideStock = true;
+                if (stockVal === 'BAJO') coincideStock = stock <= stockMin;
+                else if (stockVal === 'OPTIMO') coincideStock = stock > stockMin;
+                else if (stockVal === 'SIN_STOCK') coincideStock = stock === 0;
+
+                fila.style.display = (coincideTexto && coincideEstado && coincideStock) ? '' : 'none';
+            });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', filtrarTabla);
+        document.getElementById('filterEstado').addEventListener('change', filtrarTabla);
+        document.getElementById('filterStock').addEventListener('change', filtrarTabla);
+
+        document.getElementById('btnLimpiarFiltros').addEventListener('click', function () {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterEstado').value = '';
+            document.getElementById('filterStock').value = '';
+            filtrarTabla();
+        });
+
+           // ==================== IMPRIMIR ====================
+        document.getElementById('btnImprimir').addEventListener('click', function () {
+            window.print();
+        });
+    </script>
+</body>
+</html>

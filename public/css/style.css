@@ -1,0 +1,139 @@
+:root {
+  --color-bg: #eaf6ff;
+  --color-primary: #8ecae6;
+  --color-secondary: #219ebc;
+  --color-white: #ffffff;
+  --radius-xl: 18px;
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.qr-mobile {
+    display: none;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .qr-mobile {
+        display: block;
+    }
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background: var(--color-bg);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 20px;
+  position: relative;
+}
+
+/* Logo fijo en esquina */
+.logo-fixed {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 140px;
+  height: 140px;
+  border-radius: 20px;
+  border: 3px solid var(--color-secondary);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+  opacity: 0.95;
+  background-color: var(--color-white);
+  padding: 5px;
+}
+
+.auth-container {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+  width: 100%;
+  max-width: 450px;
+  overflow: hidden;
+}
+
+.auth-header {
+  background: var(--color-primary);
+  color: #023047;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+.auth-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.clinic-name {
+  color: #023047;
+  font-weight: 800;
+}
+
+.auth-tabs {
+  display: flex;
+  background: #caf0f8;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 15px;
+  text-align: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.auth-tab.active {
+  background: var(--color-white);
+  border-bottom: 3px solid var(--color-primary);
+}
+
+.auth-forms {
+  padding: 30px;
+}
+
+.auth-form {
+  display: none;
+}
+
+.auth-form.active {
+  display: block;
+  animation: fadeIn 0.4s ease;
+}
+
+.input-group-text {
+  background: var(--color-primary);
+  color: #023047;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #8ecae6 0%, #219ebc 100%);
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(33, 158, 188, 0.4);
+}
+
+.text-link {
+  color: #219ebc;
+  text-decoration: none;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

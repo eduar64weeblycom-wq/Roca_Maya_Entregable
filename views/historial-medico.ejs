@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Historial Médico - Clínicas Roca Maya</title>
+  <link rel="icon" href="/ICONO.jpg" type="image/jpeg">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+  <style>
+    :root {
+      --primary-color: #2c5aa0;
+      --secondary-color: #ff6b8b;
+      --accent-color: #4ecdc4;
+      --light-bg: #f8fafc;
+      --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+    }
+
+    .navbar-custom {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #1e3c72 100%);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo-btn img {
+      height: 50px;
+      transition: transform 0.3s ease;
+    }
+
+    .logo-btn:hover img {
+      transform: scale(1.05);
+    }
+
+    .contenedor-principal {
+      background: white;
+      border-radius: 20px;
+      box-shadow: var(--card-shadow);
+      margin: 30px auto;
+      padding: 30px;
+      max-width: 1400px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-primary-custom {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #3a7bd5 100%);
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      color: white;
+    }
+
+    .btn-primary-custom:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--hover-shadow);
+      color: white;
+    }
+
+    .btn-primary-custom:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-warning-custom {
+      background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      color: #212529;
+    }
+
+    .btn-warning-custom:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--hover-shadow);
+    }
+
+    .btn-warning-custom:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-excel-custom {
+      background: linear-gradient(135deg, #217346 0%, #2ecc71 100%);
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-weight: 600;
+      color: white;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .btn-excel-custom:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--hover-shadow);
+      color: white;
+    }
+
+    .btn-excel-custom:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .selector-paciente {
+      border-radius: 12px;
+      border: 2px solid #e9ecef;
+      padding: 12px 15px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      min-width: 300px;
+    }
+
+    .selector-paciente:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+    }
+
+    .historial-contenido {
+      min-height: 400px;
+      background: var(--light-bg);
+      border-radius: 15px;
+      padding: 25px;
+      margin-top: 20px;
+    }
+
+    .card-historial {
+      border: none;
+      border-radius: 15px;
+      box-shadow: var(--card-shadow);
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .card-historial:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--hover-shadow);
+    }
+
+    .card-header-custom {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #3a7bd5 100%);
+      color: white;
+      border: none;
+      padding: 15px 20px;
+      font-weight: 600;
+    }
+
+    .badge-estado {
+      font-size: 0.75em;
+      padding: 5px 10px;
+      border-radius: 20px;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f1f1;
+    }
+
+    .info-item:last-child {
+      border-bottom: none;
+    }
+
+    .info-icon {
+      width: 30px;
+      text-align: center;
+      margin-right: 10px;
+      color: var(--primary-color);
+    }
+
+    .loading-spinner {
+      display: none;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6c757d;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      color: #dee2e6;
+    }
+
+    .paciente-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 25px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: var(--card-shadow);
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+      .contenedor-principal {
+        margin: 15px;
+        padding: 20px;
+      }
+      
+      .action-buttons {
+        justify-content: center;
+      }
+      
+      .selector-paciente {
+        min-width: 100%;
+        margin-bottom: 15px;
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== LISTA DE VALORES (buscador de pacientes) ===== */
+    .lov-paciente-wrapper {
+      position: relative;
+      min-width: 380px;
+    }
+
+    @media (max-width: 768px) {
+      .lov-paciente-wrapper {
+        min-width: 100%;
+        margin-bottom: 15px;
+      }
+    }
+
+    .lov-paciente-input {
+      border-radius: 12px;
+      border: 2px solid #e9ecef;
+      padding: 12px 40px 12px 15px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .lov-paciente-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+      outline: none;
+    }
+
+    .lov-paciente-icono {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #adb5bd;
+      pointer-events: none;
+    }
+
+    .lov-paciente-lista {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      max-height: 320px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      box-shadow: var(--hover-shadow);
+      z-index: 1050;
+    }
+
+    .lov-paciente-lista.mostrar {
+      display: block;
+    }
+
+    .lov-paciente-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f1f1;
+      font-size: 14px;
+    }
+
+    .lov-paciente-item:last-child {
+      border-bottom: none;
+    }
+
+    .lov-paciente-item:hover,
+    .lov-paciente-item.activo {
+      background: var(--light-bg);
+    }
+
+    .lov-paciente-item small {
+      display: block;
+      color: #6c757d;
+    }
+
+    .lov-paciente-sin-resultados {
+      padding: 15px;
+      text-align: center;
+      color: #6c757d;
+      font-size: 14px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-custom navbar-expand-lg">
+    <div class="container-fluid">
+      <button id="logoBtn" class="logo-btn border-0 bg-transparent">
+        <img src="/roca-maya-oct.jpg" alt="Clínicas Roca Maya" 
+             onerror="this.onerror=null; this.src='/img/roca-maya-oct.jpg';">
+      </button>
+      
+      <div class="navbar-brand text-white mx-auto">
+        <h4 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Historial Médico Digital</h4>
+        <small class="opacity-75">Gestión Integral de Salud del Paciente</small>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <div class="contenedor-principal animate__animated animate__fadeIn">
+    
+    <!-- BARRA SUPERIOR DE ACCIONES -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-3 gap-3">
+      <div class="d-flex align-items-center flex-wrap gap-3">
+        <!-- LISTA DE VALORES: buscador de pacientes con autocompletado -->
+        <div class="lov-paciente-wrapper">
+          <input type="text"
+                 id="buscadorPaciente"
+                 class="lov-paciente-input"
+                 placeholder="🔍 Buscar por nombre, ID, teléfono, correo o documento..."
+                 autocomplete="off">
+          <i class="fas fa-chevron-down lov-paciente-icono"></i>
+
+          <!-- Lista desplegable de resultados -->
+          <div id="listaPacientes" class="lov-paciente-lista"></div>
+
+          <!-- Input oculto que guarda el ID del paciente seleccionado -->
+          <input type="hidden" id="selectorPaciente" value="">
+        </div>
+
+        <div class="text-muted">
+          <small id="totalPacientesCount">
+            <%= typeof pacientes !== 'undefined' && pacientes ? pacientes.length : 3 %> pacientes registrados
+          </small>
+        </div>
+      </div>
+
+      <!-- BOTONES DE ACCIÓN -->
+      <div class="action-buttons">
+        <button id="btnEditarHistorial" class="btn btn-warning-custom" disabled>
+          <i class="fas fa-edit me-2"></i>Editar Historial
+        </button>
+        
+        <button id="btnExportarExcel" class="btn btn-excel-custom" disabled>
+          <i class="fas fa-file-excel me-2"></i>Descargar Excel
+        </button>
+
+        <button id="btnExportarPDF" class="btn btn-danger" disabled>
+          <i class="fas fa-file-pdf me-2"></i>Exportar PDF
+        </button>
+        
+        <button id="btnImprimir" class="btn btn-primary-custom" disabled>
+          <i class="fas fa-print me-2"></i>Imprimir
+        </button>
+      </div>
+    </div>
+
+    <!-- INDICADOR DE CARGA -->
+    <div id="loadingSpinner" class="loading-spinner">
+      <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+      <p class="mt-3 text-muted">Cargando información del paciente...</p>
+    </div>
+
+    <!-- CONTENIDO DEL HISTORIAL -->
+    <div id="historialContainer" class="historial-contenido">
+      
+      <!-- ESTADO VACÍO -->
+      <div id="emptyState" class="empty-state">
+        <i class="fas fa-file-medical"></i>
+        <h4>Historial Médico</h4>
+        <p class="mb-4">Seleccione un paciente para visualizar su historial médico completo</p>
+        <div class="row justify-content-center">
+          <div class="col-md-8">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-number" id="totalPacientes"><%= typeof pacientes !== 'undefined' && pacientes ? pacientes.length : 3 %></div>
+                <div class="stat-label">Pacientes Activos</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA DEL HISTORIAL (se llena dinámicamente) -->
+      <div id="historialView" style="display: none;"></div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR HISTORIAL -->
+  <div class="modal fade" id="editarHistorialModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Editar Historial Médico</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="formEditarHistorial">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label"><i class="fas fa-allergies text-danger me-2"></i>Alergias</label>
+                <textarea class="form-control" id="editarAlergias" rows="3" 
+                          placeholder="Ej: Penicilina, Mariscos, Polen... (separar por comas)"></textarea>
+                <div class="form-text">Lista todas las alergias conocidas del paciente</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label"><i class="fas fa-heartbeat text-danger me-2"></i>Enfermedades Crónicas</label>
+                <textarea class="form-control" id="editarEnfermedades" rows="3"
+                          placeholder="Ej: Diabetes, Hipertensión, Asma... (separar por comas)"></textarea>
+                <div class="form-text">Enfermedades de larga duración y progresión lenta</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label"><i class="fas fa-procedures text-info me-2"></i>Cirugías Previas</label>
+                <textarea class="form-control" id="editarCirugias" rows="3"
+                          placeholder="Ej: Apendicectomía 2020, Cesárea 2022... (separar por comas)"></textarea>
+                <div class="form-text">Incluir año y tipo de cirugía</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label"><i class="fas fa-pills text-success me-2"></i>Medicamentos Actuales</label>
+                <textarea class="form-control" id="editarMedicamentos" rows="3"
+                          placeholder="Ej: Metformina 500mg, Losartán 50mg... (separar por comas)"></textarea>
+                <div class="form-text">Medicación actual con dosis si es posible</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label"><i class="fas fa-syringe text-primary me-2"></i>Vacunas</label>
+                <textarea class="form-control" id="editarVacunas" rows="3"
+                          placeholder="Ej: Influenza 2023, Hepatitis B, COVID-19... (separar por comas)"></textarea>
+                <div class="form-text">Esquema de vacunación completo</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label"><i class="fas fa-history text-secondary me-2"></i>Antecedentes Familiares</label>
+                <textarea class="form-control" id="editarAntecedentes" rows="3"
+                          placeholder="Ej: Padre - Diabetes, Madre - Cáncer de mama..."></textarea>
+                <div class="form-text">Enfermedades hereditarias o familiares relevantes</div>
+              </div>
+              <!-- CAMPO HÁBITOS -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label"><i class="fas fa-dumbbell text-dark me-2"></i>Hábitos</label>
+                <textarea class="form-control" id="editarHabitos" rows="3"
+                          placeholder="Ej: Fumador, Consumo de alcohol ocasional, Sedentario..."></textarea>
+                <div class="form-text">Hábitos relevantes para la salud del paciente</div>
+              </div>
+              <div class="col-12 mb-3">
+                <label class="form-label"><i class="fas fa-sticky-note text-warning me-2"></i>Notas Importantes</label>
+                <textarea class="form-control" id="editarNotas" rows="4"
+                          placeholder="Observaciones adicionales, recomendaciones especiales, etc."></textarea>
+                <div class="form-text">Información relevante para el tratamiento</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times me-2"></i>Cancelar
+            </button>
+            <button type="submit" class="btn btn-success" id="btnGuardarHistorial">
+              <i class="fas fa-save me-2"></i>Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS (sin duplicados) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/historial-medico.js"></script>
+
+</body>
+</html>

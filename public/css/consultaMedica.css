@@ -1,0 +1,173 @@
+:root, .ctroot {
+    --color-primary: #3498db;
+    --color-success: #28a745;
+    --color-warning: #ffc107;
+    --color-danger: #dc3545;
+    --color-info: #17a2b8;
+    --color-card: #ffffff;
+    --color-background: #f8f9fa;
+    --color-border: #dee2e6;
+    --color-text-dark: #343a40;
+    --color-text-light: #6c757d;
+}
+
+/* Reset / base */
+* { box-sizing: border-box; }
+body {
+    background-color: var(--color-background);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0; padding: 20px; line-height: 1.6;
+}
+.ctcontainer { max-width: 1200px; margin: 0 auto; }
+
+/* Header */
+.ctconsulta-header {
+    display:flex; justify-content:space-between; align-items:center;
+    gap:12px; background:white; padding:20px; border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.06);
+}
+.title-wrap h1 { margin:0; color:var(--color-text-dark); font-size:1.6rem; }
+.title-wrap p { margin:4px 0 0; color:var(--color-text-light); }
+
+/* Buttons */
+.ctbtn-primary {
+    background:var(--color-primary); color:#fff; border:none;
+    padding:10px 18px; border-radius:8px; cursor:pointer; font-weight:600;
+    display:inline-flex; gap:8px; align-items:center;
+}
+.ctbtn-primary:hover { background:#2980b9; transform:translateY(-2px); box-shadow:0 6px 18px rgba(52,152,219,0.18); }
+.ctbtn-secondary {
+    background:var(--color-text-light); color:white; border:none; padding:10px 18px; border-radius:8px;
+}
+
+/* Alerts */
+.ctalert { padding:12px 16px; border-radius:8px; display:none; align-items:center; gap:10px; }
+.ctalert-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+.ctalert-error { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
+
+/* Filters / toolbar */
+.ctfiltros-consulta {
+    display:flex; gap:16px; flex-wrap:wrap; background:white; padding:14px; border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.06); margin-top:18px;
+}
+.ctfiltro-item { display:flex; flex-direction:column; gap:6px; min-width:180px; flex:1; }
+.ctinput-field { padding:12px 14px; border:2px solid var(--color-border); border-radius:8px; background:white; font-size:1rem; }
+
+/* Table */
+.cttabla-consulta { background:var(--color-card); border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.06); margin-top:18px; }
+.cttabla-consulta table { width:100%; border-collapse:collapse; }
+.cttabla-consulta th { background:var(--color-background); padding:14px 12px; text-align:left; font-weight:700; border-bottom:2px solid var(--color-border); font-size:13px; text-transform:uppercase; letter-spacing:0.5px; }
+.cttabla-consulta td { padding:14px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+.cttabla-consulta tr:hover { background:#f7f9fb; }
+
+/* Badges */
+.ctbadge { padding:6px 12px; border-radius:16px; font-weight:700; font-size:12px; display:inline-block; }
+.ctbadge-general { background:#e7f3ff; color:var(--color-primary); }
+.ctbadge-especialidad { background:#f0e7ff; color:#6f42c1; }
+.ctbadge-control { background:#fff3cd; color:#856404; }
+.ctbadge-emergencia { background:#f8d7da; color:var(--color-danger); }
+
+/* Estado badge base + variants */
+.ctestado-badge {
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:12px;
+    font-weight:700;
+    font-size:12px;
+    color:#fff;
+    min-width:90px;
+    text-align:center;
+}
+.ctestado-badge.estado-programada { background:#6c757d; } /* gris */
+.ctestado-badge.estado-confirmada { background:#3498db; } /* azul */
+.ctestado-badge.estado-preclinica { background:#17a2b8; } /* teal */
+.ctestado-badge.estado-consulta_medica { background:#007bff; } /* azul oscuro */
+.ctestado-badge.estado-finalizada { background:#28a745; } /* verde */
+.ctestado-badge.estado-cancelada { background:#dc3545; } /* rojo */
+.ctestado-badge.estado-espera { background:#ffc107; color:#212529; } /* amarillo */
+
+/* Actions */
+.ctacciones-consulta { display:flex; gap:8px; flex-wrap:wrap; }
+.ctbtn-accion { padding:8px 10px; border-radius:8px; border:none; cursor:pointer; font-weight:700; font-size:13px; background:#f0f0f0; color:#222; }
+.ctbtn-accion:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,0.06); }
+
+/* Edit button specific style */
+.ctbtn-accion.edit {
+    background: var(--color-info);
+    color: #fff;
+    border: 1px solid rgba(0,0,0,0.06);
+}
+.ctbtn-accion.edit:hover { background:#138496; box-shadow:0 8px 22px rgba(23,162,184,0.14); transform:translateY(-2px); }
+
+/* Modal (restored width to previous comfortable size) */
+.ctmodal-consulta {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1200;
+    align-items:center; justify-content:center; backdrop-filter: blur(4px);
+}
+.ctmodal-contenido {
+    background:var(--color-card); padding:22px; border-radius:14px;
+    width:92%;             /* restored to previous width */
+    max-width:900px;       /* restored to previous maximum */
+    max-height:92vh; overflow:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,0.25);
+}
+.ctmodal-contenido h2 { margin:0 0 8px; color:var(--color-text-dark); font-size:1.3rem; }
+.ctmodal-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.ctmodal-form-grid .full { grid-column:1/-1; }
+
+/* Form labels */
+.ctform label { display:block; margin-bottom:6px; font-weight:700; color:var(--color-text-dark); }
+.ctform small { color:var(--color-text-light); display:block; font-size:12px; margin-top:6px; }
+
+/* Keep inputs/textareas large & bold but do NOT force them edge-to-edge */
+/* They will respect grid columns; fields marked with .full will span both columns. */
+.ctmodal-form-grid textarea.ctinput-field,
+.ctmodal-form-grid input.ctinput-field {
+    width: 100%;
+    box-sizing: border-box;
+    font-size:1.02rem;
+    font-weight:700; /* más grueso */
+    line-height:1.4;
+    padding:12px;
+    border-width:2px;
+    border-radius:8px;
+    background:#fff;
+    color:var(--color-text-dark);
+}
+
+/* Ensure textareas have a larger min-height to show more info at once */
+.ctmodal-form-grid textarea.ctinput-field {
+    min-height:180px;  /* mantener panorama amplio */
+    resize:vertical;
+}
+
+/* Slightly larger single-line inputs */
+.ctmodal-form-grid input.ctinput-field {
+    height:46px;
+}
+
+/* Make selects comfortable */
+.ctmodal-form-grid select.ctinput-field { height:46px; }
+
+/* Small utilities */
+.cttext-center { text-align:center; }
+.ctmb-3 { margin-bottom:1rem; }
+
+/* Responsive: preserve two-column on medium screens, collapse on small */
+@media (max-width:1024px) {
+    .ctmodal-contenido { max-width:1000px; width:92%; }
+    .ctmodal-form-grid textarea.ctinput-field { min-height:160px; }
+}
+@media (max-width:768px) {
+    .ctmodal-form-grid { grid-template-columns:1fr; }
+    .ctfiltros-consulta { flex-direction:column; }
+    .ctmodal-contenido { width:96%; max-width:720px; }
+    .ctmodal-form-grid textarea.ctinput-field { min-height:140px; }
+}
+
+/* Close btn */
+.ctclose-modal { background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--color-text-light); padding:6px; border-radius:50%; }
+.ctclose-modal:hover { background:var(--color-background); }
+
+/* Tiny helper */
+.ctsmall { font-size:0.9rem; color:var(--color-text-light); }

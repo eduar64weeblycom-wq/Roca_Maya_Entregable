@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Consulta Médica - Clínicas Roca Maya</title>
+    <link rel="stylesheet" href="/css/styleCitas.css" />
+    <link rel="stylesheet" href="/css/consultaMedica.css" />
+    <link rel="stylesheet" href="/css/preclinica.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        /* ===== ESTILOS PROPIOS DE CONSULTA MÉDICA ===== */
+        .field-error {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.06) !important;
+        }
+        .error-text {
+            color: #721c24;
+            font-size: 0.9rem;
+            margin-top: 6px;
+            display: none;
+        }
+        .btn-header {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            white-space: nowrap;
+            color: white;
+        }
+        .btn-header:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .btn-imprimir {
+            background: #17a2b8;
+        }
+        .btn-imprimir:hover {
+            background: #138496;
+        }
+        .btn-excel {
+            background: #28a745;
+        }
+        .btn-excel:hover {
+            background: #1e7e34;
+        }
+        .btn-nueva {
+            background: #2c7be5;
+        }
+        .btn-nueva:hover {
+            background: #1a68d4;
+        }
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: #e9ecef;
+            color: #495057;
+            border: 1px solid #dee2e6;
+        }
+        .user-badge .role {
+            background: #2c7be5;
+            color: white;
+            padding: 1px 10px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .user-space {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0;
+        }
+        .ctfiltros-consulta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            background: #f8f9fa;
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin: 16px 0 20px 0;
+            border: 1px solid #e9ecef;
+        }
+        .ctfiltro-item label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 4px;
+        }
+        .ctfiltro-item .ctinput-field {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+            background: white;
+        }
+        .ctfiltro-item .ctinput-field:focus {
+            border-color: #2c7be5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.1);
+        }
+        .filtros-actions {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            grid-column: span 1;
+        }
+        .btn-limpiar-filtros {
+            padding: 8px 16px;
+            background: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 42px;
+            white-space: nowrap;
+        }
+        .btn-limpiar-filtros:hover {
+            background: #dee2e6;
+        }
+        .cttabla-consulta {
+            overflow-x: auto;
+        }
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            min-width: 700px;
+        }
+        .table th {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: middle;
+        }
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+        .tabla-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 4px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .total-registros {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.95rem;
+        }
+        .ctsin-citas {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .ctsin-citas i {
+            font-size: 3rem;
+            color: #dee2e6;
+            display: block;
+            margin-bottom: 16px;
+        }
+        .ctsin-citas h3 {
+            font-weight: 400;
+            font-size: 1.2rem;
+        }
+        .ctestado-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .ctestado-programada {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .ctestado-confirmada {
+            background: #d4edda;
+            color: #155724;
+        }
+        .ctestado-preciinica {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .ctestado-consulta_medica {
+            background: #c3e6cb;
+            color: #0b5e1a;
+        }
+        .ctestado-finalizada {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .ctestado-cancelada {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .ctestado-no_asistio {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .ctacciones-consulta {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .ctbtn-accion {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #e9ecef;
+            color: #495057;
+        }
+        .ctbtn-accion:hover {
+            background: #dee2e6;
+        }
+        .ctbtn-accion.edit {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .ctbtn-cancelar {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .ctbtn-no-asistio {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .text-muted {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+        .ctmodal-footer-buttons {
+            display: flex !important;
+            gap: 12px !important;
+            justify-content: flex-end !important;
+            margin-top: 18px !important;
+            flex-wrap: wrap !important;
+            width: 100% !important;
+            padding: 0 !important;
+        }
+        .ctmodal-footer-buttons .ctbtn-modal {
+            padding: 10px 24px !important;
+            border-radius: 8px !important;
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            border: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 120px !important;
+            justify-content: center !important;
+            transition: all 0.2s !important;
+            height: auto !important;
+            line-height: normal !important;
+            margin: 0 !important;
+            float: none !important;
+            clear: none !important;
+            position: static !important;
+        }
+        .ctmodal-footer-buttons .ctbtn-modal:hover {
+            transform: translateY(-1px) !important;
+        }
+        .ctmodal-footer-buttons .ctbtn-imprimir-modal {
+            background: #17a2b8 !important;
+            color: white !important;
+            border: none !important;
+        }
+        .ctmodal-footer-buttons .ctbtn-cancelar-modal {
+            background: #e9ecef !important;
+            color: #495057 !important;
+            border: 1px solid #ced4da !important;
+        }
+        .ctmodal-footer-buttons .ctbtn-guardar-modal {
+            background: #2c7be5 !important;
+            color: white !important;
+            border: none !important;
+        }
+        .ctcontainer {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+        .ctcitas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .title-wrap h1 {
+            font-size: 1.8rem;
+            margin: 0;
+            color: #1a3c6e;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .actions-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .logo-container .logo {
+            height: 50px;
+            object-fit: contain;
+        }
+        .logo-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+        .clinic-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1a3c6e;
+            margin-left: 10px;
+        }
+        .ctmy-4 {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        .ctsmall {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        .ctalert {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+        .ctalert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .ctalert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .ctalert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .ctbtn-primary {
+            background: #2c7be5;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ctbtn-primary:hover {
+            background: #1a68d4;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(44, 123, 229, 0.3);
+        }
+        .ctbtn-secondary {
+            background: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ctbtn-secondary:hover {
+            background: #dee2e6;
+        }
+        .ctmodal-consulta {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+        .ctmodal-contenido {
+            background: white;
+            border-radius: 16px;
+            max-width: 900px;
+            width: 95%;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin: 20px auto;
+        }
+        .ctclose-modal {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 0 8px;
+        }
+        .ctclose-modal:hover {
+            color: #dc3545;
+        }
+        .ctmodal-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .ctmodal-form-grid .full {
+            grid-column: 1 / -1;
+        }
+        .ctinput-field {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: white;
+        }
+        .ctinput-field:focus {
+            border-color: #2c7be5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.1);
+        }
+        #historialRapidoContenido {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #historialRapidoContenido::-webkit-scrollbar {
+            width: 4px;
+        }
+        #historialRapidoContenido::-webkit-scrollbar-thumb {
+            background: #2c7be5;
+            border-radius: 4px;
+        }
+        .historial-item:hover {
+            border-color: #2c7be5 !important;
+            box-shadow: 0 2px 8px rgba(44, 123, 229, 0.1) !important;
+        }
+        .historial-detalle {
+            margin-top: 8px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #2c7be5;
+            font-size: 0.85rem;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+            text-align: center;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.85rem;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .calendar-day {
+            min-height: 80px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 4px;
+            background: white;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .calendar-day:hover {
+            background: #f8f9fa;
+            border-color: #2c7be5;
+        }
+        .calendar-day .day-number {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #495057;
+            margin-bottom: 4px;
+        }
+        .calendar-day .day-number.weekend {
+            color: #dc3545;
+        }
+        .calendar-day.empty {
+            background: #f8f9fa;
+            border-color: #e9ecef;
+        }
+        .calendar-day .cita-badge {
+            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            margin-top: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            background: #2c7be5;
+        }
+        .calendar-day .cita-badge:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        .calendar-day .cita-badge.preciinica {
+            background: #ffc107;
+            color: #856404;
+        }
+        .calendar-day .cita-badge.consulta_medica {
+            background: #28a745;
+            color: white;
+        }
+        .calendar-day .cita-badge.programada {
+            background: #007bff;
+            color: white;
+        }
+        .calendar-day .cita-badge.confirmada {
+            background: #17a2b8;
+            color: white;
+        }
+        .calendar-day .cita-badge.finalizada {
+            background: #6c757d;
+            color: white;
+        }
+        .calendar-day .cita-badge.cancelada {
+            background: #dc3545;
+            color: white;
+        }
+        .calendar-day .cita-badge.no_asistio {
+            background: #fd7e14;
+            color: white;
+        }
+        .add-cita-quick {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: none;
+            background: #2c7be5;
+            color: white;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+        .calendar-day:hover .add-cita-quick {
+            opacity: 1;
+        }
+        .add-cita-quick:hover {
+            background: #1a68d4;
+            transform: scale(1.1);
+        }
+        .autocomplete-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        .autocomplete-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        .autocomplete-item:hover {
+            background: #e7f1ff;
+        }
+        .autocomplete-item .sub-info {
+            display: block;
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        .autocomplete-item.no-results {
+            color: #6c757d;
+            font-style: italic;
+            cursor: default;
+        }
+        .autocomplete-item.no-results:hover {
+            background: transparent;
+        }
+
+        /* ===== ESTILOS DE PRECLÍNICA ===== */
+        .pre-field-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px 12px;
+            transition: border-color 0.2s;
+        }
+        .pre-field-card .pre-field-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        .pre-field-card .pre-field-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #495057;
+        }
+        .pre-field-card .field-status {
+            font-size: 0.65rem;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .status-empty {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        .status-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .vital-status-normal {
+            border-left: 4px solid #28a745;
+        }
+        .vital-status-warning {
+            border-left: 4px solid #ffc107;
+        }
+        .vital-status-critical {
+            border-left: 4px solid #dc3545;
+            background: #fff5f5;
+        }
+        .pre-vital-alert {
+            margin-top: 10px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            border-left: 4px solid #ffc107;
+            background: #fffdf0;
+        }
+        .pre-vital-alert-critical {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        .pre-vital-alert .pre-vital-alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .pre-vital-alert .pre-vital-alert-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pre-vital-alert ul {
+            margin: 6px 0 0 0;
+            padding-left: 20px;
+        }
+        .pre-vital-alert ul li.critical {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .pre-vital-alert ul li.warning {
+            color: #856404;
+        }
+        .pre-vital-level {
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: #e9ecef;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+        .pre-vital-alert-critical .pre-vital-level {
+            background: #dc3545;
+            color: white;
+        }
+        .pre-vital-alert-warning .pre-vital-level {
+            background: #ffc107;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .ctcontainer {
+                padding: 0 16px;
+            }
+            .ctcitas-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .ctfiltros-consulta {
+                grid-template-columns: 1fr 1fr;
+            }
+            .ctmodal-contenido {
+                padding: 16px;
+                margin: 10px;
+            }
+            .ctmodal-form-grid {
+                grid-template-columns: 1fr;
+            }
+            .ctmodal-form-grid .full {
+                grid-column: span 1;
+            }
+            .table {
+                min-width: 600px;
+                font-size: 0.85rem;
+            }
+            .table th,
+            .table td {
+                padding: 10px 12px;
+            }
+            .calendar-day {
+                min-height: 60px;
+                font-size: 0.75rem;
+            }
+            .calendar-day .cita-badge {
+                font-size: 8px;
+                padding: 2px 4px;
+            }
+            .add-cita-quick {
+                width: 16px;
+                height: 16px;
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .ctcontainer {
+                padding: 0 12px;
+            }
+            .ctfiltros-consulta {
+                grid-template-columns: 1fr;
+            }
+            .table {
+                min-width: 500px;
+                font-size: 0.75rem;
+            }
+            .table th,
+            .table td {
+                padding: 8px 10px;
+            }
+            .title-wrap h1 {
+                font-size: 1.1rem;
+            }
+            .actions-right {
+                gap: 8px;
+            }
+            .btn-header {
+                padding: 6px 10px;
+                font-size: 0.7rem;
+            }
+            .user-badge {
+                font-size: 0.65rem;
+                padding: 3px 10px;
+            }
+            .calendar-day {
+                min-height: 50px;
+                padding: 2px;
+            }
+            .calendar-day .day-number {
+                font-size: 0.7rem;
+            }
+            .calendar-day .cita-badge {
+                font-size: 7px;
+                padding: 1px 3px;
+            }
+            .ctmodal-footer-buttons {
+                justify-content: center;
+            }
+            .ctmodal-footer-buttons .ctbtn-modal {
+                min-width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media print {
+            .btn-header,
+            .btn-imprimir,
+            .btn-excel,
+            .btn-nueva,
+            .ctbtn-accion,
+            .ctmodal-consulta,
+            #modalCalendario,
+            #modalConsulta,
+            #modalCitaDirecta,
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white;
+                padding: 20px;
+            }
+            .table {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            .ctcontainer {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="ctcontainer ctmy-4">
+        <!-- Encabezado -->
+        <div class="ctcitas-header">
+            <div class="header-left">
+                <div class="logo-container">
+                    <button class="logo-btn" id="logoBtn" title="Volver al Dashboard" aria-label="Volver al Dashboard" type="button">
+                        <img src="/roca-maya-oct.jpg" alt="Clínicas Roca Maya" class="logo">
+                    </button>
+                    <div class="clinic-name">Clínicas Roca Maya</div>
+                </div>
+                <div class="title-wrap">
+                    <h1><i class="fas fa-notes-medical"></i> Consulta Médica</h1>
+                    <p class="ctsmall">Registro y seguimiento de consultas</p>
+                </div>
+            </div>
+            <div class="user-space">
+            <span class="user-badge"><i class="fas fa-user-circle"></i> <%= typeof nombreUsuario !== 'undefined' ? nombreUsuario : 'Usuario' %></span>
+<span class="user-badge"><i class="fas fa-user-tag"></i><span class="role"><%= typeof rol !== 'undefined' ? rol : 'DOCTOR' %></span></span>
+            </div>
+            <div class="actions-right">
+                <button id="btnCalendario" class="btn-header" type="button" title="Ver calendario" style="background:#6f42c1; color:white;"><i class="fas fa-calendar-alt"></i> <span>Calendario</span></button>
+                <button id="btnImprimir" class="btn-header btn-imprimir" type="button" title="Imprimir lista"><i class="fas fa-print"></i> <span>Imprimir</span></button>
+                <button id="btnExcelConsulta" class="btn-header btn-excel" type="button" title="Exportar a Excel"><i class="fas fa-file-excel"></i> <span>Excel</span></button>
+                <button id="btnNuevaConsulta" class="btn-header btn-nueva" type="button"><i class="fas fa-plus"></i> <span>Nueva</span></button>
+            </div>
+        </div>
+
+        <!-- Alertas -->
+        <div id="alertSuccessConsulta" class="ctalert ctalert-success" style="display:none;">
+            <i class="fas fa-check-circle"></i> <span id="successMessageConsulta"></span>
+        </div>
+        <div id="alertErrorConsulta" class="ctalert ctalert-error" style="display:none;">
+            <i class="fas fa-exclamation-circle"></i> <span id="errorMessageConsulta"></span>
+        </div>
+
+        <!-- Filtros -->
+        <div class="ctfiltros-consulta">
+            <div class="ctfiltro-item">
+                <label for="filtroPaciente"><i class="fas fa-user"></i> Nombre / ID</label>
+                <input id="filtroPaciente" class="ctinput-field" placeholder="Buscar por nombre o ID..." />
+            </div>
+            <div class="ctfiltro-item">
+                <label for="filtroTelefono"><i class="fas fa-phone"></i> Teléfono</label>
+                <input id="filtroTelefono" class="ctinput-field" placeholder="Ej: 9876-5432" />
+            </div>
+            <div class="ctfiltro-item">
+                <label for="filtroIdentidad"><i class="fas fa-id-card"></i> Identidad</label>
+                <input id="filtroIdentidad" class="ctinput-field" placeholder="Ej: 0801-2000-12345" />
+            </div>
+            <div class="ctfiltro-item">
+                <label for="filtroFechaConsulta"><i class="fas fa-calendar"></i> Fecha</label>
+                <input id="filtroFechaConsulta" type="date" class="ctinput-field" />
+            </div>
+            <div class="ctfiltro-item">
+                <label for="filtroTipoConsulta"><i class="fas fa-tag"></i> Tipo</label>
+                <select id="filtroTipoConsulta" class="ctinput-field">
+                    <option value="">Todos los tipos</option>
+                    <option value="GENERAL">General</option>
+                    <option value="ESPECIALIDAD">Especialidad</option>
+                    <option value="CONTROL">Control</option>
+                    <option value="EMERGENCIA">Emergencia</option>
+                </select>
+            </div>
+            <div class="filtros-actions">
+                <button id="btnLimpiarFiltros" class="btn-limpiar-filtros" type="button"><i class="fas fa-eraser"></i> Limpiar filtros</button>
+            </div>
+        </div>
+
+        <!-- Tabla de consultas -->
+        <div class="cttabla-consulta">
+            <div id="tablaContenidoConsulta" class="ctmy-4">
+                <div class="ctsin-citas">
+                    <i class="fas fa-notes-medical"></i>
+                    <h3>No hay consultas registradas</h3>
+                    <p>Puedes crear una con "Nueva Consulta".</p>
+                    <button class="ctbtn-primary" id="btnCrearPrimeraConsulta" type="button"><i class="fas fa-plus"></i> Nueva Consulta</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Calendario -->
+    <div id="modalCalendario" class="ctmodal-consulta" aria-hidden="true">
+        <div class="ctmodal-contenido calendario-modal">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 id="modalTitleCalendario"><i class="fas fa-calendar-alt" style="color:#2c7be5;"></i> Calendario de Consultas</h2>
+                <button id="btnCerrarCalendario" class="ctclose-modal" title="Cerrar" type="button">&times;</button>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <button id="prev-month" class="ctbtn-secondary" type="button" style="padding:6px 16px;"><i class="fas fa-chevron-left"></i> Anterior</button>
+                <h3 id="calendar-month-year" style="margin:0; color:#1a3c6e;"></h3>
+                <button id="next-month" class="ctbtn-secondary" type="button" style="padding:6px 16px;">Siguiente <i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="calendar-weekdays">
+                <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+            </div>
+            <div id="calendar-days" class="calendar-grid"></div>
+            <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; padding-top:12px; border-top:1px solid #e9ecef; justify-content:center;">
+                <span><span class="ctestado-badge ctestado-preciinica" style="display:inline-block; width:12px; height:12px; padding:0; border-radius:50%;"></span> Preclínica</span>
+                <span><span class="ctestado-badge ctestado-consulta_medica" style="display:inline-block; width:12px; height:12px; padding:0; border-radius:50%;"></span> Consulta Médica</span>
+                <span><span class="ctestado-badge ctestado-programada" style="display:inline-block; width:12px; height:12px; padding:0; border-radius:50%;"></span> Programada</span>
+                <span><span class="ctestado-badge ctestado-confirmada" style="display:inline-block; width:12px; height:12px; padding:0; border-radius:50%;"></span> Confirmada</span>
+                <span><span class="ctestado-badge ctestado-finalizada" style="display:inline-block; width:12px; height:12px; padding:0; border-radius:50%;"></span> Finalizada</span>
+                <span><span class="ctestado-badge ctestado-cancelada" style="display:inline-block; width:12px; height:12px; padding:0; border-radius:50%;"></span> Cancelada</span>
+                <span><span class="ctestado-badge ctestado-no_asistio" style="display:inline-block; width:12px; height:12px; padding:0; border-radius:50%;"></span> No Asistió</span>
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+                <button id="btnCerrarCalendarioFooter" class="ctbtn-secondary" type="button">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Consulta -->
+    <div id="modalConsulta" class="ctmodal-consulta" aria-hidden="true">
+        <div class="ctmodal-contenido" role="dialog" aria-modal="true" aria-labelledby="modalTitleConsulta">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 id="modalTitleConsulta"><i class="fas fa-notes-medical" style="color:#2c7be5;"></i> Consulta</h2>
+                <button id="btnCerrarModalConsulta" class="ctclose-modal" title="Cerrar" type="button">&times;</button>
+            </div>
+            <div id="modalErrorConsulta" class="ctalert ctalert-error" style="display:none; margin-top:10px;"></div>
+            <form id="formConsulta" class="ctform" style="margin-top:12px;" onsubmit="return false;">
+                <input type="hidden" id="idConsulta" />
+                <div class="ctmodal-form-grid">
+                    <div class="full">
+                        <!-- Selector de Cita -->
+                        <label for="selectCitaConsulta">Cita</label>
+                        <select id="selectCitaConsulta" class="ctinput-field"></select>
+                        <div id="selectCitaConsulta-error" class="error-text"></div>
+                        <div id="pacienteInfoConsulta" style="margin-top:8px; font-size:0.95rem; color:#6c757d;"></div>
+
+                        <!-- ===== SECCIÓN PRECLÍNICA (botón siempre visible) ===== -->
+                        <div style="margin-top:12px;">
+                            <!-- Cabecera: título + botón toggle + mensaje -->
+                            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+                                <strong style="font-size:1rem; color:#1a3c6e;">
+                                    <i class="fas fa-heartbeat" style="color:#dc3545;"></i> Preclínica / Signos Vitales
+                                </strong>
+                                <button type="button" id="togglePreclinica" onclick="window.Preclinica.toggleVisibility()">
+    <i class="fas fa-eye"></i> Mostrar
+</button>
+                                <span id="preclinicaMensaje" style="font-size:0.85rem; color:#6c757d;">Complete los signos vitales si el paciente los requiere.</span>
+                            </div>
+
+                            <!-- Contenedor de campos (oculto por defecto) -->
+                            <div id="preclinicaFields" style="display:none; padding:12px; border-radius:8px; background:#f7f9fb; border:1px solid #e6eef6;">
+                                <div id="preclinicaInfoConsulta">
+                                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;" id="preclinicaFieldsGrid">
+                                        <div class="pre-field-card">
+                                            <div class="pre-field-head"><label for="temperatura" class="pre-field-label">Temperatura (°C)</label><span id="temperatura-status" class="field-status status-empty">Sin registrar</span></div>
+                                            <input id="temperatura" class="ctinput-field" type="number" step="0.1" />
+                                        </div>
+                                        <div class="pre-field-card">
+                                            <div class="pre-field-head"><label for="presionSistolica" class="pre-field-label">Presión sistólica</label><span id="presionSistolica-status" class="field-status status-empty">Pendiente</span></div>
+                                            <input id="presionSistolica" class="ctinput-field" type="number" />
+                                        </div>
+                                        <div class="pre-field-card">
+                                            <div class="pre-field-head"><label for="presionDiastolica" class="pre-field-label">Presión diastólica</label><span id="presionDiastolica-status" class="field-status status-empty">Pendiente</span></div>
+                                            <input id="presionDiastolica" class="ctinput-field" type="number" />
+                                        </div>
+                                        <div class="pre-field-card">
+                                            <div class="pre-field-head"><label for="frecuenciaCardiaca" class="pre-field-label">Frec. Cardíaca (lpm)</label><span id="frecuenciaCardiaca-status" class="field-status status-empty">Sin registrar</span></div>
+                                            <input id="frecuenciaCardiaca" class="ctinput-field" type="number" />
+                                        </div>
+                                        <div class="pre-field-card">
+                                            <div class="pre-field-head"><label for="frecuenciaRespiratoria" class="pre-field-label">Frec. Respiratoria (rpm)</label><span id="frecuenciaRespiratoria-status" class="field-status status-empty">Sin registrar</span></div>
+                                            <input id="frecuenciaRespiratoria" class="ctinput-field" type="number" />
+                                        </div>
+                                        <div class="pre-field-card">
+                                            <div class="pre-field-head"><label for="saturacionOxigeno" class="pre-field-label">Saturación O₂ (%)</label><span id="saturacionOxigeno-status" class="field-status status-empty">Sin registrar</span></div>
+                                            <input id="saturacionOxigeno" class="ctinput-field" type="number" step="0.1" />
+                                        </div>
+                                        <div class="pre-field-card">
+                                            <div class="pre-field-head"><label for="peso" class="pre-field-label">Peso (kg)</label><span id="peso-status" class="field-status status-empty">Pendiente</span></div>
+                                            <input id="peso" class="ctinput-field" type="number" step="0.01" />
+                                        </div>
+                                        <div class="pre-field-card">
+                                            <div class="pre-field-head"><label for="talla" class="pre-field-label">Talla (m)</label><span id="talla-status" class="field-status status-empty">Pendiente</span></div>
+                                            <input id="talla" class="ctinput-field" type="number" step="0.01" />
+                                        </div>
+                                        <div class="pre-field-card">
+                                            <div class="pre-field-head"><label for="glucosa" class="pre-field-label">Glucosa (mg/dL)</label><span id="glucosa-status" class="field-status status-empty">Sin registrar</span></div>
+                                            <input id="glucosa" class="ctinput-field" type="number" step="0.1" />
+                                        </div>
+                                        <div class="pre-field-card">
+                                            <div class="pre-field-head"><label for="perimetroAbdominal" class="pre-field-label">Perímetro abdominal (cm)</label><span id="perimetroAbdominal-status" class="field-status status-empty">Sin registrar</span></div>
+                                            <input id="perimetroAbdominal" class="ctinput-field" type="number" step="0.1" />
+                                        </div>
+                                        <div class="pre-field-card" style="grid-column:1/-1;">
+                                            <div class="pre-field-head"><label for="observaciones" class="pre-field-label">Observaciones</label><span id="observaciones-status" class="field-status status-empty">Opcional</span></div>
+                                            <textarea id="observaciones" rows="2" class="ctinput-field"></textarea>
+                                        </div>
+                                    </div>
+                                    <!-- Badges ocultos y alertas (se mantienen por compatibilidad) -->
+                                    <div style="display:none;">
+                                        <span id="selectCita-status"></span>
+                                        <span id="imc-status"></span>
+                                        <span id="estadoGeneral-status"></span>
+                                        <span id="registroEstadoBadge"></span>
+                                    </div>
+                                    <p id="registroEstadoTexto" style="font-size:0.85rem; margin-top:8px;"></p>
+                                    <div id="alertaSignosVitales" class="pre-vital-alert" style="display:none; margin-top:10px;">
+                                        <div class="pre-vital-alert-header">
+                                            <div class="pre-vital-alert-title">
+                                                <i id="alertaSignosVitalesIcono" class="fas fa-triangle-exclamation"></i>
+                                                <div>
+                                                    <strong id="alertaSignosVitalesTitulo">Signos vitales que requieren atención</strong>
+                                                    <span id="alertaSignosVitalesResumen">Revise los valores antes de continuar.</span>
+                                                </div>
+                                            </div>
+                                            <span id="alertaSignosVitalesNivel" class="pre-vital-level">Alerta</span>
+                                        </div>
+                                        <ul id="listaAlertasVitales"></ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Historial Médico -->
+                        <div id="historialRapidoPaciente" style="margin-top:12px; padding:12px; background:#f8f9fa; border-radius:8px; border:1px solid #e9ecef; display:none;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <h5 style="margin:0; color:#1a3c6e; font-size:0.95rem;"><i class="fas fa-history" style="color:#2c7be5;"></i> Historial Médico</h5>
+                                <span style="font-size:0.7rem; color:#6c757d;"><i class="fas fa-hand-pointer"></i> Click en consulta para expandir</span>
+                            </div>
+                            <div id="historialRapidoContenido"><p class="text-muted" style="font-size:0.85rem;">Seleccione una cita para ver el historial del paciente.</p></div>
+                        </div>
+
+                        <!-- Campos de la consulta -->
+                        <div class="full">
+                            <label for="motivoConsulta">Motivo</label>
+                            <textarea id="motivoConsulta" rows="4" class="ctinput-field"></textarea>
+                            <div id="motivoConsulta-error" class="error-text"></div>
+                        </div>
+                        <div class="full">
+                            <label for="sintomasConsulta">Síntomas (una por línea)</label>
+                            <textarea id="sintomasConsulta" rows="6" class="ctinput-field"></textarea>
+                            <div id="sintomasConsulta-error" class="error-text"></div>
+                        </div>
+                        <div class="full">
+                            <label for="examenFisicoConsulta">Examen físico (una por línea)</label>
+                            <textarea id="examenFisicoConsulta" rows="6" class="ctinput-field"></textarea>
+                            <div id="examenFisicoConsulta-error" class="error-text"></div>
+                        </div>
+                        <div class="full">
+                            <label for="examenesComplementariosConsulta"><i class="fas fa-flask" style="color:#17a2b8;"></i> Exámenes Complementarios</label>
+                            <p class="ctsmall" style="color:#6c757d; margin:2px 0 8px;">Resultados de exámenes de laboratorio u otros estudios.</p>
+                            <textarea id="examenesComplementariosConsulta" rows="6" class="ctinput-field" placeholder="Ej: Hemograma completo (10/07/2026): Hemoglobina 13.5 g/dL..."></textarea>
+                        </div>
+                        <div class="full">
+                            <label for="diagnosticoPrincipal">Diagnóstico principal *</label>
+                            <textarea id="diagnosticoPrincipal" rows="4" class="ctinput-field"></textarea>
+                            <div id="diagnosticoPrincipal-error" class="error-text"></div>
+                        </div>
+                        <div class="full">
+                            <label for="tratamiento">Tratamiento *</label>
+                            <textarea id="tratamiento" rows="6" class="ctinput-field"></textarea>
+                            <div id="tratamiento-error" class="error-text"></div>
+                        </div>
+                        <div class="full">
+                            <label for="recomendaciones">Recomendaciones</label>
+                            <textarea id="recomendaciones" rows="4" class="ctinput-field"></textarea>
+                            <div id="recomendaciones-error" class="error-text"></div>
+                        </div>
+
+                        <!-- Medicamentos -->
+                        <div class="full" style="margin-top:16px;">
+                            <label for="contenedorMedicamentos" style="font-weight:600;"><i class="fas fa-prescription-bottle-alt" style="color:#28a745;"></i> Medicamentos Prescritos</label>
+                            <p class="ctsmall" style="color:#6c757d; margin:2px 0 8px;">Agregue los medicamentos recetados al paciente.</p>
+                            <div id="contenedorMedicamentos" style="margin-bottom:8px;"><p class="text-muted" style="font-size:0.85rem;">No hay medicamentos prescritos. Agrega uno con el botón.</p></div>
+                            <button type="button" id="btnAgregarMedicamento" class="ctbtn-secondary" style="padding:6px 16px; font-size:0.85rem;"><i class="fas fa-plus-circle"></i> Agregar medicamento</button>
+                        </div>
+
+                        <div>
+                            <label for="tipoConsulta">Tipo de consulta</label>
+                            <select id="tipoConsulta" class="ctinput-field">
+                                <option value="GENERAL">GENERAL</option>
+                                <option value="ESPECIALIDAD">ESPECIALIDAD</option>
+                                <option value="CONTROL">CONTROL</option>
+                                <option value="EMERGENCIA">EMERGENCIA</option>
+                            </select>
+                        </div>
+
+                        <!-- Botones del modal -->
+                        <div class="ctmodal-footer-buttons">
+                            <button type="button" id="btnImprimirConsulta" class="ctbtn-modal ctbtn-imprimir-modal" data-id-consulta=""><i class="fas fa-print"></i> Imprimir</button>
+                            <button type="button" id="btnFinalizarConsulta" class="ctbtn-modal" style="background:#28a745; color:white; border:none; padding:10px 24px; border-radius:8px; font-weight:600; display:none;"><i class="fas fa-check-circle"></i> Finalizar Consulta</button>
+                            <button type="button" id="btnCancelarConsulta" class="ctbtn-modal ctbtn-cancelar-modal">Cancelar</button>
+                            <button type="button" id="btnGuardarConsulta" class="ctbtn-modal ctbtn-guardar-modal"><i class="fas fa-save"></i> Guardar Consulta</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Cita Directa -->
+    <div id="modalCitaDirecta" class="ctmodal-consulta" aria-hidden="true">
+        <div class="ctmodal-contenido" style="max-width:900px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 id="modalTitleCitaDirecta"><i class="fas fa-bolt" style="color:#fd7e14;"></i> Cita Directa con el Doctor</h2>
+                <button id="btnCerrarCitaDirecta" class="ctclose-modal" title="Cerrar" type="button">&times;</button>
+            </div>
+            <div id="modalErrorCitaDirecta" class="ctalert ctalert-error" style="display:none; margin-top:10px;"></div>
+            <form id="formCitaDirecta" class="ctform" onsubmit="return false;">
+                <div class="ctmodal-form-grid">
+                    <div class="full">
+                        <label for="buscarPacienteDirecta"><i class="fas fa-user"></i> Paciente *</label>
+                        <div style="position:relative;">
+                            <input id="buscarPacienteDirecta" class="ctinput-field" placeholder="Buscar paciente por nombre, teléfono o identidad..." autocomplete="off" />
+                            <div id="autocompletePacientesDirecta" class="autocomplete-list" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #ced4da; border-radius:6px; max-height:200px; overflow-y:auto; z-index:1000;"></div>
+                        </div>
+                        <input type="hidden" id="pacienteSeleccionadoDirecta" />
+                        <div id="pacienteInfoDirecta" style="margin-top:6px; font-size:0.85rem; color:#6c757d;"></div>
+                        <div id="pacienteDirecta-error" class="error-text"></div>
+                    </div>
+                    <div class="full">
+                        <label><i class="fas fa-user-md"></i> Doctor *</label>
+                        <div style="background:#e9ecef; padding:12px 16px; border-radius:6px; border:1px solid #ced4da;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <i class="fas fa-user-circle" style="font-size:1.8rem; color:#2c7be5;"></i>
+                                <div>
+                                    <strong id="doctorNombreDirecta" style="color:#1a3c6e; font-size:1rem;">Cargando...</strong>
+                                    <div id="doctorEspecialidadDirecta" style="font-size:0.85rem; color:#6c757d;"></div>
+                                </div>
+                                <span class="badge bg-success ms-auto" style="font-size:0.7rem;"><i class="fas fa-check-circle"></i> Pre-seleccionado</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="doctorSeleccionadoDirecta" />
+                        <div id="doctorDirecta-error" class="error-text"></div>
+                    </div>
+                    <div>
+                        <label for="inputFechaDirecta"><i class="fas fa-calendar"></i> Fecha *</label>
+                        <input id="inputFechaDirecta" type="date" class="ctinput-field" />
+                        <div id="fechaDirecta-error" class="error-text"></div>
+                    </div>
+                    <div>
+                        <label for="inputHoraDirecta"><i class="fas fa-clock"></i> Hora *</label>
+                        <input id="inputHoraDirecta" type="time" class="ctinput-field" />
+                        <div id="horaDirecta-error" class="error-text"></div>
+                    </div>
+                    <div>
+                        <label for="selectTipoCitaDirecta"><i class="fas fa-tag"></i> Tipo de Cita</label>
+                        <select id="selectTipoCitaDirecta" class="ctinput-field">
+                            <option value="PRIMERA_VEZ">Primera Vez</option>
+                            <option value="CONTROL" selected>Control</option>
+                            <option value="EMERGENCIA">Emergencia</option>
+                            <option value="PROCEDIMIENTO">Procedimiento</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="selectPrioridadDirecta"><i class="fas fa-flag"></i> Prioridad</label>
+                        <select id="selectPrioridadDirecta" class="ctinput-field">
+                            <option value="NORMAL">Normal</option>
+                            <option value="URGENTE">Urgente</option>
+                            <option value="ALTA">Alta</option>
+                        </select>
+                    </div>
+                    <div class="full">
+                        <label for="inputMotivoDirecta"><i class="fas fa-comment-medical"></i> Motivo de Consulta</label>
+                        <textarea id="inputMotivoDirecta" rows="3" class="ctinput-field" placeholder="Motivo por el cual el paciente consulta..."></textarea>
+                    </div>
+                    <div class="full" style="background:#fff3cd; padding:12px; border-radius:6px; border-left:4px solid #ffc107;">
+                        <p style="margin:0; font-size:0.9rem; color:#856404;">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Nota:</strong> Esta cita se registrará en estado 
+                            <span class="badge bg-primary">PROGRAMADA</span>.
+                            El paciente deberá pasar por <strong>preclínica</strong> 
+                            (enfermería) antes de ser atendido por el doctor.
+                        </p>
+                    </div>
+                </div>
+                <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:18px;">
+                    <button type="button" id="btnCancelarCitaDirecta" class="ctbtn-secondary">Cancelar</button>
+                    <button type="button" id="btnGuardarCitaDirecta" class="ctbtn-primary" style="background:#fd7e14; border-color:#fd7e14;"><i class="fas fa-bolt"></i> Crear Cita Directa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/preclinica.js" defer></script>
+    <script src="/js/consultaMedica.js" defer></script>
+<script>
+    window.user = <%- JSON.stringify(typeof user !== 'undefined' ? user : null) %>;
+    window.nombreUsuario = '<%- typeof nombreUsuario !== "undefined" ? nombreUsuario : "Usuario" %>';
+    window.rol = '<%- typeof rol !== "undefined" ? rol : "DOCTOR" %>';
+    console.log('Usuario inyectado:', window.user);
+</script>
+    <script>
+        // Inyección de datos del usuario
+        window.user = <%- JSON.stringify(typeof user !== 'undefined' ? user : null) %>;
+        window.nombreUsuario = '<%- typeof nombreUsuario !== "undefined" ? nombreUsuario : "Usuario" %>';
+        window.rol = '<%- typeof rol !== "undefined" ? rol : "DOCTOR" %>';
+        console.log('Usuario inyectado:', window.user);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoBtn = document.getElementById('logoBtn');
+            if (logoBtn) {
+                logoBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = '/dashboard';
+                });
+            }
+        });
+    </script>
+    <script>
+    function togglePreclinica() {
+        const fields = document.getElementById('preclinicaFields');
+        const btn = document.getElementById('togglePreclinica');
+        if (!fields || !btn) return;
+
+        const isHidden = fields.style.display === 'none';
+        fields.style.display = isHidden ? 'grid' : 'none';
+        btn.innerHTML = isHidden
+            ? '<i class="fas fa-eye-slash"></i> Ocultar'
+            : '<i class="fas fa-eye"></i> Mostrar';
+        localStorage.setItem('preclinicaVisible', isHidden ? 'true' : 'false');
+    }
+
+    // Opcional: restaurar estado al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        const fields = document.getElementById('preclinicaFields');
+        const btn = document.getElementById('togglePreclinica');
+        if (fields && btn) {
+            const visible = localStorage.getItem('preclinicaVisible') !== 'false';
+            fields.style.display = visible ? 'grid' : 'none';
+            btn.innerHTML = visible
+                ? '<i class="fas fa-eye-slash"></i> Ocultar'
+                : '<i class="fas fa-eye"></i> Mostrar';
+        }
+    });
+</script>
+
+<script>
+    window.user = <%- JSON.stringify(typeof user !== 'undefined' ? user : null) %>;
+    window.nombreUsuario = '<%- typeof nombreUsuario !== "undefined" ? nombreUsuario : "Usuario" %>';
+    window.rol = '<%- typeof rol !== "undefined" ? rol : "DOCTOR" %>';
+    console.log('Usuario inyectado:', window.user);
+</script>
+</body>
+</html>
+
+<script src="/js/preclinica.js" defer></script>
+<script src="/js/consultaMedica.js" defer></script>

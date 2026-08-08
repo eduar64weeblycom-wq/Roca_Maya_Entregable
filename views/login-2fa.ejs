@@ -1,0 +1,7 @@
+<h3>Verificación 2FA</h3>
+<form method="POST" action="/2fa/verify">
+  <input type="hidden" name="userId" value="<%= userId %>" />
+  <input name="token" placeholder="Código 6 dígitos" required />
+  <button type="submit">Verificar</button>
+  <% if (error) { %><p style="color:red;"><%= error %></p><% } %>
+</form>
