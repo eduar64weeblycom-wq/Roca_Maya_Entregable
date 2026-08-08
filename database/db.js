@@ -1,12 +1,37 @@
 const mysql = require("mysql2/promise");
 require("dotenv").config();
 
+// Obtener la contraseña priorizando las variables reales de Railway y descartando textos literales
+const getPassword = () => {
+  const pwd = process.env.DB_PASSWORD || process.env.MYSQL_ROOT_PASSWORD || process.env.MYSQLPASSWORD;
+  if (!pwd || pwd.includes("el_valor_de")) {
+    return "jWgLAGkmXFfYUhaoYKGGAxBUYLCUQsAk";
+  }
+  return pwd;
+};
+
+const getUser = () => {
+  const user = process.env.DB_USER || process.env.MYSQLUSER;
+  if (!user || user.includes("el_valor_de")) {
+    return "root";
+  }
+  return user;
+};
+
+const getHost = () => {
+  const host = process.env.DB_HOST || process.env.MYSQLHOST;
+  if (!host || host.includes("el_valor_de")) {
+    return "mysql.railway.internal";
+  }
+  return host;
+};
+
 const pool = mysql.createPool({
-  host: process.env.DB_HOST && process.env.DB_HOST !== "el_valor_de_MYSQLHOST" ? process.env.DB_HOST : "mysql.railway.internal",
-  user: process.env.DB_USER && process.env.DB_USER !== "el_valor_de_MYSQLUSER" ? process.env.DB_USER : "root",
-  password: process.env.DB_PASSWORD && process.env.DB_PASSWORD !== "el_valor_de_MYSQLPASSWORD" ? process.env.DB_PASSWORD : "jWgLAGkmXFfYUhaoYKGGAxBUYLCUQsAk",
-  database: process.env.DB_NAME && process.env.DB_NAME !== "el_valor_de_MYSQLDATABASE" ? process.env.DB_NAME : "railway", 
-  port: Number(process.env.DB_PORT) || 3306,
+  host: getHost(),
+  user: getUser(),
+  password: getPassword(),
+  database: process.env.DB_NAME || process.env.MYSQLDATABASE || "railway", 
+  port: Number(process.env.DB_PORT || process.env.MYSQLPORT) || 3306,
   waitForConnections: true,
   connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10,
   maxIdle: 10,
