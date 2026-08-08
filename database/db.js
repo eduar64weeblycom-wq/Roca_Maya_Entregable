@@ -1,23 +1,26 @@
 const mysql = require("mysql2/promise");
 require("dotenv").config();
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || "mysql.railway.internal",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "jWgLAGkmXFfYUhaoYKGGAxBUYLCUQsAk",
-  database: process.env.DB_NAME || "railway", 
-  port: Number(process.env.DB_PORT) || 3306,
-  waitForConnections: true,
-  connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10,
-  maxIdle: 10,
-  idleTimeout: 60000,
-  queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0,
-  multipleStatements: true,
-  timezone: 'Z',
-  dateStrings: true
-});
+// Railway provee una URL completa con el usuario, contraseña y host correctos
+const pool = mysql.createPool(
+  process.env.MYSQL_URL || {
+    host: process.env.DB_HOST || "mysql.railway.internal",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "jWgLAGkmXFfYUhaoYKGGAxBUYLCUQsAk",
+    database: process.env.DB_NAME || "railway",
+    port: Number(process.env.DB_PORT) || 3306,
+    waitForConnections: true,
+    connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10,
+    maxIdle: 10,
+    idleTimeout: 60000,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
+    multipleStatements: true,
+    timezone: 'Z',
+    dateStrings: true
+  }
+);
 
 async function testConnection() {
   try {
