@@ -54,25 +54,32 @@ async function registrarBitacora({
       ? req.get("User-Agent") || "Desconocido"
       : "Sistema";
 
-    // 2. Registrar en la bitácora mediante el procedimiento almacenado
-    await pool.query(
-      "CALL SP_REGISTRAR_BITACORA(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        idUsuario,
-        accion,
-        descripcion,
-        modulo,
-        idRegistro,
-        tabla,
-        ipCliente,
-        userAgent,
-        estado,
-        detalleError,
-        "SISTEMA_WEB",
-      ]
-    );
-  } catch (err) {
-    console.error("bitacora error:", err);
+    // 2. Insertar directamente en la tabla de bitácora (evitando procedimientos almacenados)
+    const query = `
+      INSERT INTO TBL_MS_BITACORA (
+        ID_USUARIO, ACCION, DESCRIPCION, MODULO,
+        ID_REGISTRO_AFECTADO, TABLA_AFECTADA, IP_CLIENTE, USER_AGENT,
+        ESTADO_OPERACION, DETALLE_ERROR, USUARIO_CREACION
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    
+    await pool.query(query, [
+      idUsuario || null,
+      accion || 'ACCION',
+      descripcion || null,
+      modulo || null,
+      idRegistro || null,
+      tabla || null,
+      ipCliente || null,
+      userAgent || null,
+      estado || 'EXITO',
+      detalleError || null,
+      'SISTEMA_WEB'
+    ]);
+
+  } catch (error) {
+    // Evita que un fallo en la bitácora rompa la petición principal de la app
+    console.error("Error en bitácora (ignorado):", error.message);
   }
 }
 
