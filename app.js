@@ -93,7 +93,7 @@ app.use(async (req, res, next) => {
   if (usuario) {
     try {
       const [userData] = await pool.query(`
-        SELECT 
+  SELECT 
           u.ID_USUARIO,
           u.USUARIO,
           u.NOMBRE_USUARIO,
@@ -101,8 +101,8 @@ app.use(async (req, res, next) => {
           u.CORREO_ELECTRONICO,
           r.ROL,
           r.ID_ROL
-        FROM TBL_MS_USUARIO u
-        INNER JOIN TBL_MS_ROLES r ON u.ID_ROL = r.ID_ROL
+        FROM tbl_ms_usuario u
+        INNER JOIN tbl_ms_roles r ON u.ID_ROL = r.ID_ROL
         WHERE u.USUARIO = ?
       `, [usuario]);
       
@@ -370,7 +370,7 @@ emitter.on("cita:creada", async (payload) => {
     const pacienteRow = pacRows && pacRows[0] ? pacRows[0] : null;
 
     const [docRows] = await pool.query(
-      `SELECT NOMBRE_USUARIO, CORREO_ELECTRONICO FROM TBL_MS_USUARIO WHERE ID_USUARIO = ? LIMIT 1`,
+      `SELECT NOMBRE_USUARIO, CORREO_ELECTRONICO FROM tbl_ms_USUARIO WHERE ID_USUARIO = ? LIMIT 1`,
       [doctorId]
     );
     const doctorRow = docRows && docRows[0] ? docRows[0] : null;
@@ -513,7 +513,7 @@ emitter.on("cita:creada", async (payload) => {
           descripcion: `Email de confirmación enviado al doctor ${doctorRow.CORREO_ELECTRONICO} para cita ID ${idCita}`,
           modulo: "CITAS",
           idRegistro: idCita,
-          tabla: "TBL_MS_USUARIO",
+          tabla: "tbl_ms_USUARIO",
           estado: "EXITO",
           req: null,
         });
@@ -525,7 +525,7 @@ emitter.on("cita:creada", async (payload) => {
           descripcion: `Error enviando email al doctor ${doctorRow.CORREO_ELECTRONICO} para cita ID ${idCita}`,
           modulo: "CITAS",
           idRegistro: idCita,
-          tabla: "TBL_MS_USUARIO",
+          tabla: "tbl_ms_USUARIO",
           estado: "ERROR",
           detalleError: "Falló enviarCorreo()",
           req: null,
@@ -539,7 +539,7 @@ emitter.on("cita:creada", async (payload) => {
         descripcion: `No se envió email: doctor ID ${doctorId} no tiene correo registrado para cita ${idCita}`,
         modulo: "CITAS",
         idRegistro: idCita,
-        tabla: "TBL_MS_USUARIO",
+        tabla: "tbl_ms_USUARIO",
         estado: "ADVERTENCIA",
         req: null,
       });
@@ -554,7 +554,7 @@ emitter.on("cita:creada", async (payload) => {
         descripcion: err.message || String(err),
         modulo: "CITAS",
         idRegistro: null,
-        tabla: "TBL_MS_USUARIO",
+        tabla: "tbl_ms_USUARIO",
         estado: "ERROR",
         detalleError: err.message || String(err),
         req: null,

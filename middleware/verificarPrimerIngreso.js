@@ -20,7 +20,7 @@ async function verificarPrimerIngreso(req, res, next) {
         }
 
         const [rows] = await db.query(
-            'SELECT ESTADO FROM TBL_MS_USUARIO WHERE USUARIO = ?',
+            'SELECT ESTADO FROM tbl_ms_USUARIO WHERE USUARIO = ?',
             [usuario]
         );
 

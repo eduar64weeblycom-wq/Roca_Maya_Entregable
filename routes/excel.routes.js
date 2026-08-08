@@ -71,7 +71,7 @@ router.get("/preclinica", async (req, res) => {
             FROM TBL_PRECLINICA p
             INNER JOIN TBL_CITAS c ON p.ID_CITA = c.ID_CITA
             INNER JOIN TBL_PACIENTE pa ON c.ID_PACIENTE = pa.ID_PACIENTE
-            LEFT JOIN TBL_MS_USUARIO u ON p.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
+            LEFT JOIN tbl_ms_USUARIO u ON p.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
             WHERE 1=1
         `;
 
@@ -313,8 +313,8 @@ router.get("/usuarios", async (req, res) => {
                 u.CORREO_ELECTRONICO,
                 CASE WHEN u.ACTIVO_2FA = 1 THEN 'Sí' ELSE 'No' END AS ACTIVO_2FA,
                 u.FECHA_ULTIMA_CONEXION
-            FROM TBL_MS_USUARIO u
-            INNER JOIN TBL_MS_ROLES r ON u.ID_ROL = r.ID_ROL
+            FROM tbl_ms_USUARIO u
+            INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL
             ORDER BY u.ID_USUARIO
         `);
 
@@ -388,7 +388,7 @@ router.get("/usuarios", async (req, res) => {
                 accion: "EXPORTAR_EXCEL_USUARIOS",
                 descripcion: `Exportados ${usuarios.length} usuarios a Excel`,
                 modulo: "USUARIOS",
-                tabla: "TBL_MS_USUARIO",
+                tabla: "tbl_ms_USUARIO",
                 estado: "EXITO",
                 req
             });
@@ -444,7 +444,7 @@ router.get("/consultas", async (req, res) => {
                 cm.FECHA_CONSULTA
             FROM TBL_CITAS c
             INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
-            INNER JOIN TBL_MS_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
+            INNER JOIN tbl_ms_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
             LEFT JOIN TBL_PRECLINICA pr ON c.ID_CITA = pr.ID_CITA
             LEFT JOIN TBL_CONSULTA_MEDICA cm ON c.ID_CITA = cm.ID_CITA
             WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
@@ -701,8 +701,8 @@ router.get("/bitacora", async (req, res) => {
                 b.ACCION,
                 b.MODULO,
                 b.DESCRIPCION
-            FROM TBL_MS_BITACORA b
-            LEFT JOIN TBL_MS_USUARIO u ON b.ID_USUARIO = u.ID_USUARIO
+            FROM tbl_ms_BITACORA b
+            LEFT JOIN tbl_ms_USUARIO u ON b.ID_USUARIO = u.ID_USUARIO
             ORDER BY b.FECHA_HORA DESC
             LIMIT 500
         `);
@@ -797,7 +797,7 @@ router.get("/citas", async (req, res) => {
                 c.CANAL_REGISTRO
             FROM TBL_CITAS c
             INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
-            INNER JOIN TBL_MS_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
+            INNER JOIN tbl_ms_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
             WHERE c.ESTADO IN ('PROGRAMADA','CONFIRMADA','FINALIZADA','CANCELADA','NO_ASISTIO')
             ORDER BY c.FECHA_CITA DESC
             LIMIT 500
@@ -1090,7 +1090,7 @@ router.get("/historial/:idPaciente", async (req, res) => {
                 cm.TIPO_CONSULTA,
                 u.NOMBRE_USUARIO AS DOCTOR
             FROM TBL_CONSULTA_MEDICA cm
-            LEFT JOIN TBL_MS_USUARIO u ON cm.ID_DOCTOR = u.ID_USUARIO
+            LEFT JOIN tbl_ms_USUARIO u ON cm.ID_DOCTOR = u.ID_USUARIO
             WHERE cm.ID_PACIENTE = ?
             ORDER BY cm.FECHA_CONSULTA DESC
             LIMIT 20
@@ -1113,7 +1113,7 @@ router.get("/historial/:idPaciente", async (req, res) => {
                 pr.ESTADO_GENERAL,
                 u.NOMBRE_USUARIO AS ENFERMERA
             FROM TBL_PRECLINICA pr
-            LEFT JOIN TBL_MS_USUARIO u ON pr.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
+            LEFT JOIN tbl_ms_USUARIO u ON pr.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
             WHERE pr.ID_CITA IN (
                 SELECT c.ID_CITA FROM TBL_CITAS c WHERE c.ID_PACIENTE = ?
             )

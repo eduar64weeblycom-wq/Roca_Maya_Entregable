@@ -14,7 +14,7 @@ async function registrarBitacora({
   try {
     // 1. Verificar si la bitácora está activa en los parámetros del sistema
     const [param] = await pool.query(
-      "SELECT VALOR FROM TBL_MS_PARAMETROS WHERE PARAMETRO = 'BITACORA_ACTIVA'"
+      "SELECT VALOR FROM tbl_ms_PARAMETROS WHERE PARAMETRO = 'BITACORA_ACTIVA'"
     );
 
     // Si el parámetro existe y su valor es '0', está pausada: salimos inmediatamente sin hacer nada
@@ -27,7 +27,7 @@ async function registrarBitacora({
     // Buscar el ID del usuario
     if (usuario && typeof usuario === "string") {
       const [rows] = await pool.query(
-        "SELECT ID_USUARIO FROM TBL_MS_USUARIO WHERE USUARIO = ?",
+        "SELECT ID_USUARIO FROM tbl_ms_USUARIO WHERE USUARIO = ?",
         [usuario]
       );
       if (rows.length) idUsuario = rows[0].ID_USUARIO;
@@ -38,7 +38,7 @@ async function registrarBitacora({
     // Si no se encontró usuario, usar el admin por defecto
     if (!idUsuario) {
       const [sys] = await pool.query(
-        "SELECT ID_USUARIO FROM TBL_MS_USUARIO WHERE USUARIO = 'ADMIN'"
+        "SELECT ID_USUARIO FROM tbl_ms_USUARIO WHERE USUARIO = 'ADMIN'"
       );
       idUsuario = sys && sys.length ? sys[0].ID_USUARIO : 1;
     }
@@ -56,7 +56,7 @@ async function registrarBitacora({
 
     // 2. Insertar directamente en la tabla de bitácora (evitando procedimientos almacenados)
     const query = `
-      INSERT INTO TBL_MS_BITACORA (
+      INSERT INTO tbl_ms_BITACORA (
         ID_USUARIO, ACCION, DESCRIPCION, MODULO,
         ID_REGISTRO_AFECTADO, TABLA_AFECTADA, IP_CLIENTE, USER_AGENT,
         ESTADO_OPERACION, DETALLE_ERROR, USUARIO_CREACION

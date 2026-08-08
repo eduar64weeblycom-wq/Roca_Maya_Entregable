@@ -10,7 +10,7 @@ const pool = require('../database/db');
 async function registrarBitacora(accion, modulo, descripcion, idUsuario = null) {
   try {
     await pool.query(
-      `INSERT INTO TBL_MS_BITACORA 
+      `INSERT INTO tbl_ms_BITACORA 
          (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
        VALUES (NOW(), ?, ?, ?, ?)`,
       [idUsuario, accion, descripcion, modulo]

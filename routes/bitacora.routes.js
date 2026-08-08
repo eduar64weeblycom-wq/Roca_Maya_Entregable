@@ -13,14 +13,14 @@ router.get("/", async (req, res) => {
     // 1. Obtener los registros de la bitácora
     const [rows] = await pool.query(`
       SELECT b.FECHA_HORA, u.USUARIO, b.ACCION, b.DESCRIPCION, b.MODULO
-      FROM TBL_MS_BITACORA b
-      LEFT JOIN TBL_MS_USUARIO u ON b.ID_USUARIO = u.ID_USUARIO
+      FROM tbl_ms_BITACORA b
+      LEFT JOIN tbl_ms_USUARIO u ON b.ID_USUARIO = u.ID_USUARIO
       ORDER BY b.FECHA_HORA DESC LIMIT 50
     `);
 
     // 2. Consultar el estado actual del parámetro de la bitácora
     const [paramRows] = await pool.query(`
-      SELECT VALOR FROM TBL_MS_PARAMETROS WHERE PARAMETRO = 'BITACORA_ACTIVA'
+      SELECT VALOR FROM tbl_ms_PARAMETROS WHERE PARAMETRO = 'BITACORA_ACTIVA'
     `);
 
     // Si el valor es '0', está pausada. Si es '1' o no existe, está activa.
@@ -43,7 +43,7 @@ router.get("/parametros", async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT ID_PARAMETRO, PARAMETRO, VALOR, DESCRIPCION
-      FROM TBL_MS_PARAMETROS
+      FROM tbl_ms_PARAMETROS
       ORDER BY ID_PARAMETRO
     `);
 
@@ -70,12 +70,12 @@ router.post("/parametros/guardar", async (req, res) => {
 
     for (const p of parametros) {
       await pool.query(
-        "UPDATE TBL_MS_PARAMETROS SET VALOR = ?, FECHA_MODIFICACION = NOW(), USUARIO_MODIFICACION = ? WHERE ID_PARAMETRO = ?",
+        "UPDATE tbl_ms_PARAMETROS SET VALOR = ?, FECHA_MODIFICACION = NOW(), USUARIO_MODIFICACION = ? WHERE ID_PARAMETRO = ?",
         [p.valor, nombreUsuario, p.id]
       );
 
       await pool.query(
-        `INSERT INTO TBL_MS_BITACORA (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
+        `INSERT INTO tbl_ms_BITACORA (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
          VALUES (NOW(), ?, ?, ?, ?)`,
         [
           idUsuario,
@@ -102,7 +102,7 @@ router.post("/parametros/update", async (req, res) => {
     const { id, valor, usuario } = req.body;
 
     await pool.query(
-      `UPDATE TBL_MS_PARAMETROS 
+      `UPDATE tbl_ms_PARAMETROS 
        SET VALOR = ?, FECHA_MODIFICACION = NOW(), USUARIO_MODIFICACION = ? 
        WHERE ID_PARAMETRO = ?`,
       [valor, usuario || 'system', id]
@@ -135,7 +135,7 @@ router.get("/parametros/backup", async (req, res) => {
 
 try {
   const [paramRows] = await pool.query(
-    "SELECT VALOR FROM TBL_MS_PARAMETROS WHERE PARAMETRO = 'RUTA_MYSQLDUMP' LIMIT 1"
+    "SELECT VALOR FROM tbl_ms_PARAMETROS WHERE PARAMETRO = 'RUTA_MYSQLDUMP' LIMIT 1"
   );
 
   console.log(">>> Resultado SQL RUTA_MYSQLDUMP:", paramRows);
@@ -256,7 +256,7 @@ try {
             if (!downloadError) {
               try {
                 await pool.query(
-                  `INSERT INTO TBL_MS_BITACORA 
+                  `INSERT INTO tbl_ms_BITACORA 
                      (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
                    VALUES (NOW(), ?, ?, ?, ?)`,
                   [

@@ -12,9 +12,9 @@ const verificarSesion = async (req, res, next) => {
   try {
     // 🔍 Obtener estado del usuario y estado del rol
     const [rows] = await pool.query(`
-      SELECT u.ESTADO AS ESTADO_USUARIO, r.ESTADO AS ESTADO_ROL
-      FROM TBL_MS_USUARIO u
-      INNER JOIN TBL_MS_ROLES r ON u.ID_ROL = r.ID_ROL
+     SELECT u.ESTADO AS ESTADO_USUARIO, r.ESTADO AS ESTADO_ROL
+      FROM tbl_ms_usuario u
+      INNER JOIN tbl_ms_roles r ON u.ID_ROL = r.ID_ROL
       WHERE u.USUARIO = ?
     `, [usuario]);
     
@@ -51,8 +51,8 @@ const obtenerRolUsuario = async (usuario) => {
   try {
     const [rows] = await pool.query(`
       SELECT r.ROL
-      FROM TBL_MS_USUARIO u
-      INNER JOIN TBL_MS_ROLES r ON u.ID_ROL = r.ID_ROL
+      FROM tbl_ms_USUARIO u
+      INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL
       WHERE u.USUARIO = ?
     `, [usuario]);
     

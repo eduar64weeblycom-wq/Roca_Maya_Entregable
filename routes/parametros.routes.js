@@ -112,7 +112,7 @@ router.post('/guardar', validarParametrosBackend, async (req, res) => {
 
         for (const param of parametros) {
             await pool.query(
-                'UPDATE TBL_MS_PARAMETROS SET VALOR = ?, USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW() WHERE ID_PARAMETRO = ?',
+                'UPDATE tbl_ms_PARAMETROS SET VALOR = ?, USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW() WHERE ID_PARAMETRO = ?',
                 [param.valor, usuario.id, param.id]
             );
             
@@ -142,7 +142,7 @@ router.post('/guardar', validarParametrosBackend, async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const [parametros] = await pool.query(`
-            SELECT * FROM TBL_MS_PARAMETROS 
+            SELECT * FROM tbl_ms_PARAMETROS 
             ORDER BY ID_PARAMETRO
         `);
         

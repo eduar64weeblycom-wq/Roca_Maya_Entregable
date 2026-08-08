@@ -26,7 +26,7 @@ router.get("/", async (req, res) => {
           c.TIPO_CITA
         FROM TBL_CITAS c
         INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
-        INNER JOIN TBL_MS_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
+        INNER JOIN tbl_ms_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
         ORDER BY c.FECHA_CITA DESC
       `);
@@ -45,7 +45,7 @@ router.get("/", async (req, res) => {
           c.TIPO_CITA
         FROM TBL_CITAS c
         INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
-        INNER JOIN TBL_MS_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
+        INNER JOIN tbl_ms_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
           AND c.ID_DOCTOR = ?
         ORDER BY c.FECHA_CITA DESC
@@ -57,9 +57,9 @@ router.get("/", async (req, res) => {
       SELECT 
         u.ID_USUARIO, 
         u.NOMBRE_USUARIO 
-      FROM TBL_MS_USUARIO u
+      FROM tbl_ms_USUARIO u
       WHERE u.ESTADO = 'ACTIVO' 
-        AND u.ID_ROL = (SELECT ID_ROL FROM TBL_MS_ROLES WHERE ROL = 'DOCTOR')
+        AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_ROLES WHERE ROL = 'DOCTOR')
       GROUP BY u.ID_USUARIO, u.NOMBRE_USUARIO
       ORDER BY u.NOMBRE_USUARIO
     `);
@@ -111,7 +111,7 @@ router.get("/api/calendario", async (req, res) => {
           c.DURACION_ESTIMADA_MIN
         FROM TBL_CITAS c
         INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
-        INNER JOIN TBL_MS_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
+        INNER JOIN tbl_ms_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
         ORDER BY c.FECHA_CITA ASC
       `);
@@ -135,7 +135,7 @@ router.get("/api/calendario", async (req, res) => {
           c.DURACION_ESTIMADA_MIN
         FROM TBL_CITAS c
         INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
-        INNER JOIN TBL_MS_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
+        INNER JOIN tbl_ms_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
           AND c.ID_DOCTOR = ?
         ORDER BY c.FECHA_CITA ASC
@@ -149,11 +149,11 @@ router.get("/api/calendario", async (req, res) => {
         u.NOMBRE_USUARIO AS NOMBRE,
         GROUP_CONCAT(DISTINCT COALESCE(e.NOMBRE_ESPECIALIDAD, 'Medicina General') SEPARATOR ', ') AS ESPECIALIDAD,
         u.CORREO_ELECTRONICO
-      FROM TBL_MS_USUARIO u
+      FROM tbl_ms_USUARIO u
       LEFT JOIN TBL_DOCTOR_ESPECIALIDAD de ON u.ID_USUARIO = de.ID_DOCTOR
       LEFT JOIN TBL_ESPECIALIDADES e ON de.ID_ESPECIALIDAD = e.ID_ESPECIALIDAD
       WHERE u.ESTADO = 'ACTIVO' 
-        AND u.ID_ROL = (SELECT ID_ROL FROM TBL_MS_ROLES WHERE ROL = 'DOCTOR')
+        AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_ROLES WHERE ROL = 'DOCTOR')
       GROUP BY u.ID_USUARIO, u.NOMBRE_USUARIO, u.CORREO_ELECTRONICO
       ORDER BY u.NOMBRE_USUARIO
     `);
@@ -196,7 +196,7 @@ router.get("/api/cita-detalle/:idCita", async (req, res) => {
         u.NOMBRE_USUARIO AS NOMBRE_DOCTOR
       FROM TBL_CITAS c
       INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
-      INNER JOIN TBL_MS_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
+      INNER JOIN tbl_ms_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
       WHERE c.ID_CITA = ?
     `, [idCita]);
 
@@ -237,7 +237,7 @@ router.get("/api/historial-rapido/:idPaciente", async (req, res) => {
         cm.ID_PACIENTE,
         u.NOMBRE_USUARIO AS DOCTOR
       FROM TBL_CONSULTA_MEDICA cm
-      INNER JOIN TBL_MS_USUARIO u ON cm.ID_DOCTOR = u.ID_USUARIO
+      INNER JOIN tbl_ms_USUARIO u ON cm.ID_DOCTOR = u.ID_USUARIO
       WHERE cm.ID_PACIENTE = ?
       ORDER BY cm.FECHA_CONSULTA DESC
       LIMIT 5
@@ -285,7 +285,7 @@ router.get("/api/imprimir-consulta/:idConsulta", async (req, res) => {
         c.ESTADO AS ESTADO_CITA
       FROM TBL_CONSULTA_MEDICA cm
       INNER JOIN TBL_PACIENTE p ON cm.ID_PACIENTE = p.ID_PACIENTE
-      INNER JOIN TBL_MS_USUARIO u ON cm.ID_DOCTOR = u.ID_USUARIO
+      INNER JOIN tbl_ms_USUARIO u ON cm.ID_DOCTOR = u.ID_USUARIO
       INNER JOIN TBL_CITAS c ON cm.ID_CITA = c.ID_CITA
       WHERE cm.ID_CONSULTA = ?
     `, [idConsulta]);
@@ -363,7 +363,7 @@ router.get("/api/datos", async (req, res) => {
           c.OBSERVACIONES
         FROM TBL_CITAS c
         INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
-        INNER JOIN TBL_MS_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
+        INNER JOIN tbl_ms_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
         ORDER BY c.FECHA_CITA ASC
       `);
@@ -388,7 +388,7 @@ router.get("/api/datos", async (req, res) => {
           c.OBSERVACIONES
         FROM TBL_CITAS c
         INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
-        INNER JOIN TBL_MS_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
+        INNER JOIN tbl_ms_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
           AND c.ID_DOCTOR = ?
         ORDER BY c.FECHA_CITA ASC
@@ -402,11 +402,11 @@ router.get("/api/datos", async (req, res) => {
         u.NOMBRE_USUARIO,
         u.CORREO_ELECTRONICO,
         GROUP_CONCAT(DISTINCT COALESCE(e.NOMBRE_ESPECIALIDAD, 'Medicina General') SEPARATOR ', ') AS ESPECIALIDAD
-      FROM TBL_MS_USUARIO u
+      FROM tbl_ms_USUARIO u
       LEFT JOIN TBL_DOCTOR_ESPECIALIDAD de ON u.ID_USUARIO = de.ID_DOCTOR
       LEFT JOIN TBL_ESPECIALIDADES e ON de.ID_ESPECIALIDAD = e.ID_ESPECIALIDAD
       WHERE u.ESTADO = 'ACTIVO' 
-        AND u.ID_ROL = (SELECT ID_ROL FROM TBL_MS_ROLES WHERE ROL = 'DOCTOR')
+        AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_ROLES WHERE ROL = 'DOCTOR')
       GROUP BY u.ID_USUARIO, u.NOMBRE_USUARIO, u.CORREO_ELECTRONICO
       ORDER BY u.NOMBRE_USUARIO
     `);
@@ -942,7 +942,7 @@ router.get("/por-cita/:idCita", async (req, res) => {
         u.NOMBRE_USUARIO AS NOMBRE_DOCTOR
       FROM TBL_CONSULTA_MEDICA cm
       INNER JOIN TBL_PACIENTE p ON cm.ID_PACIENTE = p.ID_PACIENTE
-      INNER JOIN TBL_MS_USUARIO u ON cm.ID_DOCTOR = u.ID_USUARIO
+      INNER JOIN tbl_ms_USUARIO u ON cm.ID_DOCTOR = u.ID_USUARIO
       WHERE cm.ID_CITA = ?
     `, [idCita]);
 
@@ -1003,7 +1003,7 @@ router.get("/api/cita/:idCita", async (req, res) => {
         p.DIRECCION, u.NOMBRE_USUARIO AS NOMBRE_DOCTOR
       FROM TBL_CITAS c
       INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
-      INNER JOIN TBL_MS_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
+      INNER JOIN tbl_ms_USUARIO u ON c.ID_DOCTOR = u.ID_USUARIO
       WHERE c.ID_CITA = ?
     `, [idCita]);
 
@@ -1028,7 +1028,7 @@ router.get("/api/cita/:idCita", async (req, res) => {
       SELECT ID_CONSULTA, FECHA_CONSULTA, DIAGNOSTICO_PRINCIPAL,
         TRATAMIENTO, u.NOMBRE_USUARIO AS DOCTOR
       FROM TBL_CONSULTA_MEDICA cm
-      INNER JOIN TBL_MS_USUARIO u ON cm.ID_DOCTOR = u.ID_USUARIO
+      INNER JOIN tbl_ms_USUARIO u ON cm.ID_DOCTOR = u.ID_USUARIO
       WHERE cm.ID_PACIENTE = ?
       ORDER BY cm.FECHA_CONSULTA DESC LIMIT 5
     `, [cita.ID_PACIENTE]);
@@ -1064,7 +1064,7 @@ router.get("/api/consulta/:idConsulta", async (req, res) => {
              pre.OBSERVACIONES AS PRECLINICA_OBSERVACIONES
       FROM TBL_CONSULTA_MEDICA cm
       INNER JOIN TBL_PACIENTE p ON cm.ID_PACIENTE = p.ID_PACIENTE
-      INNER JOIN TBL_MS_USUARIO u ON cm.ID_DOCTOR = u.ID_USUARIO
+      INNER JOIN tbl_ms_USUARIO u ON cm.ID_DOCTOR = u.ID_USUARIO
       LEFT JOIN TBL_PRECLINICA pre ON cm.ID_CITA = pre.ID_CITA
       WHERE cm.ID_CONSULTA = ?
     `, [idConsulta]);

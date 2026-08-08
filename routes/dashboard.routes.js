@@ -24,8 +24,8 @@ router.get("/", async (req, res) => {
       SELECT u.ID_USUARIO, u.USUARIO, u.NOMBRE_USUARIO, 
              u.CORREO_ELECTRONICO, u.ESTADO, u.TELEFONO_PROFESIONAL,
              r.ROL, r.ID_ROL
-      FROM TBL_MS_USUARIO u
-      INNER JOIN TBL_MS_ROLES r ON u.ID_ROL = r.ID_ROL
+      FROM tbl_ms_USUARIO u
+      INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL
       WHERE u.USUARIO = ?
     `, [usuario]);
 
@@ -89,7 +89,7 @@ router.get('/permisos', async (req, res) => {
     const usuario = req.usuarioActual;
     if (!usuario) return res.status(401).json({ error: 'No autenticado' });
 
-    const [userData] = await db.query(`SELECT ID_ROL FROM TBL_MS_USUARIO WHERE USUARIO = ?`, [usuario]);
+    const [userData] = await db.query(`SELECT ID_ROL FROM tbl_ms_USUARIO WHERE USUARIO = ?`, [usuario]);
     if (userData.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
 
     const idRol = userData[0].ID_ROL;
@@ -130,7 +130,7 @@ router.post('/cambiar-password', async (req, res) => {
 
     const [userData] = await db.query(`
       SELECT ID_USUARIO, CONTRASENA, ESTADO 
-      FROM TBL_MS_USUARIO 
+      FROM tbl_ms_USUARIO 
       WHERE USUARIO = ?
     `, [usuario]);
 
@@ -164,7 +164,7 @@ router.post('/cambiar-password', async (req, res) => {
     const nuevoEstado = estadoActual.toUpperCase() === 'NUEVO' ? 'ACTIVO' : estadoActual;
 
     await db.query(`
-      UPDATE TBL_MS_USUARIO 
+      UPDATE tbl_ms_USUARIO 
       SET CONTRASENA = ?, 
           ESTADO = ?,
           FECHA_MODIFICACION = NOW(),
@@ -181,7 +181,7 @@ router.post('/cambiar-password', async (req, res) => {
       `Usuario ${usuario} cambió su contraseña${estadoActual === 'NUEVO' ? ' (primer ingreso)' : ''}`,
       'SEGURIDAD',
       userId,
-      'TBL_MS_USUARIO',
+      'tbl_ms_USUARIO',
       req.ip || null,
       req.headers['user-agent'] || null,
       'EXITO',
@@ -222,7 +222,7 @@ router.post('/actualizar-telefono', async (req, res) => {
 
     // Actualizar el teléfono
     await db.query(
-      'UPDATE TBL_MS_USUARIO SET TELEFONO_PROFESIONAL = ? WHERE USUARIO = ?',
+      'UPDATE tbl_ms_USUARIO SET TELEFONO_PROFESIONAL = ? WHERE USUARIO = ?',
       [telefono.trim(), usuario]
     );
 
@@ -235,7 +235,7 @@ router.post('/actualizar-telefono', async (req, res) => {
       `Usuario ${usuario} actualizó su número profesional a: ${telefono.trim()}`,
       'PERFIL',
       null,
-      'TBL_MS_USUARIO',
+      'tbl_ms_USUARIO',
       req.ip || null,
       req.headers['user-agent'] || null,
       'EXITO',
@@ -258,8 +258,8 @@ router.get('/stats', async (req, res) => {
     const usuario = req.usuarioActual;
     const [userData] = await db.query(`
       SELECT r.ROL
-      FROM TBL_MS_USUARIO u
-      INNER JOIN TBL_MS_ROLES r ON u.ID_ROL = r.ID_ROL
+      FROM tbl_ms_USUARIO u
+      INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL
       WHERE u.USUARIO = ?
     `, [usuario]);
     const rol = userData[0]?.ROL || '';

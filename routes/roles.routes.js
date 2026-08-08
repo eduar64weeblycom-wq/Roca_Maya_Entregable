@@ -9,7 +9,7 @@ router.get("/", async (req, res) => {
   try {
     const [roles] = await pool.query(`
       SELECT ID_ROL, ROL, DESCRIPCION, ESTADO, FECHA_CREACION 
-      FROM TBL_MS_ROLES 
+      FROM tbl_ms_ROLES 
       ORDER BY ID_ROL
     `);
     
@@ -51,7 +51,7 @@ router.get("/api/roles", async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT ID_ROL, ROL, DESCRIPCION, ESTADO 
-       FROM TBL_MS_ROLES 
+       FROM tbl_ms_ROLES 
        ORDER BY ID_ROL`
     );
     res.json({ ok: true, roles: rows });
@@ -68,7 +68,7 @@ router.get("/api/todos", async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT ID_ROL, ROL, DESCRIPCION, ESTADO 
-       FROM TBL_MS_ROLES 
+       FROM tbl_ms_ROLES 
        ORDER BY ID_ROL`
     );
     res.json({ ok: true, roles: rows });
@@ -177,7 +177,7 @@ router.post("/api/crear", async (req, res) => {
     }
 
     const [existe] = await pool.query(
-      `SELECT ID_ROL FROM TBL_MS_ROLES WHERE UPPER(ROL) = UPPER(?)`,
+      `SELECT ID_ROL FROM tbl_ms_ROLES WHERE UPPER(ROL) = UPPER(?)`,
       [rol.trim()]
     );
     
@@ -186,7 +186,7 @@ router.post("/api/crear", async (req, res) => {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO TBL_MS_ROLES (ROL, DESCRIPCION, ESTADO, USUARIO_CREACION) 
+      `INSERT INTO tbl_ms_ROLES (ROL, DESCRIPCION, ESTADO, USUARIO_CREACION) 
        VALUES (?, ?, ?, ?)`,
       [rol.trim(), descripcion || '', estadoFinal, usuarioAccion || 'SISTEMA']
     );
@@ -246,7 +246,7 @@ router.put("/api/actualizar/:id", async (req, res) => {
     }
 
     const [existe] = await pool.query(
-      `SELECT ID_ROL FROM TBL_MS_ROLES 
+      `SELECT ID_ROL FROM tbl_ms_ROLES 
        WHERE UPPER(ROL) = UPPER(?) AND ID_ROL != ?`,
       [rol.trim(), id]
     );
@@ -256,7 +256,7 @@ router.put("/api/actualizar/:id", async (req, res) => {
     }
 
     await pool.query(
-      `UPDATE TBL_MS_ROLES 
+      `UPDATE tbl_ms_ROLES 
        SET ROL = ?, DESCRIPCION = ?, ESTADO = ?,
            FECHA_MODIFICACION = CURRENT_TIMESTAMP, 
            USUARIO_MODIFICACION = ? 
@@ -288,7 +288,7 @@ router.delete("/api/eliminar/:id", async (req, res) => {
     }
 
     const [usuarios] = await pool.query(
-      `SELECT COUNT(*) as total FROM TBL_MS_USUARIO WHERE ID_ROL = ?`,
+      `SELECT COUNT(*) as total FROM tbl_ms_USUARIO WHERE ID_ROL = ?`,
       [id]
     );
 
@@ -302,11 +302,11 @@ router.delete("/api/eliminar/:id", async (req, res) => {
     await pool.query(`DELETE FROM TBL_PERMISOS WHERE ID_ROL = ?`, [id]);
 
     const [rolData] = await pool.query(
-      `SELECT ROL FROM TBL_MS_ROLES WHERE ID_ROL = ?`,
+      `SELECT ROL FROM tbl_ms_ROLES WHERE ID_ROL = ?`,
       [id]
     );
 
-    await pool.query(`DELETE FROM TBL_MS_ROLES WHERE ID_ROL = ?`, [id]);
+    await pool.query(`DELETE FROM tbl_ms_ROLES WHERE ID_ROL = ?`, [id]);
 
     res.json({ ok: true, msg: `Rol "${rolData[0]?.ROL || 'ID ' + id}" eliminado exitosamente` });
 
