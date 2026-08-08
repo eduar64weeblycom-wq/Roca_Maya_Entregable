@@ -27,7 +27,7 @@ async function registrarBitacora({
     // Buscar el ID del usuario
     if (usuario && typeof usuario === "string") {
       const [rows] = await pool.query(
-        "SELECT ID_USUARIO FROM tbl_ms_USUARIO WHERE USUARIO = ?",
+        "SELECT ID_USUARIO FROM tbl_ms_usuario WHERE USUARIO = ?",
         [usuario]
       );
       if (rows.length) idUsuario = rows[0].ID_USUARIO;
@@ -38,7 +38,7 @@ async function registrarBitacora({
     // Si no se encontró usuario, usar el admin por defecto
     if (!idUsuario) {
       const [sys] = await pool.query(
-        "SELECT ID_USUARIO FROM tbl_ms_USUARIO WHERE USUARIO = 'ADMIN'"
+        "SELECT ID_USUARIO FROM tbl_ms_usuario WHERE USUARIO = 'ADMIN'"
       );
       idUsuario = sys && sys.length ? sys[0].ID_USUARIO : 1;
     }

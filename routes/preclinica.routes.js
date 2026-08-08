@@ -211,7 +211,7 @@ router.get(
           INNER JOIN TBL_PACIENTE p
             ON c.ID_PACIENTE =
                p.ID_PACIENTE
-          LEFT JOIN tbl_ms_USUARIO u
+          LEFT JOIN tbl_ms_usuario u
             ON c.ID_DOCTOR =
                u.ID_USUARIO
           WHERE c.ESTADO IN (
@@ -1407,7 +1407,7 @@ router.get(
           INNER JOIN TBL_PACIENTE pa
             ON c.ID_PACIENTE =
                pa.ID_PACIENTE
-          LEFT JOIN tbl_ms_USUARIO u
+          LEFT JOIN tbl_ms_usuario u
             ON p.ID_USUARIO_ENFERMERIA =
                u.ID_USUARIO
           ORDER BY

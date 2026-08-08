@@ -370,7 +370,7 @@ emitter.on("cita:creada", async (payload) => {
     const pacienteRow = pacRows && pacRows[0] ? pacRows[0] : null;
 
     const [docRows] = await pool.query(
-      `SELECT NOMBRE_USUARIO, CORREO_ELECTRONICO FROM tbl_ms_USUARIO WHERE ID_USUARIO = ? LIMIT 1`,
+      `SELECT NOMBRE_USUARIO, CORREO_ELECTRONICO FROM tbl_ms_usuario WHERE ID_USUARIO = ? LIMIT 1`,
       [doctorId]
     );
     const doctorRow = docRows && docRows[0] ? docRows[0] : null;
@@ -513,7 +513,7 @@ emitter.on("cita:creada", async (payload) => {
           descripcion: `Email de confirmación enviado al doctor ${doctorRow.CORREO_ELECTRONICO} para cita ID ${idCita}`,
           modulo: "CITAS",
           idRegistro: idCita,
-          tabla: "tbl_ms_USUARIO",
+          tabla: "tbl_ms_usuario",
           estado: "EXITO",
           req: null,
         });
@@ -525,7 +525,7 @@ emitter.on("cita:creada", async (payload) => {
           descripcion: `Error enviando email al doctor ${doctorRow.CORREO_ELECTRONICO} para cita ID ${idCita}`,
           modulo: "CITAS",
           idRegistro: idCita,
-          tabla: "tbl_ms_USUARIO",
+          tabla: "tbl_ms_usuario",
           estado: "ERROR",
           detalleError: "Falló enviarCorreo()",
           req: null,
@@ -539,7 +539,7 @@ emitter.on("cita:creada", async (payload) => {
         descripcion: `No se envió email: doctor ID ${doctorId} no tiene correo registrado para cita ${idCita}`,
         modulo: "CITAS",
         idRegistro: idCita,
-        tabla: "tbl_ms_USUARIO",
+        tabla: "tbl_ms_usuario",
         estado: "ADVERTENCIA",
         req: null,
       });
@@ -554,7 +554,7 @@ emitter.on("cita:creada", async (payload) => {
         descripcion: err.message || String(err),
         modulo: "CITAS",
         idRegistro: null,
-        tabla: "tbl_ms_USUARIO",
+        tabla: "tbl_ms_usuario",
         estado: "ERROR",
         detalleError: err.message || String(err),
         req: null,

@@ -574,7 +574,7 @@ router.get("/api/datos", async (req, res) => {
       FROM TBL_CITAS c
       INNER JOIN TBL_PACIENTE p
         ON c.ID_PACIENTE = p.ID_PACIENTE
-      INNER JOIN tbl_ms_USUARIO d
+      INNER JOIN tbl_ms_usuario d
         ON c.ID_DOCTOR = d.ID_USUARIO
       WHERE c.ESTADO IN (
         'PROGRAMADA',
@@ -749,7 +749,7 @@ router.get("/api/datos", async (req, res) => {
           ORDER BY e.NOMBRE_ESPECIALIDAD
           SEPARATOR '||'
         ) AS ESPECIALIDADES_RAW
-      FROM tbl_ms_USUARIO u
+      FROM tbl_ms_usuario u
       INNER JOIN TBL_DOCTOR_ESPECIALIDAD de
         ON u.ID_USUARIO = de.ID_DOCTOR
       INNER JOIN TBL_ESPECIALIDADES e

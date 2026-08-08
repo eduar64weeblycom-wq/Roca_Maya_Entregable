@@ -288,7 +288,7 @@ router.delete("/api/eliminar/:id", async (req, res) => {
     }
 
     const [usuarios] = await pool.query(
-      `SELECT COUNT(*) as total FROM tbl_ms_USUARIO WHERE ID_ROL = ?`,
+      `SELECT COUNT(*) as total FROM tbl_ms_usuario WHERE ID_ROL = ?`,
       [id]
     );
 

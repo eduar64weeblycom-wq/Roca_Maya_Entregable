@@ -9,7 +9,7 @@ router.get("/setup/:userId", async (req, res) => {
   const { userId } = req.params;
   const secret = speakeasy.generateSecret({ name: `Roca Maya (${userId})`, issuer: "Sistema Roca Maya" });
 
-  await pool.query("UPDATE tbl_ms_USUARIO SET SECRET_2FA=?, ACTIVO_2FA=1 WHERE USUARIO=?", [secret.base32, userId]);
+  await pool.query("UPDATE tbl_ms_usuario SET SECRET_2FA=?, ACTIVO_2FA=1 WHERE USUARIO=?", [secret.base32, userId]);
 
   const qr = await QRCode.toDataURL(secret.otpauth_url);
   res.render("setup-2fa", { userId, data_url: qr, secret: secret.base32 });
@@ -17,7 +17,7 @@ router.get("/setup/:userId", async (req, res) => {
 
 router.post("/verify", async (req, res) => {
   const { userId, token } = req.body;
-  const [rows] = await pool.query("SELECT SECRET_2FA FROM tbl_ms_USUARIO WHERE USUARIO=?", [userId]);
+  const [rows] = await pool.query("SELECT SECRET_2FA FROM tbl_ms_usuario WHERE USUARIO=?", [userId]);
   if (!rows.length) return res.render("login-2fa", { userId, error: "Usuario no encontrado" });
 
   const valid = speakeasy.totp.verify({ secret: rows[0].SECRET_2FA, encoding: "base32", token, window: 1 });

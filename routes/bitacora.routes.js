@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
     const [rows] = await pool.query(`
       SELECT b.FECHA_HORA, u.USUARIO, b.ACCION, b.DESCRIPCION, b.MODULO
       FROM tbl_ms_BITACORA b
-      LEFT JOIN tbl_ms_USUARIO u ON b.ID_USUARIO = u.ID_USUARIO
+      LEFT JOIN tbl_ms_usuario u ON b.ID_USUARIO = u.ID_USUARIO
       ORDER BY b.FECHA_HORA DESC LIMIT 50
     `);
 

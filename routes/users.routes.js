@@ -21,7 +21,7 @@ router.get("/", async (req, res) => {
         u.TELEFONO_PROFESIONAL,   -- NUEVO
         r.ROL AS NOMBRE_ROL,
         r.ID_ROL
-      FROM tbl_ms_USUARIO u
+      FROM tbl_ms_usuario u
       INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL
       ORDER BY u.ID_USUARIO
     `);
@@ -70,7 +70,7 @@ router.get("/api/usuario/:id", async (req, res) => {
     const id = req.params.id;
     const [rows] = await pool.query(
       `SELECT u.*, r.ROL 
-       FROM tbl_ms_USUARIO u 
+       FROM tbl_ms_usuario u 
        INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL 
        WHERE u.ID_USUARIO = ?`,
       [id]
@@ -119,7 +119,7 @@ router.post("/api/update", async (req, res) => {
 
     // Actualizar datos básicos del usuario
     await pool.query(
-      `UPDATE tbl_ms_USUARIO SET 
+      `UPDATE tbl_ms_usuario SET 
         USUARIO = ?, 
         NOMBRE_USUARIO = ?, 
         ID_ROL = ?, 
@@ -156,7 +156,7 @@ router.post("/api/update", async (req, res) => {
       descripcion: `Usuario ${usuario} actualizado. Rol: ${id_rol}. Especialidades: ${especialidades ? especialidades.join(', ') : 'Ninguna'}. Teléfono: ${telefono_profesional || 'No especificado'}`,
       modulo: "USUARIOS",
       idRegistro: id,
-      tabla: "tbl_ms_USUARIO",
+      tabla: "tbl_ms_usuario",
       estado: "EXITO",
       req
     });
@@ -180,7 +180,7 @@ router.post("/api/cambiar-estado", async (req, res) => {
     }
 
     await pool.query(
-      `UPDATE tbl_ms_USUARIO SET ESTADO = ?, FECHA_MODIFICACION = CURRENT_TIMESTAMP, USUARIO_MODIFICACION = ? WHERE ID_USUARIO = ?`,
+      `UPDATE tbl_ms_usuario SET ESTADO = ?, FECHA_MODIFICACION = CURRENT_TIMESTAMP, USUARIO_MODIFICACION = ? WHERE ID_USUARIO = ?`,
       [estado, usuarioAccion || 'SISTEMA', id]
     );
 
@@ -190,7 +190,7 @@ router.post("/api/cambiar-estado", async (req, res) => {
       descripcion: `Usuario ID ${id} cambió a estado: ${estado}`,
       modulo: "USUARIOS",
       idRegistro: id,
-      tabla: "tbl_ms_USUARIO",
+      tabla: "tbl_ms_usuario",
       estado: "EXITO",
       req
     });
@@ -219,7 +219,7 @@ router.get("/usuarios", async (req, res) => {
         u.TELEFONO_PROFESIONAL,   -- NUEVO
         CASE WHEN u.ACTIVO_2FA = 1 THEN 'Sí' ELSE 'No' END AS ACTIVO_2FA,
         u.FECHA_ULTIMA_CONEXION
-      FROM tbl_ms_USUARIO u
+      FROM tbl_ms_usuario u
       INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL
       ORDER BY u.ID_USUARIO
     `);
@@ -295,7 +295,7 @@ router.get("/usuarios", async (req, res) => {
         accion: "EXPORTAR_EXCEL_USUARIOS",
         descripcion: `Exportados ${usuarios.length} usuarios a Excel`,
         modulo: "USUARIOS",
-        tabla: "tbl_ms_USUARIO",
+        tabla: "tbl_ms_usuario",
         estado: "EXITO",
         req
       });
@@ -322,10 +322,10 @@ router.post("/api/delete", async (req, res) => {
       return res.status(400).json({ ok: false, msg: "ID de usuario requerido" });
     }
 
-    const [user] = await pool.query(`SELECT USUARIO FROM tbl_ms_USUARIO WHERE ID_USUARIO = ?`, [id]);
+    const [user] = await pool.query(`SELECT USUARIO FROM tbl_ms_usuario WHERE ID_USUARIO = ?`, [id]);
     const nombreUsuario = user.length ? user[0].USUARIO : 'Desconocido';
 
-    await pool.query(`DELETE FROM tbl_ms_USUARIO WHERE ID_USUARIO = ?`, [id]);
+    await pool.query(`DELETE FROM tbl_ms_usuario WHERE ID_USUARIO = ?`, [id]);
 
     await registrarBitacora({
       usuario: usuarioAccion || 'SISTEMA',
@@ -333,7 +333,7 @@ router.post("/api/delete", async (req, res) => {
       descripcion: `Usuario ${nombreUsuario} (ID ${id}) eliminado permanentemente`,
       modulo: "USUARIOS",
       idRegistro: id,
-      tabla: "tbl_ms_USUARIO",
+      tabla: "tbl_ms_usuario",
       estado: "EXITO",
       req
     });

@@ -152,7 +152,7 @@ router.get("/", async (req, res) => {
           ↓
    TBL_DOCTOR_ESPECIALIDAD
           ↓
-   tbl_ms_USUARIO
+   tbl_ms_usuario
           ↓
    TBL_CITAS
           ↓
@@ -292,7 +292,7 @@ router.get("/api/datos", async (req, res) => {
         ON de_total.ID_DOCTOR =
            de.ID_DOCTOR
 
-      LEFT JOIN tbl_ms_USUARIO u
+      LEFT JOIN tbl_ms_usuario u
         ON u.ID_USUARIO =
            de.ID_DOCTOR
 
@@ -982,7 +982,7 @@ router.get("/excel", async (req, res) => {
         ) de_total
           ON de_total.ID_DOCTOR =
              de.ID_DOCTOR
-        LEFT JOIN tbl_ms_USUARIO u
+        LEFT JOIN tbl_ms_usuario u
           ON u.ID_USUARIO =
              de.ID_DOCTOR
         LEFT JOIN (

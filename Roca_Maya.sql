@@ -629,7 +629,7 @@ BEGIN
     
     IF p_ID_USUARIO IS NOT NULL THEN
         SELECT ID_USUARIO INTO v_usuario_valido 
-        FROM tbl_ms_USUARIO 
+        FROM tbl_ms_usuario 
         WHERE ID_USUARIO = p_ID_USUARIO;
     END IF;
     
@@ -654,7 +654,7 @@ CREATE PROCEDURE `SP_ACTIVAR_2FA`(
     IN p_USUARIO_ACTUALIZACION VARCHAR(50)
 )
 BEGIN
-    UPDATE tbl_ms_USUARIO 
+    UPDATE tbl_ms_usuario 
     SET SECRET_2FA = p_SECRET_2FA,
         ACTIVO_2FA = 1,
         FECHA_ACTIVACION_2FA = CURRENT_TIMESTAMP,
@@ -668,7 +668,7 @@ BEGIN
         'Usuario activó autenticación de dos factores',
         'SEGURIDAD',
         p_ID_USUARIO,
-        'tbl_ms_USUARIO',
+        'tbl_ms_usuario',
         NULL, NULL, 'EXITO', NULL,
         p_USUARIO_ACTUALIZACION
     );
@@ -698,7 +698,7 @@ BEGIN
         b.ESTADO_OPERACION,
         b.DETALLE_ERROR
     FROM tbl_ms_BITACORA b
-    LEFT JOIN tbl_ms_USUARIO u ON b.ID_USUARIO = u.ID_USUARIO
+    LEFT JOIN tbl_ms_usuario u ON b.ID_USUARIO = u.ID_USUARIO
     WHERE 
         (p_FECHA_INICIO IS NULL OR b.FECHA_HORA >= p_FECHA_INICIO) AND
         (p_FECHA_FIN IS NULL OR b.FECHA_HORA <= p_FECHA_FIN) AND
@@ -713,7 +713,7 @@ CREATE PROCEDURE `SP_DESACTIVAR_2FA`(
     IN p_USUARIO_ACTUALIZACION VARCHAR(50)
 )
 BEGIN
-    UPDATE tbl_ms_USUARIO 
+    UPDATE tbl_ms_usuario 
     SET ACTIVO_2FA = 0,
         SECRET_2FA = NULL,
         INTENTOS_2FA_FALLIDOS = 0,
@@ -728,7 +728,7 @@ BEGIN
         'Usuario desactivó autenticación de dos factores',
         'SEGURIDAD',
         p_ID_USUARIO,
-        'tbl_ms_USUARIO',
+        'tbl_ms_usuario',
         NULL, NULL, 'EXITO', NULL,
         p_USUARIO_ACTUALIZACION
     );
@@ -755,13 +755,13 @@ BEGIN
     
     SELECT INTENTOS_2FA_FALLIDOS, SECRET_2FA, ACTIVO_2FA
     INTO v_INTENTOS_2FA_FALLIDOS, v_SECRET_2FA, v_ACTIVO_2FA
-    FROM tbl_ms_USUARIO 
+    FROM tbl_ms_usuario 
     WHERE ID_USUARIO = p_ID_USUARIO;
     
     IF v_ACTIVO_2FA != 1 THEN
         SELECT 'ERROR' AS RESULTADO, '2FA NO ESTÁ ACTIVADO PARA ESTE USUARIO' AS MENSAJE;
     ELSEIF v_INTENTOS_2FA_FALLIDOS >= v_MAX_INTENTOS_2FA THEN
-        UPDATE tbl_ms_USUARIO 
+        UPDATE tbl_ms_usuario 
         SET BLOQUEO_2FA_HASTA = DATE_ADD(NOW(), INTERVAL v_TIEMPO_BLOQUEO_MIN MINUTE),
             FECHA_MODIFICACION = CURRENT_TIMESTAMP,
             USUARIO_MODIFICACION = 'SISTEMA'
@@ -771,7 +771,7 @@ BEGIN
                CONCAT('CUENTA BLOQUEADA POR EXCESO DE INTENTOS 2FA. ESPERE ', v_TIEMPO_BLOQUEO_MIN, ' MINUTOS.') AS MENSAJE;
     ELSE
         IF LENGTH(p_CODIGO_2FA) = 6 AND p_CODIGO_2FA REGEXP '^[0-9]+$' THEN
-            UPDATE tbl_ms_USUARIO 
+            UPDATE tbl_ms_usuario 
             SET INTENTOS_2FA_FALLIDOS = 0,
                 BLOQUEO_2FA_HASTA = NULL,
                 ULTIMO_CODIGO_2FA = p_CODIGO_2FA,
@@ -785,14 +785,14 @@ BEGIN
                 'Validación de código 2FA exitosa',
                 'AUTENTICACION',
                 p_ID_USUARIO,
-                'tbl_ms_USUARIO',
+                'tbl_ms_usuario',
                 NULL, NULL, 'EXITO', NULL,
                 'SISTEMA'
             );
             
             SELECT 'EXITO' AS RESULTADO, 'CÓDIGO 2FA VÁLIDO' AS MENSAJE;
         ELSE
-            UPDATE tbl_ms_USUARIO 
+            UPDATE tbl_ms_usuario 
             SET INTENTOS_2FA_FALLIDOS = v_INTENTOS_2FA_FALLIDOS + 1,
                 FECHA_MODIFICACION = CURRENT_TIMESTAMP,
                 USUARIO_MODIFICACION = 'SISTEMA'
@@ -804,7 +804,7 @@ BEGIN
                 'Intento fallido de validación de código 2FA',
                 'AUTENTICACION',
                 p_ID_USUARIO,
-                'tbl_ms_USUARIO',
+                'tbl_ms_usuario',
                 NULL, NULL, 'ERROR', 'Código 2FA inválido',
                 'SISTEMA'
             );
@@ -834,7 +834,7 @@ BEGIN
     
     SELECT ID_USUARIO, ESTADO, INTENTOS_FALLIDOS, CONTRASENA, FECHA_VENCIMIENTO, ACTIVO_2FA, BLOQUEO_2FA_HASTA
     INTO v_ID_USUARIO, v_ESTADO, v_INTENTOS_FALLIDOS, v_CONTRASENA_DB, v_FECHA_VENCIMIENTO, v_ACTIVO_2FA, v_BLOQUEO_2FA_HASTA
-    FROM tbl_ms_USUARIO 
+    FROM tbl_ms_usuario 
     WHERE USUARIO = UPPER(p_USUARIO);
     
     IF v_ID_USUARIO IS NULL THEN
@@ -851,10 +851,10 @@ BEGIN
             ELSEIF v_ESTADO = 'INACTIVO' THEN
                 SELECT 'ERROR' AS RESULTADO, 'USUARIO INACTIVO. CONTACTE AL ADMINISTRADOR.' AS MENSAJE, NULL AS ID_USUARIO, FALSE AS REQUIERE_2FA;
             ELSEIF v_INTENTOS_FALLIDOS >= v_MAX_INTENTOS THEN
-                UPDATE tbl_ms_USUARIO SET ESTADO = 'BLOQUEADO' WHERE ID_USUARIO = v_ID_USUARIO;
+                UPDATE tbl_ms_usuario SET ESTADO = 'BLOQUEADO' WHERE ID_USUARIO = v_ID_USUARIO;
                 SELECT 'ERROR' AS RESULTADO, 'USUARIO BLOQUEADO POR EXCESO DE INTENTOS FALLIDOS.' AS MENSAJE, NULL AS ID_USUARIO, FALSE AS REQUIERE_2FA;
             ELSEIF v_CONTRASENA_DB != p_CONTRASENA THEN
-                UPDATE tbl_ms_USUARIO 
+                UPDATE tbl_ms_usuario 
                 SET INTENTOS_FALLIDOS = INTENTOS_FALLIDOS + 1,
                     FECHA_MODIFICACION = CURRENT_TIMESTAMP,
                     USUARIO_MODIFICACION = 'SISTEMA'
@@ -862,7 +862,7 @@ BEGIN
                 
                 SELECT 'ERROR' AS RESULTADO, 'USUARIO/CONTRASEÑA INVÁLIDOS' AS MENSAJE, NULL AS ID_USUARIO, FALSE AS REQUIERE_2FA;
             ELSE
-                UPDATE tbl_ms_USUARIO 
+                UPDATE tbl_ms_usuario 
                 SET INTENTOS_FALLIDOS = 0,
                     INTENTOS_2FA_FALLIDOS = 0,
                     BLOQUEO_2FA_HASTA = NULL,
@@ -911,7 +911,7 @@ CREATE TRIGGER `TR_AUDITORIA_CITAS_UPDATE` AFTER UPDATE ON `tbl_citas` FOR EACH 
 BEGIN
     IF OLD.ESTADO != NEW.ESTADO THEN
         CALL SP_REGISTRAR_BITACORA(
-            COALESCE((SELECT ID_USUARIO FROM tbl_ms_USUARIO WHERE USUARIO = COALESCE(NEW.USUARIO_MODIFICACION, 'SISTEMA')), 1),
+            COALESCE((SELECT ID_USUARIO FROM tbl_ms_usuario WHERE USUARIO = COALESCE(NEW.USUARIO_MODIFICACION, 'SISTEMA')), 1),
             'CAMBIO_ESTADO_CITA',
             CONCAT('Cita ID ', NEW.ID_CITA, ' cambió de ', OLD.ESTADO, ' a ', NEW.ESTADO),
             'CITAS',
@@ -970,7 +970,7 @@ BEGIN
     
     IF v_cambios != '' THEN
         SELECT COALESCE(ID_USUARIO, 1) INTO v_id_usuario_modificador 
-        FROM tbl_ms_USUARIO 
+        FROM tbl_ms_usuario 
         WHERE USUARIO = COALESCE(NEW.USUARIO_MODIFICACION, 'SISTEMA')
         LIMIT 1;
         
@@ -993,7 +993,7 @@ BEGIN
     
     IF OLD.VALOR != NEW.VALOR THEN
         SELECT COALESCE(ID_USUARIO, 1) INTO v_id_usuario_modificador 
-        FROM tbl_ms_USUARIO 
+        FROM tbl_ms_usuario 
         WHERE USUARIO = COALESCE(NEW.USUARIO_MODIFICACION, 'SISTEMA')
         LIMIT 1;
         
@@ -1015,7 +1015,7 @@ BEGIN
     DECLARE v_id_usuario_creador INT;
     
     SELECT COALESCE(ID_USUARIO, 1) INTO v_id_usuario_creador 
-    FROM tbl_ms_USUARIO 
+    FROM tbl_ms_usuario 
     WHERE USUARIO = COALESCE(NEW.USUARIO_CREACION, 'SISTEMA')
     LIMIT 1;
     
@@ -1036,7 +1036,7 @@ BEGIN
     DECLARE v_id_usuario_creador INT;
     
     SELECT COALESCE(ID_USUARIO, 1) INTO v_id_usuario_creador 
-    FROM tbl_ms_USUARIO 
+    FROM tbl_ms_usuario 
     WHERE USUARIO = COALESCE(NEW.USUARIO_CREACION, 'SISTEMA')
     LIMIT 1;
     
@@ -1046,7 +1046,7 @@ BEGIN
         CONCAT('Nuevo usuario creado: ', NEW.USUARIO, ' - ', NEW.NOMBRE_USUARIO),
         'USUARIOS',
         NEW.ID_USUARIO,
-        'tbl_ms_USUARIO',
+        'tbl_ms_usuario',
         NULL, NULL, 'EXITO', NULL,
         'TRIGGER'
     );
@@ -1062,7 +1062,7 @@ BEGIN
                 'Usuario activó autenticación de dos factores',
                 'SEGURIDAD',
                 NEW.ID_USUARIO,
-                'tbl_ms_USUARIO',
+                'tbl_ms_usuario',
                 NULL, NULL, 'EXITO', NULL,
                 'TRIGGER'
             );
@@ -1073,7 +1073,7 @@ BEGIN
                 'Usuario desactivó autenticación de dos factores',
                 'SEGURIDAD',
                 NEW.ID_USUARIO,
-                'tbl_ms_USUARIO',
+                'tbl_ms_usuario',
                 NULL, NULL, 'EXITO', NULL,
                 'TRIGGER'
             );
@@ -1087,7 +1087,7 @@ BEGIN
     DECLARE v_id_usuario_modificador INT;
     
     SELECT COALESCE(ID_USUARIO, 1) INTO v_id_usuario_modificador 
-    FROM tbl_ms_USUARIO 
+    FROM tbl_ms_usuario 
     WHERE USUARIO = COALESCE(NEW.USUARIO_MODIFICACION, 'SISTEMA')
     LIMIT 1;
     
@@ -1113,7 +1113,7 @@ BEGIN
         CONCAT('Usuario actualizado: ', NEW.USUARIO, ' - Cambios: ', v_cambios),
         'USUARIOS',
         NEW.ID_USUARIO,
-        'tbl_ms_USUARIO',
+        'tbl_ms_usuario',
         NULL, NULL, 'EXITO', NULL,
         'TRIGGER'
     );

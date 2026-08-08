@@ -10,12 +10,12 @@ try {
 await registrarBitacora({ usuario: userId, accion: 'INICIO_CONFIGURACION_2FA', descripcion: 'Iniciando 2FA', modulo: 'SEGURIDAD', req, estado: 'EXITO' });
 
 
-const [user] = await pool.query('SELECT ID_USUARIO FROM tbl_ms_USUARIO WHERE USUARIO = ?', [userId]);
+const [user] = await pool.query('SELECT ID_USUARIO FROM tbl_ms_usuario WHERE USUARIO = ?', [userId]);
 if (!user.length) return res.status(404).send('Usuario no encontrado');
 
 
 const secret = speakeasy.generateSecret({ name: `Roca Maya (${userId})`, issuer: 'Sistema Roca Maya', length: 20 });
-await pool.query('UPDATE tbl_ms_USUARIO SET SECRET_2FA = ?, ACTIVO_2FA = 1, FECHA_ACTIVACION_2FA = NOW() WHERE USUARIO = ?', [secret.base32, userId]);
+await pool.query('UPDATE tbl_ms_usuario SET SECRET_2FA = ?, ACTIVO_2FA = 1, FECHA_ACTIVACION_2FA = NOW() WHERE USUARIO = ?', [secret.base32, userId]);
 
 
 const dataUrl = await QRCode.toDataURL(secret.otpauth_url);
@@ -31,6 +31,6 @@ res.status(500).send('Error configurando 2FA');
 async function test2fa(req, res) {
 const userId = req.params.userId;
 try {
-const [rows] = await pool.query('SELECT SECRET_2FA FROM tbl_ms_USUARIO WHERE USUARIO = ? AND ACTIVO_2FA = 1', [userId]);
+const [rows] = await pool.query('SELECT SECRET_2FA FROM tbl_ms_usuario WHERE USUARIO = ? AND ACTIVO_2FA = 1', [userId]);
 if (!rows.length) return res.render('test-2fa', { userId, error: '2FA no configurado' });
 const secret = rows[
