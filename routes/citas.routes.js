@@ -84,7 +84,7 @@ async function obtenerColumnaEspecialidadCita() {
 
   try {
     const [columnas] = await pool.query(
-      "SHOW COLUMNS FROM TBL_CITAS"
+      "SHOW COLUMNS FROM tbl_citas"
     );
 
     const nombres = new Set(
@@ -99,7 +99,7 @@ async function obtenerColumnaEspecialidadCita() {
       ) || null;
   } catch (error) {
     console.warn(
-      "No se pudo verificar si TBL_CITAS tiene una columna de especialidad:",
+      "No se pudo verificar si tbl_citas tiene una columna de especialidad:",
       error.message
     );
 
@@ -519,7 +519,7 @@ router.get("/", async (req, res) => {
       accion: "ACCESO_CITAS",
       descripcion: "Acceso a la vista de citas",
       modulo: "CITAS",
-      tabla: "TBL_CITAS",
+      tabla: "tbl_citas",
       estado: "EXITO",
       req,
     });
@@ -571,7 +571,7 @@ router.get("/api/datos", async (req, res) => {
         c.DURACION_ESTIMADA_MIN,
         c.FECHA_FIN_ESTIMADA,
         c.CANAL_REGISTRO
-      FROM TBL_CITAS c
+      FROM tbl_citas c
       INNER JOIN tbl_paciente p
         ON c.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario d
@@ -853,7 +853,7 @@ router.get("/api/datos", async (req, res) => {
         duraciones: [15, 20, 30, 45, 60],
         almacenamientoEspecialidad:
           columnaEspecialidad
-            ? `TBL_CITAS.${columnaEspecialidad}`
+            ? `tbl_citas.${columnaEspecialidad}`
             : "data/citas-especialidades.json",
         duplicadosExactosOcultos:
           duplicadosOcultos.length,
@@ -981,7 +981,7 @@ router.post(
           SELECT
             ID_CITA,
             ID_DOCTOR
-          FROM TBL_CITAS
+          FROM tbl_citas
           WHERE ID_CITA = ?
           LIMIT 1
           FOR UPDATE
@@ -1024,7 +1024,7 @@ router.post(
       if (columnaEspecialidad) {
         await connection.query(
           `
-            UPDATE TBL_CITAS
+            UPDATE tbl_citas
             SET
               \`${columnaEspecialidad}\` = ?,
               FECHA_MODIFICACION =
@@ -1057,7 +1057,7 @@ router.post(
           `Asignada especialidad ${especialidadValida.NOMBRE_ESPECIALIDAD} a la cita ${idCita}`,
         modulo: "CITAS",
         idRegistro: idCita,
-        tabla: "TBL_CITAS",
+        tabla: "tbl_citas",
         estado: "EXITO",
         req,
       });
@@ -1225,7 +1225,7 @@ router.post("/nueva", async (req, res) => {
     const [duplicadas] = await connection.query(
       `
         SELECT ID_CITA
-        FROM TBL_CITAS
+        FROM tbl_citas
         WHERE ESTADO <> 'CANCELADA'
           AND (
             ID_DOCTOR = ?
@@ -1298,7 +1298,7 @@ router.post("/nueva", async (req, res) => {
 
     const [result] = await connection.query(
       `
-        INSERT INTO TBL_CITAS (
+        INSERT INTO tbl_citas (
           ${columnas.map((columna) => `\`${columna}\``).join(", ")}
         )
         VALUES (${placeholders})
@@ -1330,7 +1330,7 @@ router.post("/nueva", async (req, res) => {
         `especialidad ${especialidadValida.NOMBRE_ESPECIALIDAD}, estado ${estadoInicial}`,
       modulo: "CITAS",
       idRegistro: idCitaCreada,
-      tabla: "TBL_CITAS",
+      tabla: "tbl_citas",
       estado: "EXITO",
       req,
     });
@@ -1393,7 +1393,7 @@ router.post("/nueva", async (req, res) => {
       accion: "ERROR_CREACION_CITA",
       descripcion: error.message,
       modulo: "CITAS",
-      tabla: "TBL_CITAS",
+      tabla: "tbl_citas",
       estado: "ERROR",
       detalleError: error.message,
       req,
@@ -1532,7 +1532,7 @@ router.post("/editar", async (req, res) => {
     const [duplicadas] = await connection.query(
       `
         SELECT ID_CITA
-        FROM TBL_CITAS
+        FROM tbl_citas
         WHERE ESTADO <> 'CANCELADA'
           AND ID_CITA <> ?
           AND (
@@ -1608,7 +1608,7 @@ router.post("/editar", async (req, res) => {
 
     const [result] = await connection.query(
       `
-        UPDATE TBL_CITAS
+        UPDATE tbl_citas
         SET ${asignaciones.join(",\n            ")}
         WHERE ID_CITA = ?
       `,
@@ -1646,7 +1646,7 @@ router.post("/editar", async (req, res) => {
         `Editada cita ID ${id}; especialidad ${especialidadValida.NOMBRE_ESPECIALIDAD}`,
       modulo: "CITAS",
       idRegistro: id,
-      tabla: "TBL_CITAS",
+      tabla: "tbl_citas",
       estado: "EXITO",
       req,
     });
@@ -1678,7 +1678,7 @@ router.post("/editar", async (req, res) => {
       accion: "ERROR_EDICION_CITA",
       descripcion: error.message,
       modulo: "CITAS",
-      tabla: "TBL_CITAS",
+      tabla: "tbl_citas",
       estado: "ERROR",
       detalleError: error.message,
       req,
@@ -1731,7 +1731,7 @@ async function handleCambiarEstado(req, res) {
 
     const [result] = await pool.query(
       `
-        UPDATE TBL_CITAS
+        UPDATE tbl_citas
         SET
           ESTADO = ?,
           FECHA_MODIFICACION = CURRENT_TIMESTAMP,
@@ -1755,7 +1755,7 @@ async function handleCambiarEstado(req, res) {
         `Cita ${idCita} -> ${nuevoEstado}`,
       modulo: "CITAS",
       idRegistro: idCita,
-      tabla: "TBL_CITAS",
+      tabla: "tbl_citas",
       estado: "EXITO",
       req,
     });
@@ -1775,7 +1775,7 @@ async function handleCambiarEstado(req, res) {
       accion: "ERROR_CAMBIO_ESTADO_CITA",
       descripcion: error.message,
       modulo: "CITAS",
-      tabla: "TBL_CITAS",
+      tabla: "tbl_citas",
       estado: "ERROR",
       detalleError: error.message,
       req,
@@ -1827,7 +1827,7 @@ router.post(
               ' ',
               p.APELLIDOS
             ) AS NOMBRE_PACIENTE
-          FROM TBL_CITAS c
+          FROM tbl_citas c
           INNER JOIN tbl_paciente p
             ON p.ID_PACIENTE = c.ID_PACIENTE
           WHERE c.ID_CITA = ?
@@ -1994,7 +1994,7 @@ router.post(
       if (estadoActual !== "CONSULTA_MEDICA") {
         await pool.query(
           `
-            UPDATE TBL_CITAS
+            UPDATE tbl_citas
             SET
               ESTADO = 'CONSULTA_MEDICA',
               FECHA_MODIFICACION = CURRENT_TIMESTAMP,
@@ -2015,7 +2015,7 @@ router.post(
             : " sin datos pendientes"),
         modulo: "CITAS",
         idRegistro: idCita,
-        tabla: "TBL_CITAS",
+        tabla: "tbl_citas",
         estado: "EXITO",
         req,
       });
@@ -2064,7 +2064,7 @@ router.delete("/eliminar/:id", async (req, res) => {
     const [citas] = await pool.query(
       `
         SELECT ID_CITA, ESTADO
-        FROM TBL_CITAS
+        FROM tbl_citas
         WHERE ID_CITA = ?
         LIMIT 1
       `,
@@ -2080,7 +2080,7 @@ router.delete("/eliminar/:id", async (req, res) => {
 
     const [result] = await pool.query(
       `
-        DELETE FROM TBL_CITAS
+        DELETE FROM tbl_citas
         WHERE ID_CITA = ?
       `,
       [idCita]
@@ -2108,7 +2108,7 @@ router.delete("/eliminar/:id", async (req, res) => {
       descripcion: `Eliminada cita ID ${idCita}`,
       modulo: "CITAS",
       idRegistro: idCita,
-      tabla: "TBL_CITAS",
+      tabla: "tbl_citas",
       estado: "EXITO",
       req,
     });
@@ -2129,7 +2129,7 @@ router.delete("/eliminar/:id", async (req, res) => {
       accion: "ERROR_ELIMINACION_CITA",
       descripcion: error.message,
       modulo: "CITAS",
-      tabla: "TBL_CITAS",
+      tabla: "tbl_citas",
       estado: "ERROR",
       detalleError: error.message,
       req,

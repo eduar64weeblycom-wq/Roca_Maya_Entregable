@@ -163,7 +163,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
       FROM TBL_PRECLINICA pr
       INNER JOIN tbl_ms_usuario u ON pr.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
       WHERE pr.ID_CITA IN (
-        SELECT ID_CITA FROM TBL_CITAS WHERE ID_PACIENTE = ?
+        SELECT ID_CITA FROM tbl_citas WHERE ID_PACIENTE = ?
       )
       ORDER BY pr.FECHA_REGISTRO DESC
       LIMIT 10
@@ -180,7 +180,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
         c.TIPO_CITA,
         c.DURACION_ESTIMADA_MIN,
         u.NOMBRE_USUARIO AS DOCTOR
-      FROM TBL_CITAS c
+      FROM tbl_citas c
       INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
       WHERE c.ID_PACIENTE = ?
       ORDER BY c.FECHA_CITA DESC
@@ -212,7 +212,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
     const [countRows] = await db.query(`
       SELECT
         (SELECT COUNT(*) FROM TBL_CONSULTA_MEDICA WHERE ID_PACIENTE = ?) AS TOTAL_CONSULTAS,
-        (SELECT COUNT(*) FROM TBL_CITAS WHERE ID_PACIENTE = ?) AS TOTAL_CITAS
+        (SELECT COUNT(*) FROM tbl_citas WHERE ID_PACIENTE = ?) AS TOTAL_CITAS
     `, [pacienteId, pacienteId]);
 
     res.json({
@@ -498,7 +498,7 @@ router.get("/:pacienteId/exportar-pdf", async (req, res) => {
              u.NOMBRE_USUARIO AS ENFERMERA
       FROM TBL_PRECLINICA pr
       INNER JOIN tbl_ms_usuario u ON pr.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
-      WHERE pr.ID_CITA IN (SELECT ID_CITA FROM TBL_CITAS WHERE ID_PACIENTE = ?)
+      WHERE pr.ID_CITA IN (SELECT ID_CITA FROM tbl_citas WHERE ID_PACIENTE = ?)
       ORDER BY pr.FECHA_REGISTRO DESC LIMIT 10
     `, [pacienteId]);
 
@@ -743,7 +743,7 @@ router.get("/excel/historial/:pacienteId", async (req, res) => {
                    u.NOMBRE_USUARIO AS ENFERMERA
             FROM TBL_PRECLINICA pr
             INNER JOIN tbl_ms_usuario u ON pr.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
-            WHERE pr.ID_CITA IN (SELECT ID_CITA FROM TBL_CITAS WHERE ID_PACIENTE = ?)
+            WHERE pr.ID_CITA IN (SELECT ID_CITA FROM tbl_citas WHERE ID_PACIENTE = ?)
             ORDER BY pr.FECHA_REGISTRO DESC
         `, [pacienteId]);
 

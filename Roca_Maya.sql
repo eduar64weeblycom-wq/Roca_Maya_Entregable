@@ -901,7 +901,7 @@ BEGIN
         CONCAT('Cita creada para paciente ID: ', NEW.ID_PACIENTE, ' con doctor ID: ', NEW.ID_DOCTOR, ' - ', NEW.ESTADO),
         'CITAS',
         NEW.ID_CITA,
-        'TBL_CITAS',
+        'tbl_citas',
         NULL, NULL, 'EXITO', NULL,
         'TRIGGER'
     );
@@ -916,7 +916,7 @@ BEGIN
             CONCAT('Cita ID ', NEW.ID_CITA, ' cambió de ', OLD.ESTADO, ' a ', NEW.ESTADO),
             'CITAS',
             NEW.ID_CITA,
-            'TBL_CITAS',
+            'tbl_citas',
             NULL, NULL, 'EXITO', NULL,
             'TRIGGER'
         );

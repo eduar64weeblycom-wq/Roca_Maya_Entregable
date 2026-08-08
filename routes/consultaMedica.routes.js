@@ -24,7 +24,7 @@ router.get("/", async (req, res) => {
           c.MOTIVO_CONSULTA,
           c.PRIORIDAD,
           c.TIPO_CITA
-        FROM TBL_CITAS c
+        FROM tbl_citas c
         INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
         INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
@@ -43,7 +43,7 @@ router.get("/", async (req, res) => {
           c.MOTIVO_CONSULTA,
           c.PRIORIDAD,
           c.TIPO_CITA
-        FROM TBL_CITAS c
+        FROM tbl_citas c
         INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
         INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
@@ -109,7 +109,7 @@ router.get("/api/calendario", async (req, res) => {
           c.PRIORIDAD,
           c.TIPO_CITA,
           c.DURACION_ESTIMADA_MIN
-        FROM TBL_CITAS c
+        FROM tbl_citas c
         INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
         INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
@@ -133,7 +133,7 @@ router.get("/api/calendario", async (req, res) => {
           c.PRIORIDAD,
           c.TIPO_CITA,
           c.DURACION_ESTIMADA_MIN
-        FROM TBL_CITAS c
+        FROM tbl_citas c
         INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
         INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
@@ -194,7 +194,7 @@ router.get("/api/cita-detalle/:idCita", async (req, res) => {
         p.TELEFONO,
         p.CORREO_ELECTRONICO,
         u.NOMBRE_USUARIO AS NOMBRE_DOCTOR
-      FROM TBL_CITAS c
+      FROM tbl_citas c
       INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
       WHERE c.ID_CITA = ?
@@ -286,7 +286,7 @@ router.get("/api/imprimir-consulta/:idConsulta", async (req, res) => {
       FROM TBL_CONSULTA_MEDICA cm
       INNER JOIN tbl_paciente p ON cm.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
-      INNER JOIN TBL_CITAS c ON cm.ID_CITA = c.ID_CITA
+      INNER JOIN tbl_citas c ON cm.ID_CITA = c.ID_CITA
       WHERE cm.ID_CONSULTA = ?
     `, [idConsulta]);
 
@@ -361,7 +361,7 @@ router.get("/api/datos", async (req, res) => {
           c.TIPO_CITA,
           c.DURACION_ESTIMADA_MIN,
           c.OBSERVACIONES
-        FROM TBL_CITAS c
+        FROM tbl_citas c
         INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
         INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
@@ -386,7 +386,7 @@ router.get("/api/datos", async (req, res) => {
           c.TIPO_CITA,
           c.DURACION_ESTIMADA_MIN,
           c.OBSERVACIONES
-        FROM TBL_CITAS c
+        FROM tbl_citas c
         INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
         INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
@@ -493,7 +493,7 @@ router.post("/nueva", async (req, res) => {
 
     if (idCita && (!idPaciente || !idDoctor)) {
       const [citaData] = await connection.query(
-        "SELECT ID_PACIENTE, ID_DOCTOR FROM TBL_CITAS WHERE ID_CITA = ?",
+        "SELECT ID_PACIENTE, ID_DOCTOR FROM tbl_citas WHERE ID_CITA = ?",
         [idCita]
       );
       if (citaData.length > 0) {
@@ -517,7 +517,7 @@ router.post("/nueva", async (req, res) => {
     const usuarioCreacion = req.user?.USUARIO || 'SISTEMA';
 
     const [citaExists] = await connection.query(
-      "SELECT ID_CITA, ESTADO FROM TBL_CITAS WHERE ID_CITA = ?",
+      "SELECT ID_CITA, ESTADO FROM tbl_citas WHERE ID_CITA = ?",
       [idCita]
     );
     if (citaExists.length === 0) {
@@ -604,13 +604,13 @@ router.post("/nueva", async (req, res) => {
 
     if (estadoCita === "PRECLINICA") {
       await connection.query(
-        `UPDATE TBL_CITAS SET ESTADO = 'CONSULTA_MEDICA', USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW() WHERE ID_CITA = ?`,
+        `UPDATE tbl_citas SET ESTADO = 'CONSULTA_MEDICA', USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW() WHERE ID_CITA = ?`,
         [usuarioCreacion, idCita]
       );
       console.log(`🔄 Cita #${idCita} actualizada de PRECLINICA a CONSULTA_MEDICA`);
     } else {
       await connection.query(
-        `UPDATE TBL_CITAS SET USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW() WHERE ID_CITA = ?`,
+        `UPDATE tbl_citas SET USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW() WHERE ID_CITA = ?`,
         [usuarioCreacion, idCita]
       );
     }
@@ -820,7 +820,7 @@ router.post("/actualizar", async (req, res) => {
     const idCita = consultaExists[0].ID_CITA;
 
     const [citaData] = await connection.query(
-      "SELECT ESTADO FROM TBL_CITAS WHERE ID_CITA = ?",
+      "SELECT ESTADO FROM tbl_citas WHERE ID_CITA = ?",
       [idCita]
     );
 
@@ -888,7 +888,7 @@ router.post("/actualizar", async (req, res) => {
     }
 
     await connection.query(`
-      UPDATE TBL_CITAS 
+      UPDATE tbl_citas 
       SET USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW()
       WHERE ID_CITA = ?
     `, [usuarioModificacion, idCita]);
@@ -1001,7 +1001,7 @@ router.get("/api/cita/:idCita", async (req, res) => {
         c.OBSERVACIONES, CONCAT(p.NOMBRES, ' ', p.APELLIDOS) AS NOMBRE_PACIENTE,
         p.FECHA_NACIMIENTO, p.GENERO, p.TELEFONO, p.CORREO_ELECTRONICO,
         p.DIRECCION, u.NOMBRE_USUARIO AS NOMBRE_DOCTOR
-      FROM TBL_CITAS c
+      FROM tbl_citas c
       INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
       WHERE c.ID_CITA = ?
@@ -1293,7 +1293,7 @@ router.post("/api/cambiar-estado", async (req, res) => {
     const usuarioModificacion = req.user?.USUARIO || 'SISTEMA';
 
     await pool.query(`
-      UPDATE TBL_CITAS SET 
+      UPDATE tbl_citas SET 
         ESTADO = ?,
         USUARIO_MODIFICACION = ?,
         FECHA_MODIFICACION = NOW()
@@ -1306,7 +1306,7 @@ router.post("/api/cambiar-estado", async (req, res) => {
       descripcion: `El usuario ${usuarioModificacion} actualizó el estado de la cita #${idCita} a: '${nuevoEstado}' desde Consulta Médica`,
       modulo: "CONSULTA_MEDICA",
       idRegistro: idCita,
-      tabla: "TBL_CITAS",
+      tabla: "tbl_citas",
       estado: "EXITO",
       req: req
     });

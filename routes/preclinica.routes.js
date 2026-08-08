@@ -207,7 +207,7 @@ router.get(
             u.NOMBRE_USUARIO AS NOMBRE_DOCTOR,
             c.FECHA_CITA,
             c.ESTADO
-          FROM TBL_CITAS c
+          FROM tbl_citas c
           INNER JOIN tbl_paciente p
             ON c.ID_PACIENTE =
                p.ID_PACIENTE
@@ -504,7 +504,7 @@ router.post(
       if (debeEnviarAConsulta) {
         await pool.query(
           `
-            UPDATE TBL_CITAS
+            UPDATE tbl_citas
             SET
               ESTADO = 'CONSULTA_MEDICA',
               FECHA_MODIFICACION = CURRENT_TIMESTAMP,
@@ -524,7 +524,7 @@ router.post(
               : ""),
           modulo: "CITAS",
           idRegistro: idCitaNum,
-          tabla: "TBL_CITAS",
+          tabla: "tbl_citas",
           estado: "EXITO",
           req,
         });
@@ -709,7 +709,7 @@ router.post(
       if (debeEnviarAConsulta && idCitaNum) {
         await pool.query(
           `
-            UPDATE TBL_CITAS
+            UPDATE tbl_citas
             SET
               ESTADO = 'CONSULTA_MEDICA',
               FECHA_MODIFICACION = CURRENT_TIMESTAMP,
@@ -729,7 +729,7 @@ router.post(
               : ""),
           modulo: "CITAS",
           idRegistro: idCitaNum,
-          tabla: "TBL_CITAS",
+          tabla: "tbl_citas",
           estado: "EXITO",
           req,
         });
@@ -753,7 +753,7 @@ router.post(
       let estadoActual = "PRECLINICA";
       if (idCitaNum) {
         const [estadoRows] = await pool.query(
-          `SELECT ESTADO FROM TBL_CITAS WHERE ID_CITA = ? LIMIT 1`,
+          `SELECT ESTADO FROM tbl_citas WHERE ID_CITA = ? LIMIT 1`,
           [idCitaNum]
         );
         if (estadoRows && estadoRows.length) {
@@ -848,7 +848,7 @@ router.delete(
               p.ID_CITA,
               c.ESTADO AS ESTADO_CITA
             FROM TBL_PRECLINICA p
-            INNER JOIN TBL_CITAS c
+            INNER JOIN tbl_citas c
               ON c.ID_CITA =
                  p.ID_CITA
             WHERE p.ID_CITA = ?
@@ -943,7 +943,7 @@ router.delete(
 
         await connection.query(
           `
-            UPDATE TBL_CITAS
+            UPDATE tbl_citas
             SET
               ESTADO =
                 'PRECLINICA',
@@ -1012,7 +1012,7 @@ router.delete(
               idCita,
 
             tabla:
-              "TBL_CITAS",
+              "tbl_citas",
 
             estado:
               "EXITO",
@@ -1213,7 +1213,7 @@ router.post(
 
       await pool.query(
         `
-          UPDATE TBL_CITAS
+          UPDATE tbl_citas
           SET
             ESTADO = 'CONSULTA_MEDICA',
             FECHA_MODIFICACION = CURRENT_TIMESTAMP,
@@ -1233,7 +1233,7 @@ router.post(
             : " con preclínica completa"),
         modulo: "CITAS",
         idRegistro: id,
-        tabla: "TBL_CITAS",
+        tabla: "tbl_citas",
         estado: "EXITO",
         req,
       });
@@ -1401,7 +1401,7 @@ router.get(
             c.ESTADO
               AS ESTADO_CITA
           FROM TBL_PRECLINICA p
-          INNER JOIN TBL_CITAS c
+          INNER JOIN tbl_citas c
             ON p.ID_CITA =
                c.ID_CITA
           INNER JOIN tbl_paciente pa
@@ -1529,7 +1529,7 @@ router.delete(
         await connection.query(
           `
             SELECT ID_CITA
-            FROM TBL_CITAS
+            FROM tbl_citas
             WHERE ID_CITA = ?
             LIMIT 1
             FOR UPDATE
@@ -1565,7 +1565,7 @@ router.delete(
       const [resultado] =
         await connection.query(
           `
-            DELETE FROM TBL_CITAS
+            DELETE FROM tbl_citas
             WHERE ID_CITA = ?
           `,
           [idCita]
@@ -1612,7 +1612,7 @@ router.delete(
             idCita,
 
           tabla:
-            "TBL_CITAS",
+            "tbl_citas",
 
           estado:
             "EXITO",
@@ -1672,7 +1672,7 @@ router.delete(
             "CITAS",
 
           tabla:
-            "TBL_CITAS",
+            "tbl_citas",
 
           estado:
             "ERROR",

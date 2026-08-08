@@ -69,7 +69,7 @@ router.get("/preclinica", async (req, res) => {
                 pa.TELEFONO,
                 pa.CORREO_ELECTRONICO
             FROM TBL_PRECLINICA p
-            INNER JOIN TBL_CITAS c ON p.ID_CITA = c.ID_CITA
+            INNER JOIN tbl_citas c ON p.ID_CITA = c.ID_CITA
             INNER JOIN tbl_paciente pa ON c.ID_PACIENTE = pa.ID_PACIENTE
             LEFT JOIN tbl_ms_usuario u ON p.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
             WHERE 1=1
@@ -442,7 +442,7 @@ router.get("/consultas", async (req, res) => {
                 cm.TRATAMIENTO,
                 cm.RECOMENDACIONES,
                 cm.FECHA_CONSULTA
-            FROM TBL_CITAS c
+            FROM tbl_citas c
             INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
             INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
             LEFT JOIN TBL_PRECLINICA pr ON c.ID_CITA = pr.ID_CITA
@@ -671,7 +671,7 @@ router.get("/consultas", async (req, res) => {
                 accion: "EXPORTAR_EXCEL_CONSULTAS",
                 descripcion: `Exportados ${citas.length} registros de consultas a Excel. Archivo: ${fileName}`,
                 modulo: "CONSULTA_MEDICA",
-                tabla: "TBL_CITAS",
+                tabla: "tbl_citas",
                 estado: "EXITO",
                 req
             });
@@ -795,7 +795,7 @@ router.get("/citas", async (req, res) => {
                 c.MOTIVO_CONSULTA,
                 c.DURACION_ESTIMADA_MIN,
                 c.CANAL_REGISTRO
-            FROM TBL_CITAS c
+            FROM tbl_citas c
             INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
             INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
             WHERE c.ESTADO IN ('PROGRAMADA','CONFIRMADA','FINALIZADA','CANCELADA','NO_ASISTIO')
@@ -1115,7 +1115,7 @@ router.get("/historial/:idPaciente", async (req, res) => {
             FROM TBL_PRECLINICA pr
             LEFT JOIN tbl_ms_usuario u ON pr.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
             WHERE pr.ID_CITA IN (
-                SELECT c.ID_CITA FROM TBL_CITAS c WHERE c.ID_PACIENTE = ?
+                SELECT c.ID_CITA FROM tbl_citas c WHERE c.ID_PACIENTE = ?
             )
             ORDER BY pr.FECHA_REGISTRO DESC
             LIMIT 20

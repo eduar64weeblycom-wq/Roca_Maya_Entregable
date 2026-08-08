@@ -154,12 +154,12 @@ router.get("/", async (req, res) => {
           ↓
    tbl_ms_usuario
           ↓
-   TBL_CITAS
+   tbl_citas
           ↓
    tbl_paciente
 
    IMPORTANTE:
-   TBL_CITAS no contiene ID_ESPECIALIDAD. Por eso, cuando un
+   tbl_citas no contiene ID_ESPECIALIDAD. Por eso, cuando un
    doctor tenga varias especialidades, sus pacientes aparecerán
    dentro de cada especialidad asignada a ese doctor.
 ============================================================ */
@@ -300,7 +300,7 @@ router.get("/api/datos", async (req, res) => {
         SELECT DISTINCT
           ID_DOCTOR,
           ID_PACIENTE
-        FROM TBL_CITAS
+        FROM tbl_citas
         WHERE ESTADO NOT IN (
           'CANCELADA',
           'NO_ASISTIO'
@@ -638,7 +638,7 @@ router.get("/api/datos", async (req, res) => {
 
     /*
       CLASIFICACIÓN DE PACIENTES SIN DUPLICADOS:
-      TBL_CITAS no guarda ID_ESPECIALIDAD. Cuando un médico tiene
+      tbl_citas no guarda ID_ESPECIALIDAD. Cuando un médico tiene
       varias especialidades, se conserva el médico en todas ellas,
       pero sus pacientes se muestran una sola vez en la especialidad
       de referencia (la de menor ID). Esto evita combinar y repetir
@@ -989,7 +989,7 @@ router.get("/excel", async (req, res) => {
           SELECT DISTINCT
             ID_DOCTOR,
             ID_PACIENTE
-          FROM TBL_CITAS
+          FROM tbl_citas
           WHERE ESTADO NOT IN (
             'CANCELADA',
             'NO_ASISTIO'
@@ -1646,7 +1646,7 @@ router.get("/excel", async (req, res) => {
     hojaResumen
       .cell(3, 1, 3, 8, true)
       .string(
-        "Resumen ejecutivo de especialidades, médicos y pacientes clasificados. La clasificación por especialidad es exacta cuando el médico posee una sola especialidad; cuando posee varias, se utiliza una referencia técnica porque TBL_CITAS no almacena ID_ESPECIALIDAD."
+        "Resumen ejecutivo de especialidades, médicos y pacientes clasificados. La clasificación por especialidad es exacta cuando el médico posee una sola especialidad; cuando posee varias, se utiliza una referencia técnica porque tbl_citas no almacena ID_ESPECIALIDAD."
       )
       .style(
         estiloSubtitulo

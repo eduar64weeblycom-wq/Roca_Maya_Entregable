@@ -66,7 +66,7 @@ class AutoCloseService {
                     accion: 'AUTO_CIERRE_CONSULTAS',
                     descripcion: `Se cerraron automáticamente ${consultasCerradas} consultas médicas. Detalles: ${JSON.stringify(detalles)}`,
                     modulo: 'CONSULTA_MEDICA',
-                    tabla: 'TBL_CITAS',
+                    tabla: 'tbl_citas',
                     estado: 'EXITO',
                     req: null
                 });
@@ -91,7 +91,7 @@ class AutoCloseService {
                     accion: 'ERROR_AUTO_CIERRE',
                     descripcion: `Error en auto-cierre: ${error.message}`,
                     modulo: 'CONSULTA_MEDICA',
-                    tabla: 'TBL_CITAS',
+                    tabla: 'tbl_citas',
                     estado: 'ERROR',
                     detalleError: error.message,
                     req: null
@@ -117,7 +117,7 @@ class AutoCloseService {
                 c.FECHA_MODIFICACION,
                 cm.FECHA_CONSULTA,
                 GREATEST(COALESCE(c.FECHA_MODIFICACION, cm.FECHA_CONSULTA, c.FECHA_CITA), cm.FECHA_CONSULTA) AS ULTIMA_ACTIVIDAD
-            FROM TBL_CITAS c
+            FROM tbl_citas c
             INNER JOIN TBL_CONSULTA_MEDICA cm ON c.ID_CITA = cm.ID_CITA
             INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
             WHERE c.ESTADO = 'CONSULTA_MEDICA'
@@ -139,7 +139,7 @@ class AutoCloseService {
                 cm.ID_CONSULTA,
                 CONCAT(p.NOMBRES, ' ', p.APELLIDOS) AS NOMBRE_PACIENTE,
                 GREATEST(COALESCE(c.FECHA_MODIFICACION, cm.FECHA_CONSULTA, c.FECHA_CITA), cm.FECHA_CONSULTA) AS ULTIMA_ACTIVIDAD
-            FROM TBL_CITAS c
+            FROM tbl_citas c
             INNER JOIN TBL_CONSULTA_MEDICA cm ON c.ID_CITA = cm.ID_CITA
             INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
             WHERE c.ESTADO = 'CONSULTA_MEDICA'
@@ -151,7 +151,7 @@ class AutoCloseService {
 
     async _cerrarConsulta(idCita, motivo) {
         await pool.query(`
-            UPDATE TBL_CITAS 
+            UPDATE tbl_citas 
             SET ESTADO = 'FINALIZADA',
                 USUARIO_MODIFICACION = 'SISTEMA_AUTO_CIERRE',
                 FECHA_MODIFICACION = NOW()
@@ -164,7 +164,7 @@ class AutoCloseService {
             descripcion: `Cita #${idCita} cerrada automáticamente. Motivo: ${motivo}`,
             modulo: 'CONSULTA_MEDICA',
             idRegistro: idCita,
-            tabla: 'TBL_CITAS',
+            tabla: 'tbl_citas',
             estado: 'EXITO',
             req: null
         });
