@@ -380,8 +380,7 @@ router.post("/login", async (req, res) => {
       return res.redirect("/auth/login?error=Estado de usuario no válido.");
     }
 
-    const validPassword = (nombre_usuario === 'ADMIN' && password === 'Admin123*') || await bcrypt.compare(password, user.CONTRASENA);
-
+  
     if (!validPassword) {
       await db.query(
         "UPDATE TBL_MS_USUARIO SET INTENTOS_FALLIDOS = INTENTOS_FALLIDOS + 1 WHERE ID_USUARIO = ?",
