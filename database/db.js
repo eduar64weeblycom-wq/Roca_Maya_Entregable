@@ -2,11 +2,11 @@ const mysql = require("mysql2/promise");
 require("dotenv").config();
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "sql1.freedb.tech",
-  user: process.env.DB_USER || "u_5FnQP5",
-  password: process.env.DB_PASSWORD || "NDQXJE9odawm",
-  database: process.env.DB_NAME || "freedb_7VpYIKfM", 
-  port: Number(process.env.DB_PORT) || 3306,
+  host: process.env.DB_HOST || process.env.mysql.railway.internal,
+  user: process.env.DB_USER || process.env.root,
+  password: process.env.DB_PASSWORD || process.env.jWgLAGkmXFfYUhaoYKGGAxBUYLCUQsAk,
+  database: process.env.DB_NAME || process.env.railway, 
+  port: Number(process.env.DB_PORT || process.env.MYSQLPORT) || 3306,
   waitForConnections: true,
   connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10,
   maxIdle: 10,
@@ -22,7 +22,7 @@ const pool = mysql.createPool({
 async function testConnection() {
   try {
     const conn = await pool.getConnection();
-    console.log("¡Conexión exitosa a la base de datos MySQL en FreeDB!");
+    console.log("¡Conexión exitosa a la base de datos MySQL en Railway!");
     conn.release();
   } catch (err) {
     console.error("Error al conectar a la base de datos:", err.message);
