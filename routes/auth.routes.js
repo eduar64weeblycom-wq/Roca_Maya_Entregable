@@ -379,7 +379,7 @@ router.post("/login", async (req, res) => {
     if (user.ESTADO !== 'ACTIVO' && user.ESTADO !== 'NUEVO') {
       return res.redirect("/auth/login?error=Estado de usuario no válido.");
     }
-
+const passwordValida = await bcrypt.compare(passwordIngresada, usuario.CONTRASENA);
   
     if (!validPassword) {
       await db.query(
