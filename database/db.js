@@ -1,12 +1,12 @@
 const mysql = require("mysql2/promise");
 require("dotenv").config();
 
-// Railway provee una URL completa con el usuario, contraseña y host correctos
+// Usa la URL completa de Railway que ya incluye usuario, password y host correctos
 const pool = mysql.createPool(
   process.env.MYSQL_URL || {
     host: process.env.DB_HOST || "mysql.railway.internal",
     user: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "jWgLAGkmXFfYUhaoYKGGAxBUYLCUQsAk",
+    password: process.env.DB_PASSWORD || process.env.MYSQL_ROOT_PASSWORD,
     database: process.env.DB_NAME || "railway",
     port: Number(process.env.DB_PORT) || 3306,
     waitForConnections: true,
