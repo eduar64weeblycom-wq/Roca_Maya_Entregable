@@ -25,7 +25,7 @@ router.get("/", async (req, res) => {
           c.PRIORIDAD,
           c.TIPO_CITA
         FROM TBL_CITAS c
-        INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
+        INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
         INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
         ORDER BY c.FECHA_CITA DESC
@@ -44,7 +44,7 @@ router.get("/", async (req, res) => {
           c.PRIORIDAD,
           c.TIPO_CITA
         FROM TBL_CITAS c
-        INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
+        INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
         INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
           AND c.ID_DOCTOR = ?
@@ -110,7 +110,7 @@ router.get("/api/calendario", async (req, res) => {
           c.TIPO_CITA,
           c.DURACION_ESTIMADA_MIN
         FROM TBL_CITAS c
-        INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
+        INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
         INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
         ORDER BY c.FECHA_CITA ASC
@@ -134,7 +134,7 @@ router.get("/api/calendario", async (req, res) => {
           c.TIPO_CITA,
           c.DURACION_ESTIMADA_MIN
         FROM TBL_CITAS c
-        INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
+        INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
         INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
           AND c.ID_DOCTOR = ?
@@ -195,7 +195,7 @@ router.get("/api/cita-detalle/:idCita", async (req, res) => {
         p.CORREO_ELECTRONICO,
         u.NOMBRE_USUARIO AS NOMBRE_DOCTOR
       FROM TBL_CITAS c
-      INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
+      INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
       WHERE c.ID_CITA = ?
     `, [idCita]);
@@ -284,7 +284,7 @@ router.get("/api/imprimir-consulta/:idConsulta", async (req, res) => {
         c.FECHA_CITA,
         c.ESTADO AS ESTADO_CITA
       FROM TBL_CONSULTA_MEDICA cm
-      INNER JOIN TBL_PACIENTE p ON cm.ID_PACIENTE = p.ID_PACIENTE
+      INNER JOIN tbl_paciente p ON cm.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
       INNER JOIN TBL_CITAS c ON cm.ID_CITA = c.ID_CITA
       WHERE cm.ID_CONSULTA = ?
@@ -362,7 +362,7 @@ router.get("/api/datos", async (req, res) => {
           c.DURACION_ESTIMADA_MIN,
           c.OBSERVACIONES
         FROM TBL_CITAS c
-        INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
+        INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
         INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
         ORDER BY c.FECHA_CITA ASC
@@ -387,7 +387,7 @@ router.get("/api/datos", async (req, res) => {
           c.DURACION_ESTIMADA_MIN,
           c.OBSERVACIONES
         FROM TBL_CITAS c
-        INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
+        INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
         INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
         WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
           AND c.ID_DOCTOR = ?
@@ -413,7 +413,7 @@ router.get("/api/datos", async (req, res) => {
 
     const [pacientes] = await pool.query(`
       SELECT ID_PACIENTE, NOMBRES, APELLIDOS, TELEFONO, CORREO_ELECTRONICO
-      FROM TBL_PACIENTE
+      FROM tbl_paciente
       WHERE ESTADO = 'ACTIVO'
       ORDER BY NOMBRES, APELLIDOS
     `);
@@ -737,7 +737,7 @@ router.post("/nueva", async (req, res) => {
     // BITÁCORA
     // ============================================================
     const [pacienteInfo] = await connection.query(
-      "SELECT CONCAT(NOMBRES, ' ', APELLIDOS) AS NOMBRE FROM TBL_PACIENTE WHERE ID_PACIENTE = ?",
+      "SELECT CONCAT(NOMBRES, ' ', APELLIDOS) AS NOMBRE FROM tbl_paciente WHERE ID_PACIENTE = ?",
       [idPaciente]
     );
     const nombrePaciente = pacienteInfo.length > 0 ? pacienteInfo[0].NOMBRE : `ID ${idPaciente}`;
@@ -941,7 +941,7 @@ router.get("/por-cita/:idCita", async (req, res) => {
         CONCAT(p.NOMBRES, ' ', p.APELLIDOS) AS NOMBRE_PACIENTE,
         u.NOMBRE_USUARIO AS NOMBRE_DOCTOR
       FROM TBL_CONSULTA_MEDICA cm
-      INNER JOIN TBL_PACIENTE p ON cm.ID_PACIENTE = p.ID_PACIENTE
+      INNER JOIN tbl_paciente p ON cm.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
       WHERE cm.ID_CITA = ?
     `, [idCita]);
@@ -1002,7 +1002,7 @@ router.get("/api/cita/:idCita", async (req, res) => {
         p.FECHA_NACIMIENTO, p.GENERO, p.TELEFONO, p.CORREO_ELECTRONICO,
         p.DIRECCION, u.NOMBRE_USUARIO AS NOMBRE_DOCTOR
       FROM TBL_CITAS c
-      INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
+      INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
       WHERE c.ID_CITA = ?
     `, [idCita]);
@@ -1063,7 +1063,7 @@ router.get("/api/consulta/:idConsulta", async (req, res) => {
              pre.PERIMETRO_ABDOMINAL, pre.ESTADO_GENERAL,
              pre.OBSERVACIONES AS PRECLINICA_OBSERVACIONES
       FROM TBL_CONSULTA_MEDICA cm
-      INNER JOIN TBL_PACIENTE p ON cm.ID_PACIENTE = p.ID_PACIENTE
+      INNER JOIN tbl_paciente p ON cm.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
       LEFT JOIN TBL_PRECLINICA pre ON cm.ID_CITA = pre.ID_CITA
       WHERE cm.ID_CONSULTA = ?

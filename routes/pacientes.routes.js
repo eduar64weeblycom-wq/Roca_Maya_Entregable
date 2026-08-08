@@ -36,7 +36,7 @@ router.get("/", async (req, res) => {
         FECHA_ACTUALIZACION,
         USUARIO_CREACION,
         USUARIO_MODIFICACION
-      FROM TBL_PACIENTE
+      FROM tbl_paciente
       WHERE ESTADO = 'ACTIVO'
       ORDER BY FECHA_REGISTRO DESC
     `);
@@ -92,7 +92,7 @@ router.get("/api/:id", async (req, res) => {
         h.VACUNAS,
         h.ANTECEDENTES_FAMILIARES,
         h.HABITOS
-      FROM TBL_PACIENTE p
+      FROM tbl_paciente p
       LEFT JOIN TBL_HISTORIAL_MEDICO h ON p.ID_PACIENTE = h.ID_PACIENTE
       WHERE p.ID_PACIENTE = ?
     `,
@@ -169,7 +169,7 @@ router.post("/api", async (req, res) => {
     }
 
     const [existe] = await pool.query(
-      `SELECT ID_PACIENTE FROM TBL_PACIENTE WHERE NUMERO_DOCUMENTO_IDENTIDAD = ? AND ESTADO = 'ACTIVO'`,
+      `SELECT ID_PACIENTE FROM tbl_paciente WHERE NUMERO_DOCUMENTO_IDENTIDAD = ? AND ESTADO = 'ACTIVO'`,
       [NUMERO_DOCUMENTO_IDENTIDAD]
     );
 
@@ -184,7 +184,7 @@ router.post("/api", async (req, res) => {
 
     const [result] = await pool.query(
       `
-      INSERT INTO TBL_PACIENTE (
+      INSERT INTO tbl_paciente (
         NOMBRES, APELLIDOS, FECHA_NACIMIENTO, GENERO,
         DIRECCION, TELEFONO, CORREO_ELECTRONICO,
         TIPO_DOCUMENTO_IDENTIDAD, NUMERO_DOCUMENTO_IDENTIDAD,
@@ -323,7 +323,7 @@ router.put("/api/:id", async (req, res) => {
     }
 
     const [existe] = await pool.query(
-      `SELECT ID_PACIENTE FROM TBL_PACIENTE WHERE NUMERO_DOCUMENTO_IDENTIDAD = ? AND ID_PACIENTE != ? AND ESTADO = 'ACTIVO'`,
+      `SELECT ID_PACIENTE FROM tbl_paciente WHERE NUMERO_DOCUMENTO_IDENTIDAD = ? AND ID_PACIENTE != ? AND ESTADO = 'ACTIVO'`,
       [NUMERO_DOCUMENTO_IDENTIDAD, id]
     );
 
@@ -338,7 +338,7 @@ router.put("/api/:id", async (req, res) => {
 
     const [result] = await pool.query(
       `
-      UPDATE TBL_PACIENTE SET
+      UPDATE tbl_paciente SET
         NOMBRES = ?, APELLIDOS = ?, FECHA_NACIMIENTO = ?, GENERO = ?,
         DIRECCION = ?, TELEFONO = ?, CORREO_ELECTRONICO = ?,
         TIPO_DOCUMENTO_IDENTIDAD = ?, NUMERO_DOCUMENTO_IDENTIDAD = ?,
@@ -481,7 +481,7 @@ router.delete("/api/:id", async (req, res) => {
 
     const [result] = await pool.query(
       `
-      UPDATE TBL_PACIENTE SET
+      UPDATE tbl_paciente SET
         ESTADO = 'INACTIVO',
         FECHA_ACTUALIZACION = NOW(),
         USUARIO_MODIFICACION = ?
@@ -523,7 +523,7 @@ router.get("/api/excel", async (req, res) => {
         TELEFONO,
         CORREO_ELECTRONICO,
         ESTADO
-      FROM TBL_PACIENTE
+      FROM tbl_paciente
       WHERE ESTADO = 'ACTIVO'
       ORDER BY APELLIDOS, NOMBRES
     `);
@@ -617,7 +617,7 @@ router.get("/api/excel", async (req, res) => {
         accion: "EXPORTAR_EXCEL_PACIENTES",
         descripcion: `Exportados ${pacientes.length} pacientes a Excel`,
         modulo: "PACIENTES",
-        tabla: "TBL_PACIENTE",
+        tabla: "tbl_paciente",
         estado: "EXITO",
         req
       });

@@ -17,7 +17,7 @@ function iniciarCronRecordatorios() {
           p.APELLIDOS,
           p.CORREO_ELECTRONICO
         FROM TBL_CITAS c
-        INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
+        INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
        WHERE DATE(c.FECHA_CITA) = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
       `;
       

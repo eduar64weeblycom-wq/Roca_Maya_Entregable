@@ -208,7 +208,7 @@ router.get(
             c.FECHA_CITA,
             c.ESTADO
           FROM TBL_CITAS c
-          INNER JOIN TBL_PACIENTE p
+          INNER JOIN tbl_paciente p
             ON c.ID_PACIENTE =
                p.ID_PACIENTE
           LEFT JOIN tbl_ms_usuario u
@@ -1404,7 +1404,7 @@ router.get(
           INNER JOIN TBL_CITAS c
             ON p.ID_CITA =
                c.ID_CITA
-          INNER JOIN TBL_PACIENTE pa
+          INNER JOIN tbl_paciente pa
             ON c.ID_PACIENTE =
                pa.ID_PACIENTE
           LEFT JOIN tbl_ms_usuario u

@@ -11,7 +11,7 @@ router.get("/", async (req, res) => {
   try {
     const [pacientes] = await db.query(`
       SELECT ID_PACIENTE, NOMBRES, APELLIDOS
-      FROM TBL_PACIENTE
+      FROM tbl_paciente
       WHERE ESTADO = 'ACTIVO'
       ORDER BY NOMBRES
     `);
@@ -37,7 +37,7 @@ router.get("/pacientes", async (req, res) => {
   try {
     const [rows] = await db.query(`
       SELECT ID_PACIENTE, NOMBRES, APELLIDOS, TELEFONO, CORREO_ELECTRONICO, NUMERO_DOCUMENTO_IDENTIDAD
-      FROM TBL_PACIENTE
+      FROM tbl_paciente
       WHERE ESTADO = 'ACTIVO'
       ORDER BY NOMBRES
     `);
@@ -71,7 +71,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
         p.OCUPACION,
         p.ESTADO_CIVIL,
         p.FECHA_REGISTRO
-      FROM TBL_PACIENTE p
+      FROM tbl_paciente p
       WHERE p.ID_PACIENTE = ?
     `, [pacienteId]);
 
@@ -87,7 +87,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
         SELECT FECHA_HORA
         FROM tbl_ms_BITACORA
         WHERE ACCION = 'CREACION_PACIENTE'
-          AND TABLA_AFECTADA = 'TBL_PACIENTE'
+          AND TABLA_AFECTADA = 'tbl_paciente'
           AND ID_REGISTRO_AFECTADO = ?
         ORDER BY FECHA_HORA ASC
         LIMIT 1
@@ -247,7 +247,7 @@ router.post("/guardar-desde-consulta/:pacienteId", async (req, res) => {
 
   try {
     const [paciente] = await db.query(
-      "SELECT ID_PACIENTE FROM TBL_PACIENTE WHERE ID_PACIENTE = ?",
+      "SELECT ID_PACIENTE FROM tbl_paciente WHERE ID_PACIENTE = ?",
       [pacienteId]
     );
     if (paciente.length === 0) {
@@ -354,7 +354,7 @@ router.get("/:pacienteId", async (req, res) => {
   const { pacienteId } = req.params;
   try {
     const [pacienteRows] = await db.query(`
-      SELECT * FROM TBL_PACIENTE WHERE ID_PACIENTE = ?
+      SELECT * FROM tbl_paciente WHERE ID_PACIENTE = ?
     `, [pacienteId]);
 
     if (pacienteRows.length === 0) {
@@ -465,7 +465,7 @@ router.get("/:pacienteId/exportar-pdf", async (req, res) => {
       SELECT ID_PACIENTE, NOMBRES, APELLIDOS, FECHA_NACIMIENTO, GENERO, TELEFONO,
              CORREO_ELECTRONICO, DIRECCION, ESTADO, RTN_PACIENTE, OCUPACION, ESTADO_CIVIL,
              FECHA_REGISTRO, NUMERO_DOCUMENTO_IDENTIDAD
-      FROM TBL_PACIENTE WHERE ID_PACIENTE = ?
+      FROM tbl_paciente WHERE ID_PACIENTE = ?
     `, [pacienteId]);
 
     if (pacienteRows.length === 0) {
@@ -709,7 +709,7 @@ router.get("/excel/historial/:pacienteId", async (req, res) => {
             SELECT ID_PACIENTE, NOMBRES, APELLIDOS, FECHA_NACIMIENTO, GENERO, TELEFONO,
                    CORREO_ELECTRONICO, DIRECCION, ESTADO, RTN_PACIENTE, OCUPACION, ESTADO_CIVIL,
                    FECHA_REGISTRO, NUMERO_DOCUMENTO_IDENTIDAD
-            FROM TBL_PACIENTE WHERE ID_PACIENTE = ?
+            FROM tbl_paciente WHERE ID_PACIENTE = ?
         `, [pacienteId]);
 
         if (pacienteRows.length === 0) {

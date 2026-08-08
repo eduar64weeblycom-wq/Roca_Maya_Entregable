@@ -43,7 +43,7 @@ router.get("/", async (req, res) => {
     let stats = { pacientes: 0, citasHoy: 0, consultasDiarias: 0, medicamentos: 0 };
     if (!esNuevo) {
       if (rol === 'ADMINISTRADOR' || rol === 'ENFERMERA') {
-        const [pacientes] = await db.query("SELECT COUNT(*) as total FROM TBL_PACIENTE WHERE ESTADO = 'ACTIVO'");
+        const [pacientes] = await db.query("SELECT COUNT(*) as total FROM tbl_paciente WHERE ESTADO = 'ACTIVO'");
         stats.pacientes = pacientes[0]?.total || 0;
       }
       if (rol === 'ADMINISTRADOR' || rol === 'RECEPCIONISTA') {
@@ -265,7 +265,7 @@ router.get('/stats', async (req, res) => {
     const rol = userData[0]?.ROL || '';
     let stats = { pacientesActivos: 0, citasHoy: 0, consultasHoy: 0, medicamentosActivos: 0 };
     if (rol === 'ADMINISTRADOR' || rol === 'ENFERMERA') {
-      const [pacientes] = await db.query("SELECT COUNT(*) as total FROM TBL_PACIENTE WHERE ESTADO = 'ACTIVO'");
+      const [pacientes] = await db.query("SELECT COUNT(*) as total FROM tbl_paciente WHERE ESTADO = 'ACTIVO'");
       stats.pacientesActivos = pacientes[0]?.total || 0;
     }
     if (rol === 'ADMINISTRADOR' || rol === 'RECEPCIONISTA') {

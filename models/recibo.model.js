@@ -8,7 +8,7 @@ const Recibo = {
             r.*, 
             CONCAT(p.NOMBRES, ' ', p.APELLIDOS) AS NOMBRE_PACIENTE
         FROM TBL_RECIBO r
-        LEFT JOIN TBL_PACIENTE p ON r.ID_PACIENTE = p.ID_PACIENTE
+        LEFT JOIN tbl_paciente p ON r.ID_PACIENTE = p.ID_PACIENTE
         WHERE 1=1
     `;
     const params = [];
@@ -39,7 +39,7 @@ const Recibo = {
               CONCAT(p.NOMBRES, ' ', p.APELLIDOS) AS NOMBRE_PACIENTE,
               p.RTN_PACIENTE AS RTN_PACIENTE
        FROM TBL_RECIBO r
-       LEFT JOIN TBL_PACIENTE p ON r.ID_PACIENTE = p.ID_PACIENTE
+       LEFT JOIN tbl_paciente p ON r.ID_PACIENTE = p.ID_PACIENTE
        WHERE r.ID_RECIBO = ?`,
       [id]
     );
@@ -70,7 +70,7 @@ const Recibo = {
             ID_PACIENTE, 
             CONCAT(NOMBRES, ' ', APELLIDOS) AS NOMBRE_COMPLETO,
             RTN_PACIENTE 
-       FROM TBL_PACIENTE 
+       FROM tbl_paciente 
        WHERE ID_PACIENTE = ?`,
       [id]
     );
@@ -88,7 +88,7 @@ const Recibo = {
             CONCAT(p.NOMBRES, ' ', p.APELLIDOS) AS NOMBRE_PACIENTE,
             p.RTN_PACIENTE
        FROM TBL_CITA c
-       JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
+       JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
        WHERE c.ID_CITA = ?`,
       [idCita]
     );

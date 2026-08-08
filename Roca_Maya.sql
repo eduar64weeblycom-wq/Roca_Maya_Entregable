@@ -1127,7 +1127,7 @@ BEGIN
         CONCAT('Nuevo paciente creado: ', NEW.NOMBRES, ' ', NEW.APELLIDOS, ' (', NEW.NUMERO_DOCUMENTO_IDENTIDAD, ')'),
         'PACIENTES',
         NEW.ID_PACIENTE,
-        'TBL_PACIENTE',
+        'tbl_paciente',
         NULL, NULL, 'EXITO', NULL,
         'TRIGGER'
     );
@@ -1141,7 +1141,7 @@ BEGIN
         CONCAT('Paciente actualizado: ', NEW.NOMBRES, ' ', NEW.APELLIDOS),
         'PACIENTES',
         NEW.ID_PACIENTE,
-        'TBL_PACIENTE',
+        'tbl_paciente',
         NULL, NULL, 'EXITO', NULL,
         'TRIGGER'
     );

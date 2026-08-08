@@ -70,7 +70,7 @@ router.get("/preclinica", async (req, res) => {
                 pa.CORREO_ELECTRONICO
             FROM TBL_PRECLINICA p
             INNER JOIN TBL_CITAS c ON p.ID_CITA = c.ID_CITA
-            INNER JOIN TBL_PACIENTE pa ON c.ID_PACIENTE = pa.ID_PACIENTE
+            INNER JOIN tbl_paciente pa ON c.ID_PACIENTE = pa.ID_PACIENTE
             LEFT JOIN tbl_ms_usuario u ON p.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
             WHERE 1=1
         `;
@@ -443,7 +443,7 @@ router.get("/consultas", async (req, res) => {
                 cm.RECOMENDACIONES,
                 cm.FECHA_CONSULTA
             FROM TBL_CITAS c
-            INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
+            INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
             INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
             LEFT JOIN TBL_PRECLINICA pr ON c.ID_CITA = pr.ID_CITA
             LEFT JOIN TBL_CONSULTA_MEDICA cm ON c.ID_CITA = cm.ID_CITA
@@ -796,7 +796,7 @@ router.get("/citas", async (req, res) => {
                 c.DURACION_ESTIMADA_MIN,
                 c.CANAL_REGISTRO
             FROM TBL_CITAS c
-            INNER JOIN TBL_PACIENTE p ON c.ID_PACIENTE = p.ID_PACIENTE
+            INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
             INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
             WHERE c.ESTADO IN ('PROGRAMADA','CONFIRMADA','FINALIZADA','CANCELADA','NO_ASISTIO')
             ORDER BY c.FECHA_CITA DESC
@@ -906,7 +906,7 @@ router.get("/pacientes", async (req, res) => {
                 TELEFONO,
                 CORREO_ELECTRONICO,
                 ESTADO
-            FROM TBL_PACIENTE
+            FROM tbl_paciente
             WHERE ESTADO = 'ACTIVO'
             ORDER BY APELLIDOS, NOMBRES
         `);
@@ -982,7 +982,7 @@ router.get("/pacientes", async (req, res) => {
                 accion: "EXPORTAR_EXCEL_PACIENTES",
                 descripcion: `Exportados ${pacientes.length} pacientes a Excel`,
                 modulo: "PACIENTES",
-                tabla: "TBL_PACIENTE",
+                tabla: "tbl_paciente",
                 estado: "EXITO",
                 req
             });
@@ -1036,7 +1036,7 @@ router.get("/historial/:idPaciente", async (req, res) => {
                 p.ESTADO_CIVIL,
                 p.TIPO_DOCUMENTO_IDENTIDAD,
                 p.NUMERO_DOCUMENTO_IDENTIDAD
-            FROM TBL_PACIENTE p
+            FROM tbl_paciente p
             WHERE p.ID_PACIENTE = ?
         `, [idPaciente]);
 

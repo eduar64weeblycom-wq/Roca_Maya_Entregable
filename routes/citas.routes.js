@@ -572,7 +572,7 @@ router.get("/api/datos", async (req, res) => {
         c.FECHA_FIN_ESTIMADA,
         c.CANAL_REGISTRO
       FROM TBL_CITAS c
-      INNER JOIN TBL_PACIENTE p
+      INNER JOIN tbl_paciente p
         ON c.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario d
         ON c.ID_DOCTOR = d.ID_USUARIO
@@ -821,7 +821,7 @@ router.get("/api/datos", async (req, res) => {
         TELEFONO,
         CORREO_ELECTRONICO,
         NUMERO_DOCUMENTO_IDENTIDAD
-      FROM TBL_PACIENTE
+      FROM tbl_paciente
       WHERE ESTADO = 'ACTIVO'
       ORDER BY NOMBRES, APELLIDOS
     `);
@@ -1828,7 +1828,7 @@ router.post(
               p.APELLIDOS
             ) AS NOMBRE_PACIENTE
           FROM TBL_CITAS c
-          INNER JOIN TBL_PACIENTE p
+          INNER JOIN tbl_paciente p
             ON p.ID_PACIENTE = c.ID_PACIENTE
           WHERE c.ID_CITA = ?
           LIMIT 1

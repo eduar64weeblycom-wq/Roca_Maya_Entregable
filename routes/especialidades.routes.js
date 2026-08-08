@@ -156,7 +156,7 @@ router.get("/", async (req, res) => {
           ↓
    TBL_CITAS
           ↓
-   TBL_PACIENTE
+   tbl_paciente
 
    IMPORTANTE:
    TBL_CITAS no contiene ID_ESPECIALIDAD. Por eso, cuando un
@@ -309,7 +309,7 @@ router.get("/api/datos", async (req, res) => {
         ON citas.ID_DOCTOR =
            de.ID_DOCTOR
 
-      LEFT JOIN TBL_PACIENTE p
+      LEFT JOIN tbl_paciente p
         ON p.ID_PACIENTE =
            citas.ID_PACIENTE
         AND p.ESTADO = 'ACTIVO'
@@ -997,7 +997,7 @@ router.get("/excel", async (req, res) => {
         ) citas
           ON citas.ID_DOCTOR =
              de.ID_DOCTOR
-        LEFT JOIN TBL_PACIENTE p
+        LEFT JOIN tbl_paciente p
           ON p.ID_PACIENTE =
              citas.ID_PACIENTE
           AND p.ESTADO = 'ACTIVO'
