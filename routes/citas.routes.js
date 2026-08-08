@@ -758,7 +758,7 @@ router.get("/api/datos", async (req, res) => {
       WHERE u.ESTADO = 'ACTIVO'
         AND u.ID_ROL = (
           SELECT ID_ROL
-          FROM tbl_ms_ROLES
+          FROM tbl_ms_roles
           WHERE ROL = 'DOCTOR'
           LIMIT 1
         )

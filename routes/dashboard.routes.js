@@ -25,7 +25,7 @@ router.get("/", async (req, res) => {
              u.CORREO_ELECTRONICO, u.ESTADO, u.TELEFONO_PROFESIONAL,
              r.ROL, r.ID_ROL
       FROM tbl_ms_usuario u
-      INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL
+      INNER JOIN tbl_ms_roles r ON u.ID_ROL = r.ID_ROL
       WHERE u.USUARIO = ?
     `, [usuario]);
 
@@ -259,7 +259,7 @@ router.get('/stats', async (req, res) => {
     const [userData] = await db.query(`
       SELECT r.ROL
       FROM tbl_ms_usuario u
-      INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL
+      INNER JOIN tbl_ms_roles r ON u.ID_ROL = r.ID_ROL
       WHERE u.USUARIO = ?
     `, [usuario]);
     const rol = userData[0]?.ROL || '';

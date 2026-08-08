@@ -22,14 +22,14 @@ router.get("/", async (req, res) => {
         r.ROL AS NOMBRE_ROL,
         r.ID_ROL
       FROM tbl_ms_usuario u
-      INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL
+      INNER JOIN tbl_ms_roles r ON u.ID_ROL = r.ID_ROL
       ORDER BY u.ID_USUARIO
     `);
 
     // Obtener todos los roles (sin filtro de ESTADO)
     const [roles] = await pool.query(
       `SELECT ID_ROL, ROL, DESCRIPCION 
-       FROM tbl_ms_ROLES 
+       FROM tbl_ms_roles 
        ORDER BY ID_ROL`
     );
 
@@ -71,7 +71,7 @@ router.get("/api/usuario/:id", async (req, res) => {
     const [rows] = await pool.query(
       `SELECT u.*, r.ROL 
        FROM tbl_ms_usuario u 
-       INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL 
+       INNER JOIN tbl_ms_roles r ON u.ID_ROL = r.ID_ROL 
        WHERE u.ID_USUARIO = ?`,
       [id]
     );
@@ -220,7 +220,7 @@ router.get("/usuarios", async (req, res) => {
         CASE WHEN u.ACTIVO_2FA = 1 THEN 'Sí' ELSE 'No' END AS ACTIVO_2FA,
         u.FECHA_ULTIMA_CONEXION
       FROM tbl_ms_usuario u
-      INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL
+      INNER JOIN tbl_ms_roles r ON u.ID_ROL = r.ID_ROL
       ORDER BY u.ID_USUARIO
     `);
 

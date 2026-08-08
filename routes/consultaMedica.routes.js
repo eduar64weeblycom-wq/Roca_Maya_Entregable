@@ -59,7 +59,7 @@ router.get("/", async (req, res) => {
         u.NOMBRE_USUARIO 
       FROM tbl_ms_usuario u
       WHERE u.ESTADO = 'ACTIVO' 
-        AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_ROLES WHERE ROL = 'DOCTOR')
+        AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_roles WHERE ROL = 'DOCTOR')
       GROUP BY u.ID_USUARIO, u.NOMBRE_USUARIO
       ORDER BY u.NOMBRE_USUARIO
     `);
@@ -153,7 +153,7 @@ router.get("/api/calendario", async (req, res) => {
       LEFT JOIN TBL_DOCTOR_ESPECIALIDAD de ON u.ID_USUARIO = de.ID_DOCTOR
       LEFT JOIN TBL_ESPECIALIDADES e ON de.ID_ESPECIALIDAD = e.ID_ESPECIALIDAD
       WHERE u.ESTADO = 'ACTIVO' 
-        AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_ROLES WHERE ROL = 'DOCTOR')
+        AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_roles WHERE ROL = 'DOCTOR')
       GROUP BY u.ID_USUARIO, u.NOMBRE_USUARIO, u.CORREO_ELECTRONICO
       ORDER BY u.NOMBRE_USUARIO
     `);
@@ -406,7 +406,7 @@ router.get("/api/datos", async (req, res) => {
       LEFT JOIN TBL_DOCTOR_ESPECIALIDAD de ON u.ID_USUARIO = de.ID_DOCTOR
       LEFT JOIN TBL_ESPECIALIDADES e ON de.ID_ESPECIALIDAD = e.ID_ESPECIALIDAD
       WHERE u.ESTADO = 'ACTIVO' 
-        AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_ROLES WHERE ROL = 'DOCTOR')
+        AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_roles WHERE ROL = 'DOCTOR')
       GROUP BY u.ID_USUARIO, u.NOMBRE_USUARIO, u.CORREO_ELECTRONICO
       ORDER BY u.NOMBRE_USUARIO
     `);

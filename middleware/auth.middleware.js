@@ -52,7 +52,7 @@ const obtenerRolUsuario = async (usuario) => {
     const [rows] = await pool.query(`
       SELECT r.ROL
       FROM tbl_ms_usuario u
-      INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL
+      INNER JOIN tbl_ms_roles r ON u.ID_ROL = r.ID_ROL
       WHERE u.USUARIO = ?
     `, [usuario]);
     

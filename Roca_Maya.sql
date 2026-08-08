@@ -1025,7 +1025,7 @@ BEGIN
         CONCAT('Nuevo rol creado: ', NEW.ROL),
         'ROLES',
         NEW.ID_ROL,
-        'tbl_ms_ROLES',
+        'tbl_ms_roles',
         NULL, NULL, 'EXITO', NULL,
         'TRIGGER'
     );

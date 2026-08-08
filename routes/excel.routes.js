@@ -314,7 +314,7 @@ router.get("/usuarios", async (req, res) => {
                 CASE WHEN u.ACTIVO_2FA = 1 THEN 'Sí' ELSE 'No' END AS ACTIVO_2FA,
                 u.FECHA_ULTIMA_CONEXION
             FROM tbl_ms_usuario u
-            INNER JOIN tbl_ms_ROLES r ON u.ID_ROL = r.ID_ROL
+            INNER JOIN tbl_ms_roles r ON u.ID_ROL = r.ID_ROL
             ORDER BY u.ID_USUARIO
         `);
 
