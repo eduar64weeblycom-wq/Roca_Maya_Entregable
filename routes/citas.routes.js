@@ -1805,5 +1805,84 @@ try {
   connection?.release();
 }
 });
+/* ============================================================
+   POST /citas/cambiar-estado
+============================================================ */
+
+router.post("/cambiar-estado", async (req, res) => {
+  let connection;
+
+  try {
+    const { idCita, nuevoEstado } = req.body;
+    const idCitaNum = convertirId(idCita);
+
+    if (!idCitaNum || !nuevoEstado) {
+      return res.status(400).json({
+        success: false,
+        message: "el id de la cita y el nuevo estado son obligatorios.",
+      });
+    }
+
+    const estadoUpper = String(nuevoEstado).toUpperCase();
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    const [resultado] = await connection.query(
+      `
+        UPDATE tbl_citas
+        SET 
+          estado = ?,
+          fecha_modificacion = CURRENT_TIMESTAMP,
+          usuario_modificacion = ?
+        WHERE id_cita = ?
+      `,
+      [estadoUpper, getUsuario(req), idCitaNum]
+    );
+
+    if (resultado.affectedRows === 0) {
+      await connection.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "no se encontro la cita especificada.",
+      });
+    }
+
+    await connection.commit();
+
+    await registrarEventoBitacora({
+      usuario: getUsuario(req),
+      accion: "cambiar_estado_cita",
+      descripcion: `se cambio el estado de la cita ${idCitaNum} a ${estadoUpper}`,
+      modulo: "citas",
+      idRegistro: idCitaNum,
+      tabla: "tbl_citas",
+      estado: "exito",
+      req,
+    });
+
+    return res.json({
+      success: true,
+      message: "estado de la cita actualizado exitosamente.",
+      idCita: idCitaNum,
+      nuevoEstado: estadoUpper,
+    });
+
+  } catch (error) {
+    if (connection) {
+      await connection.rollback().catch(() => {});
+    }
+
+    console.error("POST /citas/cambiar-estado error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "no se pudo actualizar el estado de la cita.",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  } finally {
+    connection?.release();
+  }
+});
 
 module.exports = router;
