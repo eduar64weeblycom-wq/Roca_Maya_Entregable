@@ -339,7 +339,7 @@ async function obtenerEspecialidadesPorIds(ids) {
         id_especialidad,
         nombre_especialidad,
         estado
-      FROM tbl_especialidades
+      FROM tbl_especialidadess
       WHERE id_especialidad IN (${placeholders})
     `,
     idsValidos
@@ -752,7 +752,7 @@ router.get("/api/datos", async (req, res) => {
       FROM tbl_ms_usuario u
       INNER JOIN tbl_doctor_especialidad de
         ON u.id_usuario = de.id_doctor
-      INNER JOIN tbl_especialidades
+      INNER JOIN tbl_especialidades e
         ON e.id_especialidad = de.id_especialidad
        AND e.estado = 'ACTIVA'
       WHERE u.estado = 'ACTIVO'
