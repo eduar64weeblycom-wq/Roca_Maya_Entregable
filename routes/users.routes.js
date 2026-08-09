@@ -51,7 +51,7 @@ router.get("/api/especialidades", async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT ID_ESPECIALIDAD, NOMBRE_ESPECIALIDAD 
-       FROM tbl_especialidade 
+       FROM tbl_especialidades 
        WHERE ESTADO = 'ACTIVA' 
        ORDER BY NOMBRE_ESPECIALIDAD`
     );
