@@ -245,7 +245,7 @@ async function validarEspecialidadDelDoctor(
         e.id_especialidad,
         e.nombre_especialidad
       FROM tbl_doctor_especialidad de
-      INNER JOIN tbl_especialidade e
+      INNER JOIN tbl_especialidades
         ON e.id_especialidad = de.id_especialidad
       WHERE de.id_doctor = ?
         AND de.id_especialidad = ?
@@ -284,7 +284,7 @@ async function obtenerEspecialidadesActivasPorDoctores(
         e.id_especialidad,
         e.nombre_especialidad
       FROM tbl_doctor_especialidad de
-      INNER JOIN tbl_especialidade e
+      INNER JOIN tbl_especialidades
         ON e.id_especialidad =
            de.id_especialidad
       WHERE de.id_doctor IN (${placeholders})
@@ -339,7 +339,7 @@ async function obtenerEspecialidadesPorIds(ids) {
         id_especialidad,
         nombre_especialidad,
         estado
-      FROM tbl_especialidade
+      FROM tbl_especialidades
       WHERE id_especialidad IN (${placeholders})
     `,
     idsValidos
@@ -752,7 +752,7 @@ router.get("/api/datos", async (req, res) => {
       FROM tbl_ms_usuario u
       INNER JOIN tbl_doctor_especialidad de
         ON u.id_usuario = de.id_doctor
-      INNER JOIN tbl_especialidade e
+      INNER JOIN tbl_especialidades
         ON e.id_especialidad = de.id_especialidad
        AND e.estado = 'ACTIVA'
       WHERE u.estado = 'ACTIVO'
@@ -915,7 +915,7 @@ router.get(
             e.descripcion AS DESCRIPCION,
             e.estado AS ESTADO
           FROM tbl_doctor_especialidad de
-          INNER JOIN tbl_especialidade e
+          INNER JOIN tbl_especialidades
             ON e.id_especialidad = de.id_especialidad
           WHERE de.id_doctor = ?
             AND e.estado = 'ACTIVA'
