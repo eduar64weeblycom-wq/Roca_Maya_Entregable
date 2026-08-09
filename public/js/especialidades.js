@@ -1757,11 +1757,20 @@
     }
   }
 
- async function ejecutarCambioEstado(id) {
-    const especialidad = especialidadesData.find((item) => idsIguales(item.ID_ESPECIALIDAD, id));
-    if (!especialidad) return;
+  async function solicitarCambioEstado(especialidad, boton) {
+    const esActiva = especialidad.ESTADO === "ACTIVA";
+    const accion = esActiva ? "inactivar" : "activar";
+    const nuevoEstado = esActiva ? "INACTIVA" : "ACTIVA";
 
-    const nuevoEstado = especialidad.ESTADO === "ACTIVA" ? "INACTIVA" : "ACTIVA";
+    const confirmado = window.confirm(
+      `¿Seguro que deseas ${accion} la especialidad "${especialidad.NOMBRE_ESPECIALIDAD}"?`
+    );
+
+    if (!confirmado) {
+      return;
+    }
+
+    establecerBotonCargando(boton, true);
 
     try {
       const response = await fetch(CAMBIAR_ESTADO_URL, {
@@ -1777,16 +1786,29 @@
       });
 
       const payload = await leerJsonRespuesta(response);
-      if (!response.ok) {
-        throw new Error(payload.message || "Error al cambiar el estado de la especialidad.");
+
+      if (!response.ok || payload.success === false) {
+        throw new Error(
+          payload.message ||
+            `No se pudo ${accion} la especialidad.`
+        );
       }
 
-      mostrarMensaje("success", "Especialidad actualizada correctamente.");
-      cargarDatosReales();
+      mostrarMensaje(
+        "success",
+        payload.message ||
+          `Especialidad ${accion}da correctamente.`
+      );
+
+      await cargarDatosReales();
     } catch (error) {
+      console.error("Error cambiando estado:", error);
       mostrarMensaje("error", error.message);
+    } finally {
+      establecerBotonCargando(boton, false);
     }
   }
+
   async function solicitarEliminacion(
     especialidad,
     boton
