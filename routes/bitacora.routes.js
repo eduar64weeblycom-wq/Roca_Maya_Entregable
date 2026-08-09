@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../database/db");
-const { exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 
@@ -10,7 +9,6 @@ const fs = require("fs");
 // ============================================================
 router.get("/", async (req, res) => {
   try {
-    // 1. Obtener los registros de la bitácora
     const [rows] = await pool.query(`
       SELECT b.FECHA_HORA, u.USUARIO, b.ACCION, b.DESCRIPCION, b.MODULO
       FROM tbl_ms_bitacora b
@@ -18,12 +16,10 @@ router.get("/", async (req, res) => {
       ORDER BY b.FECHA_HORA DESC LIMIT 50
     `);
 
-    // 2. Consultar el estado actual del parámetro de la bitácora
     const [paramRows] = await pool.query(`
       SELECT VALOR FROM tbl_ms_parametros WHERE PARAMETRO = 'BITACORA_ACTIVA'
     `);
 
-    // Si el valor es '0', está pausada. Si es '1' o no existe, está activa.
     const bitacoraPausada = paramRows.length > 0 ? paramRows[0].VALOR === '0' : false;
 
     res.render("bitacora", { 
@@ -116,7 +112,7 @@ router.post("/parametros/update", async (req, res) => {
 });
 
 // ============================================================
-// GET /bitacora/parametros/backup - Generar respaldo de la BD
+// GET /bitacora/parametros/backup - Generar respaldo nativo de la BD
 // ============================================================
 router.get("/parametros/backup", async (req, res) => {
   try {
@@ -124,87 +120,9 @@ router.get("/parametros/backup", async (req, res) => {
     const nombreUsuario = req.user?.USUARIO || "ADMIN_SYSTEM";
 
     const dbConfig = {
-      host: process.env.DB_HOST || "localhost",
-      user: process.env.DB_USER || "root",
-      password: process.env.DB_PASSWORD || "",
       database: process.env.DB_NAME || "Roca_Maya"
     };
 
-  // ========== 1. Intentar obtener la ruta desde parámetros ==========
-  let rutaMysqldump = null;
-
-  try {
-    const [paramRows] = await pool.query(
-      "SELECT VALOR FROM tbl_ms_parametros WHERE PARAMETRO = 'RUTA_MYSQLDUMP' LIMIT 1"
-    );
-
-    console.log(">>> Resultado SQL RUTA_MYSQLDUMP:", paramRows);
-
-    if (paramRows.length > 0 && paramRows[0].VALOR) {
-      let rutaParametro = String(paramRows[0].VALOR).trim();
-      rutaParametro = rutaParametro.replace(/^["']|["']$/g, "").trim();
-
-      if (rutaParametro && fs.existsSync(rutaParametro)) {
-        rutaMysqldump = rutaParametro;
-        console.log("✅ Usando ruta del parámetro:", rutaMysqldump);
-      } else {
-        console.warn("⚠️ La ruta del parámetro no existe físicamente o está vacía");
-      }
-    }
-  } catch (err) {
-    console.error("Error leyendo RUTA_MYSQLDUMP:", err.message);
-  }
-
-  // ========== 2. Si no hay ruta válida, detectar según el sistema operativo ==========
-  if (!rutaMysqldump) {
-    const esWindows = process.platform === "win32";
-
-    if (esWindows) {
-      // Búsqueda para entornos locales en Windows
-      const rutasWindows = [
-        "C:\\Program Files\\MySQL\\MySQL Server 8.4\\bin\\mysqldump.exe",
-        "C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe",
-        "C:\\Program Files\\MySQL\\MySQL Server 9.0\\bin\\mysqldump.exe",
-        "C:\\Program Files\\MySQL\\MySQL Server 5.7\\bin\\mysqldump.exe",
-        "C:\\Program Files (x86)\\MySQL\\MySQL Server 5.7\\bin\\mysqldump.exe",
-        "C:\\xampp\\mysql\\bin\\mysqldump.exe",
-        "C:\\wamp64\\bin\\mysql\\mysql8.0.31\\bin\\mysqldump.exe",
-        "C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysqldump.exe",
-        "C:\\Program Files\\MySQL\\MySQL Workbench 8.0\\mysqldump.exe",
-      ];
-
-      for (const r of rutasWindows) {
-        if (fs.existsSync(r)) {
-          rutaMysqldump = r;
-          console.log(`✅ mysqldump encontrado en Windows: ${r}`);
-          break;
-        }
-      }
-    } else {
-      // Entorno Linux (Render / servidores cloud)
-      // Por defecto intentamos invocar directamente 'mysqldump' asumiendo que está en el PATH del sistema
-      rutaMysqldump = "mysqldump";
-      console.log("🐧 Entorno Linux detectado, usando comando global: mysqldump");
-    }
-  }
-
-    // ========== 3. Si aún no se encontró, mostrar error ==========
-    if (!rutaMysqldump) {
-      return res.status(500).send(`
-        <h2>Error: No se encontró mysqldump</h2>
-        <p>No se encontró el ejecutable <strong>mysqldump</strong>.</p>
-        <p><strong>Solución:</strong></p>
-        <ol>
-          <li>Ve a <strong>Parámetros</strong></li>
-          <li>Busca el parámetro <code>RUTA_MYSQLDUMP</code></li>
-          <li>Pon la ruta completa de mysqldump.exe (ejemplo):</li>
-        </ol>
-        <pre>C:\\Program Files\\MySQL\\MySQL Server 8.4\\bin\\mysqldump.exe</pre>
-        <p>Luego vuelve a intentar el respaldo.</p>
-      `);
-    }
-
-    // ========== Generar el backup ==========
     const timestampRespaldo = new Date().toISOString()
       .replace(/T/, '_')
       .replace(/\..+/, '')
@@ -213,57 +131,89 @@ router.get("/parametros/backup", async (req, res) => {
     const archivoRespaldoSql = `backup_rocamaya_${timestampRespaldo}.sql`;
     const rutaTemporalBackup = path.join(__dirname, "../", archivoRespaldoSql);
 
-    const passwordFlag = dbConfig.password ? `-p${dbConfig.password}` : "";
-    const comando = `"${rutaMysqldump}" -h ${dbConfig.host} -u ${dbConfig.user} ${passwordFlag} --skip-triggers --complete-insert --add-drop-table ${dbConfig.database} > "${rutaTemporalBackup}"`;
+    console.log(`🔄 Generando backup nativo de la base de datos: ${dbConfig.database}`);
 
-    console.log(`🔄 Ejecutando backup con: ${rutaMysqldump}`);
+    let contenidoSql = `-- Respaldo de base de datos generado por Sistema Roca Maya\n`;
+    contenidoSql += `-- Fecha: ${new Date().toISOString()}\n`;
+    contenidoSql += `-- Base de datos: ${dbConfig.database}\n\n`;
+    contenidoSql += `SET FOREIGN_KEY_CHECKS = 0;\n\n`;
 
-    exec(comando, { timeout: 120000 }, async (error, stdout, stderr) => {
-      if (fs.existsSync(rutaTemporalBackup)) {
-        const stats = fs.statSync(rutaTemporalBackup);
+    // 1. Obtener todas las tablas
+    const [tablas] = await pool.query(`SHOW TABLES`);
+    const keyName = Object.keys(tablas[0])[0];
 
-        if (stats.size > 0) {
-          console.log(`✅ Backup generado: ${archivoRespaldoSql} (${stats.size} bytes)`);
+    for (const row of tablas) {
+      const nombreTabla = row[keyName];
 
-          res.download(rutaTemporalBackup, archivoRespaldoSql, async (downloadError) => {
-            // Limpiar archivo temporal
-            try {
-              if (fs.existsSync(rutaTemporalBackup)) {
-                fs.unlinkSync(rutaTemporalBackup);
-              }
-            } catch (fsErr) {
-              console.error("Error al limpiar archivo temporal:", fsErr);
-            }
+      // Estructura de la tabla
+      const [createTableResult] = await pool.query(`SHOW CREATE TABLE \`${nombreTabla}\``);
+      const createSql = createTableResult[0]['Create Table'];
 
-            // Registrar en bitácora
-            if (!downloadError) {
-              try {
-                await pool.query(
-                  `INSERT INTO tbl_ms_bitacora 
-                     (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
-                   VALUES (NOW(), ?, ?, ?, ?)`,
-                  [
-                    idUsuario,
-                    "BACKUP_BD",
-                    `El usuario ${nombreUsuario} generó el respaldo: ${archivoRespaldoSql}`,
-                    "CONFIGURACION"
-                  ]
-                );
-              } catch (bitacoraError) {
-                console.error("Error al registrar respaldo en bitácora:", bitacoraError);
-              }
-            }
-          });
-          return;
+      contenidoSql += `DROP TABLE IF EXISTS \`${nombreTabla}\`;\n`;
+      contenidoSql += `${createSql};\n\n`;
+
+      // Datos de la tabla
+      const [registrosTabla] = await pool.query(`SELECT * FROM \`${nombreTabla}\``);
+      
+      if (registrosTabla.length > 0) {
+        for (const reg of registrosTabla) {
+          const columnas = Object.keys(reg).map(c => `\`${c}\``).join(', ');
+          const valores = Object.values(reg).map(val => {
+            if (val === null) return 'NULL';
+            if (typeof val === 'number') return val;
+            if (val instanceof Date) return `'${val.toISOString().slice(0, 19).replace('T', ' ')}'`;
+            return `'${String(val).replace(/'/g, "''").replace(/\\/g, "\\\\")}'`;
+          }).join(', ');
+
+          contenidoSql += `INSERT INTO \`${nombreTabla}\` (${columnas}) VALUES (${valores});\n`;
         }
+        contenidoSql += `\n`;
       }
+    }
 
-      console.error("❌ Error al generar backup:", error?.message || stderr);
-      res.status(500).send(`Error al generar backup: ${error?.message || stderr || "Archivo vacío"}`);
-    });
+    contenidoSql += `SET FOREIGN_KEY_CHECKS = 1;\n`;
+
+    fs.writeFileSync(rutaTemporalBackup, contenidoSql, 'utf8');
+
+    const stats = fs.statSync(rutaTemporalBackup);
+
+    if (stats.size > 0) {
+      console.log(`✅ Backup generado exitosamente: ${archivoRespaldoSql} (${stats.size} bytes)`);
+
+      res.download(rutaTemporalBackup, archivoRespaldoSql, async (downloadError) => {
+        try {
+          if (fs.existsSync(rutaTemporalBackup)) {
+            fs.unlinkSync(rutaTemporalBackup);
+          }
+        } catch (fsErr) {
+          console.error("Error al limpiar archivo temporal:", fsErr);
+        }
+
+        if (!downloadError) {
+          try {
+            await pool.query(
+              `INSERT INTO tbl_ms_bitacora 
+                 (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
+               VALUES (NOW(), ?, ?, ?, ?)`,
+              [
+                idUsuario,
+                "BACKUP_BD",
+                `El usuario ${nombreUsuario} generó el respaldo nativo: ${archivoRespaldoSql}`,
+                "CONFIGURACION"
+              ]
+            );
+          } catch (bitacoraError) {
+            console.error("Error al registrar respaldo en bitácora:", bitacoraError);
+          }
+        }
+      });
+      return;
+    } else {
+      throw new Error("El archivo de respaldo generado está vacío.");
+    }
 
   } catch (error) {
-    console.error("❌ Error en backup:", error);
+    console.error("❌ Error en backup nativo:", error);
     res.status(500).send("Error al generar el respaldo: " + error.message);
   }
 });
@@ -280,7 +230,6 @@ router.post('/gestion', async (req, res) => {
       return res.status(400).json({ ok: false, mensaje: 'Acción inválida.' });
     }
 
-    // Ejecuta el procedimiento almacenado unificado
     const [resultado] = await pool.query(
       'CALL SP_GESTIONAR_BITACORA(?, ?)', 
       [accion, usuarioMod]
