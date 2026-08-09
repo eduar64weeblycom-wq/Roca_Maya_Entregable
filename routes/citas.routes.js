@@ -242,14 +242,14 @@ async function validarEspecialidadDelDoctor(
   const [rows] = await executor.query(
     `
       SELECT
-        e.ID_ESPECIALIDAD,
-        e.NOMBRE_ESPECIALIDAD
-      FROM TBL_DOCTOR_ESPECIALIDAD de
-      INNER JOIN TBL_ESPECIALIDADES e
-        ON e.ID_ESPECIALIDAD = de.ID_ESPECIALIDAD
-      WHERE de.ID_DOCTOR = ?
-        AND de.ID_ESPECIALIDAD = ?
-        AND e.ESTADO = 'ACTIVA'
+        e.id_especialidad,
+        e.nombre_especialidad
+      FROM tbl_doctor_especialidad de
+      INNER JOIN tbl_especialidades e
+        ON e.id_especialidad = de.id_especialidad
+      WHERE de.id_doctor = ?
+        AND de.id_especialidad = ?
+        AND e.estado = 'ACTIVA'
       LIMIT 1
     `,
     [idDoctor, idEspecialidad]
@@ -280,18 +280,18 @@ async function obtenerEspecialidadesActivasPorDoctores(
   const [rows] = await pool.query(
     `
       SELECT
-        de.ID_DOCTOR,
-        e.ID_ESPECIALIDAD,
-        e.NOMBRE_ESPECIALIDAD
-      FROM TBL_DOCTOR_ESPECIALIDAD de
-      INNER JOIN TBL_ESPECIALIDADES e
-        ON e.ID_ESPECIALIDAD =
-           de.ID_ESPECIALIDAD
-      WHERE de.ID_DOCTOR IN (${placeholders})
-        AND e.ESTADO = 'ACTIVA'
+        de.id_doctor,
+        e.id_especialidad,
+        e.nombre_especialidad
+      FROM tbl_doctor_especialidad de
+      INNER JOIN tbl_especialidades e
+        ON e.id_especialidad =
+           de.id_especialidad
+      WHERE de.id_doctor IN (${placeholders})
+        AND e.estado = 'ACTIVA'
       ORDER BY
-        de.ID_DOCTOR,
-        e.NOMBRE_ESPECIALIDAD
+        de.id_doctor,
+        e.nombre_especialidad
     `,
     idsValidos
   );
@@ -299,7 +299,7 @@ async function obtenerEspecialidadesActivasPorDoctores(
   const mapa = new Map();
 
   rows.forEach((row) => {
-    const clave = String(row.ID_DOCTOR);
+    const clave = String(row.id_doctor);
 
     if (!mapa.has(clave)) {
       mapa.set(clave, []);
@@ -307,9 +307,9 @@ async function obtenerEspecialidadesActivasPorDoctores(
 
     mapa.get(clave).push({
       ID_ESPECIALIDAD:
-        Number(row.ID_ESPECIALIDAD),
+        Number(row.id_especialidad),
       NOMBRE_ESPECIALIDAD:
-        row.NOMBRE_ESPECIALIDAD,
+        row.nombre_especialidad,
     });
   });
 
@@ -336,18 +336,18 @@ async function obtenerEspecialidadesPorIds(ids) {
   const [rows] = await pool.query(
     `
       SELECT
-        ID_ESPECIALIDAD,
-        NOMBRE_ESPECIALIDAD,
-        ESTADO
-      FROM TBL_ESPECIALIDADES
-      WHERE ID_ESPECIALIDAD IN (${placeholders})
+        id_especialidad,
+        nombre_especialidad,
+        estado
+      FROM tbl_especialidades
+      WHERE id_especialidad IN (${placeholders})
     `,
     idsValidos
   );
 
   return new Map(
     rows.map((row) => [
-      String(row.ID_ESPECIALIDAD),
+      String(row.id_especialidad),
       row,
     ])
   );
@@ -548,35 +548,35 @@ router.get("/api/datos", async (req, res) => {
 
     const [citasRows] = await pool.query(`
       SELECT
-        c.ID_CITA,
-        c.ID_PACIENTE,
+        c.id_cita AS ID_CITA,
+        c.id_paciente AS ID_PACIENTE,
         CONCAT(
-          p.NOMBRES,
+          p.nombres,
           ' ',
-          p.APELLIDOS
+          p.apellidos
         ) AS NOMBRE_PACIENTE,
-        p.TELEFONO AS TELEFONO_PACIENTE,
-        p.CORREO_ELECTRONICO AS CORREO_PACIENTE,
-        p.NUMERO_DOCUMENTO_IDENTIDAD AS IDENTIDAD_PACIENTE,
-        d.ID_USUARIO AS ID_DOCTOR,
-        d.NOMBRE_USUARIO AS NOMBRE_DOCTOR,
-        d.CORREO_ELECTRONICO AS CORREO_DOCTOR,
+        p.telefono AS TELEFONO_PACIENTE,
+        p.correo_electronico AS CORREO_PACIENTE,
+        p.numero_documento_identidad AS IDENTIDAD_PACIENTE,
+        d.id_usuario AS ID_DOCTOR,
+        d.nombre_usuario AS NOMBRE_DOCTOR,
+        d.correo_electronico AS CORREO_DOCTOR,
         ${selectEspecialidad}
-        c.FECHA_CITA,
-        DATE_FORMAT(c.FECHA_CITA, '%H:%i') AS HORA_CITA,
-        c.ESTADO,
-        COALESCE(c.TIPO_CITA, 'PRIMERA_VEZ') AS TIPO_CITA,
-        COALESCE(c.PRIORIDAD, 'NORMAL') AS PRIORIDAD,
-        COALESCE(c.MOTIVO_CONSULTA, '') AS MOTIVO_CONSULTA,
-        c.DURACION_ESTIMADA_MIN,
-        c.FECHA_FIN_ESTIMADA,
-        c.CANAL_REGISTRO
+        c.fecha_cita AS FECHA_CITA,
+        DATE_FORMAT(c.fecha_cita, '%H:%i') AS HORA_CITA,
+        c.estado AS ESTADO,
+        COALESCE(c.tipo_cita, 'PRIMERA_VEZ') AS TIPO_CITA,
+        COALESCE(c.prioridad, 'NORMAL') AS PRIORIDAD,
+        COALESCE(c.motivo_consulta, '') AS MOTIVO_CONSULTA,
+        c.duracion_estimada_min AS DURACION_ESTIMADA_MIN,
+        c.fecha_fin_estimada AS FECHA_FIN_ESTIMADA,
+        c.canal_registro AS CANAL_REGISTRO
       FROM tbl_citas c
       INNER JOIN tbl_paciente p
-        ON c.ID_PACIENTE = p.ID_PACIENTE
+        ON c.id_paciente = p.id_paciente
       INNER JOIN tbl_ms_usuario d
-        ON c.ID_DOCTOR = d.ID_USUARIO
-      WHERE c.ESTADO IN (
+        ON c.id_doctor = d.id_usuario
+      WHERE c.estado IN (
         'PROGRAMADA',
         'CONFIRMADA',
         'PRECLINICA',
@@ -587,7 +587,7 @@ router.get("/api/datos", async (req, res) => {
       )
       ORDER BY
         FIELD(
-          c.ESTADO,
+          c.estado,
           'CONSULTA_MEDICA',
           'PRECLINICA',
           'CONFIRMADA',
@@ -596,7 +596,7 @@ router.get("/api/datos", async (req, res) => {
           'NO_ASISTIO',
           'CANCELADA'
         ),
-        c.FECHA_CITA DESC
+        c.fecha_cita DESC
     `);
 
     const mapaFallback = columnaEspecialidad
@@ -737,36 +737,36 @@ router.get("/api/datos", async (req, res) => {
 
     const [doctoresRows] = await pool.query(`
       SELECT
-        u.ID_USUARIO AS ID_DOCTOR,
-        u.NOMBRE_USUARIO AS NOMBRE,
-        u.CORREO_ELECTRONICO,
+        u.id_usuario AS ID_DOCTOR,
+        u.nombre_usuario AS NOMBRE,
+        u.correo_electronico AS CORREO_ELECTRONICO,
         GROUP_CONCAT(
           DISTINCT CONCAT(
-            e.ID_ESPECIALIDAD,
+            e.id_especialidad,
             '::',
-            e.NOMBRE_ESPECIALIDAD
+            e.nombre_especialidad
           )
-          ORDER BY e.NOMBRE_ESPECIALIDAD
+          ORDER BY e.nombre_especialidad
           SEPARATOR '||'
         ) AS ESPECIALIDADES_RAW
       FROM tbl_ms_usuario u
-      INNER JOIN TBL_DOCTOR_ESPECIALIDAD de
-        ON u.ID_USUARIO = de.ID_DOCTOR
-      INNER JOIN TBL_ESPECIALIDADES e
-        ON e.ID_ESPECIALIDAD = de.ID_ESPECIALIDAD
-       AND e.ESTADO = 'ACTIVA'
-      WHERE u.ESTADO = 'ACTIVO'
-        AND u.ID_ROL = (
-          SELECT ID_ROL
+      INNER JOIN tbl_doctor_especialidad de
+        ON u.id_usuario = de.id_doctor
+      INNER JOIN tbl_especialidades e
+        ON e.id_especialidad = de.id_especialidad
+       AND e.estado = 'ACTIVA'
+      WHERE u.estado = 'ACTIVO'
+        AND u.id_rol = (
+          SELECT id_rol
           FROM tbl_ms_roles
-          WHERE ROL = 'DOCTOR'
+          WHERE rol = 'DOCTOR'
           LIMIT 1
         )
       GROUP BY
-        u.ID_USUARIO,
-        u.NOMBRE_USUARIO,
-        u.CORREO_ELECTRONICO
-      ORDER BY u.NOMBRE_USUARIO ASC
+        u.id_usuario,
+        u.nombre_usuario,
+        u.correo_electronico
+      ORDER BY u.nombre_usuario ASC
     `);
 
     const doctores = doctoresRows.map((doctor) => {
@@ -815,15 +815,15 @@ router.get("/api/datos", async (req, res) => {
 
     const [pacientes] = await pool.query(`
       SELECT
-        ID_PACIENTE,
-        NOMBRES,
-        APELLIDOS,
-        TELEFONO,
-        CORREO_ELECTRONICO,
-        NUMERO_DOCUMENTO_IDENTIDAD
+        id_paciente AS ID_PACIENTE,
+        nombres AS NOMBRES,
+        apellidos AS APELLIDOS,
+        telefono AS TELEFONO,
+        correo_electronico AS CORREO_ELECTRONICO,
+        numero_documento_identidad AS NUMERO_DOCUMENTO_IDENTIDAD
       FROM tbl_paciente
-      WHERE ESTADO = 'ACTIVO'
-      ORDER BY NOMBRES, APELLIDOS
+      WHERE estado = 'ACTIVO'
+      ORDER BY nombres, apellidos
     `);
 
     res.json({
@@ -910,16 +910,16 @@ router.get(
       const [especialidades] = await pool.query(
         `
           SELECT
-            e.ID_ESPECIALIDAD,
-            e.NOMBRE_ESPECIALIDAD,
-            e.DESCRIPCION,
-            e.ESTADO
-          FROM TBL_DOCTOR_ESPECIALIDAD de
-          INNER JOIN TBL_ESPECIALIDADES e
-            ON e.ID_ESPECIALIDAD = de.ID_ESPECIALIDAD
-          WHERE de.ID_DOCTOR = ?
-            AND e.ESTADO = 'ACTIVA'
-          ORDER BY e.NOMBRE_ESPECIALIDAD ASC
+            e.id_especialidad AS ID_ESPECIALIDAD,
+            e.nombre_especialidad AS NOMBRE_ESPECIALIDAD,
+            e.descripcion AS DESCRIPCION,
+            e.estado AS ESTADO
+          FROM tbl_doctor_especialidad de
+          INNER JOIN tbl_especialidades e
+            ON e.id_especialidad = de.id_especialidad
+          WHERE de.id_doctor = ?
+            AND e.estado = 'ACTIVA'
+          ORDER BY e.nombre_especialidad ASC
         `,
         [idDoctor]
       );
@@ -979,10 +979,10 @@ router.post(
       const [citas] = await connection.query(
         `
           SELECT
-            ID_CITA,
-            ID_DOCTOR
+            id_cita AS ID_CITA,
+            id_doctor AS ID_DOCTOR
           FROM tbl_citas
-          WHERE ID_CITA = ?
+          WHERE id_cita = ?
           LIMIT 1
           FOR UPDATE
         `,
@@ -1027,10 +1027,10 @@ router.post(
             UPDATE tbl_citas
             SET
               \`${columnaEspecialidad}\` = ?,
-              FECHA_MODIFICACION =
+              fecha_modificacion =
                 CURRENT_TIMESTAMP,
-              USUARIO_MODIFICACION = ?
-            WHERE ID_CITA = ?
+              usuario_modificacion = ?
+            WHERE id_cita = ?
           `,
           [
             idEspecialidad,
@@ -1054,7 +1054,7 @@ router.post(
         accion:
           "ASIGNACION_ESPECIALIDAD_CITA",
         descripcion:
-          `Asignada especialidad ${especialidadValida.NOMBRE_ESPECIALIDAD} a la cita ${idCita}`,
+          `Asignada especialidad ${especialidadValida.nombre_especialidad} a la cita ${idCita}`,
         modulo: "CITAS",
         idRegistro: idCita,
         tabla: "tbl_citas",
@@ -1069,7 +1069,7 @@ router.post(
         idCita,
         idEspecialidad,
         especialidad:
-          especialidadValida.NOMBRE_ESPECIALIDAD,
+          especialidadValida.nombre_especialidad,
       });
     } catch (error) {
       if (connection) {
@@ -1224,15 +1224,15 @@ router.post("/nueva", async (req, res) => {
 
     const [duplicadas] = await connection.query(
       `
-        SELECT ID_CITA
+        SELECT id_cita AS ID_CITA
         FROM tbl_citas
-        WHERE ESTADO <> 'CANCELADA'
+        WHERE estado <> 'CANCELADA'
           AND (
-            ID_DOCTOR = ?
-            OR ID_PACIENTE = ?
+            id_doctor = ?
+            OR id_paciente = ?
           )
-          AND (? < FECHA_FIN_ESTIMADA)
-          AND (? > FECHA_CITA)
+          AND (? < fecha_fin_estimada)
+          AND (? > fecha_cita)
         LIMIT 1
       `,
       [
@@ -1258,18 +1258,18 @@ router.post("/nueva", async (req, res) => {
       await obtenerColumnaEspecialidadCita();
 
     const columnas = [
-      "ID_PACIENTE",
-      "ID_DOCTOR",
-      "FECHA_CITA",
-      "FECHA_FIN_ESTIMADA",
-      "DURACION_ESTIMADA_MIN",
-      "MOTIVO_CONSULTA",
-      "ESTADO",
-      "TIPO_CITA",
-      "PRIORIDAD",
-      "CANAL_REGISTRO",
-      "ID_USUARIOCREADOR",
-      "USUARIO_CREACION",
+      "id_paciente",
+      "id_doctor",
+      "fecha_cita",
+      "fecha_fin_estimada",
+      "duracion_estimada_min",
+      "motivo_consulta",
+      "estado",
+      "tipo_cita",
+      "prioridad",
+      "canal_registro",
+      "id_usuariocreador",
+      "usuario_creacion",
     ];
 
     const valores = [
@@ -1327,7 +1327,7 @@ router.post("/nueva", async (req, res) => {
       descripcion:
         `${esFechaPasada ? "Registrada atención pasada" : "Creada cita"} ` +
         `ID ${idCitaCreada}, paciente ${idPaciente}, médico ${idDoctor}, ` +
-        `especialidad ${especialidadValida.NOMBRE_ESPECIALIDAD}, estado ${estadoInicial}`,
+        `especialidad ${especialidadValida.nombre_especialidad}, estado ${estadoInicial}`,
       modulo: "CITAS",
       idRegistro: idCitaCreada,
       tabla: "tbl_citas",
@@ -1345,7 +1345,7 @@ router.post("/nueva", async (req, res) => {
           doctorId: idDoctor,
           especialidadId: idEspecialidad,
           especialidad:
-            especialidadValida.NOMBRE_ESPECIALIDAD,
+            especialidadValida.nombre_especialidad,
           fecha,
           durMin,
           canal,
@@ -1371,7 +1371,7 @@ router.post("/nueva", async (req, res) => {
       idCita: idCitaCreada,
       idEspecialidad,
       especialidad:
-        especialidadValida.NOMBRE_ESPECIALIDAD,
+        especialidadValida.nombre_especialidad,
       estado: estadoInicial,
       registroAtendido: esFechaPasada,
     });
@@ -1531,16 +1531,16 @@ router.post("/editar", async (req, res) => {
 
     const [duplicadas] = await connection.query(
       `
-        SELECT ID_CITA
+        SELECT id_cita AS ID_CITA
         FROM tbl_citas
-        WHERE ESTADO <> 'CANCELADA'
-          AND ID_CITA <> ?
+        WHERE estado <> 'CANCELADA'
+          AND id_cita <> ?
           AND (
-            ID_DOCTOR = ?
-            OR ID_PACIENTE = ?
+            id_doctor = ?
+            OR id_paciente = ?
           )
-          AND (? < FECHA_FIN_ESTIMADA)
-          AND (? > FECHA_CITA)
+          AND (? < fecha_fin_estimada)
+          AND (? > fecha_cita)
         LIMIT 1
       `,
       [
@@ -1567,18 +1567,18 @@ router.post("/editar", async (req, res) => {
       await obtenerColumnaEspecialidadCita();
 
     const asignaciones = [
-      "ID_PACIENTE = ?",
-      "ID_DOCTOR = ?",
-      "FECHA_CITA = ?",
-      "FECHA_FIN_ESTIMADA = ?",
-      "DURACION_ESTIMADA_MIN = ?",
-      "MOTIVO_CONSULTA = ?",
-      "TIPO_CITA = ?",
-      "PRIORIDAD = ?",
-      "CANAL_REGISTRO = ?",
-      "ESTADO = ?",
-      "FECHA_MODIFICACION = CURRENT_TIMESTAMP",
-      "USUARIO_MODIFICACION = ?",
+      "id_paciente = ?",
+      "id_doctor = ?",
+      "fecha_cita = ?",
+      "fecha_fin_estimada = ?",
+      "duracion_estimada_min = ?",
+      "motivo_consulta = ?",
+      "tipo_cita = ?",
+      "prioridad = ?",
+      "canal_registro = ?",
+      "estado = ?",
+      "fecha_modificacion = CURRENT_TIMESTAMP",
+      "usuario_modificacion = ?",
     ];
 
     const valores = [
@@ -1610,7 +1610,7 @@ router.post("/editar", async (req, res) => {
       `
         UPDATE tbl_citas
         SET ${asignaciones.join(",\n            ")}
-        WHERE ID_CITA = ?
+        WHERE id_cita = ?
       `,
       valores
     );
@@ -1643,7 +1643,7 @@ router.post("/editar", async (req, res) => {
       usuario: getUsuario(req),
       accion: "EDICION_CITA",
       descripcion:
-        `Editada cita ID ${id}; especialidad ${especialidadValida.NOMBRE_ESPECIALIDAD}`,
+        `Editada cita ID ${id}; especialidad ${especialidadValida.nombre_especialidad}`,
       modulo: "CITAS",
       idRegistro: id,
       tabla: "tbl_citas",
@@ -1657,7 +1657,7 @@ router.post("/editar", async (req, res) => {
       idCita: id,
       idEspecialidad,
       especialidad:
-        especialidadValida.NOMBRE_ESPECIALIDAD,
+        especialidadValida.nombre_especialidad,
     });
   } catch (error) {
     if (connection) {
@@ -1733,10 +1733,10 @@ async function handleCambiarEstado(req, res) {
       `
         UPDATE tbl_citas
         SET
-          ESTADO = ?,
-          FECHA_MODIFICACION = CURRENT_TIMESTAMP,
-          USUARIO_MODIFICACION = ?
-        WHERE ID_CITA = ?
+          estado = ?,
+          fecha_modificacion = CURRENT_TIMESTAMP,
+          usuario_modificacion = ?
+        WHERE id_cita = ?
       `,
       [nuevoEstado, getUsuario(req), idCita]
     );
@@ -1818,19 +1818,19 @@ router.post(
       const [citas] = await pool.query(
         `
           SELECT
-            c.ID_CITA,
-            c.ID_PACIENTE,
-            c.ID_DOCTOR,
-            c.ESTADO,
+            c.id_cita AS ID_CITA,
+            c.id_paciente AS ID_PACIENTE,
+            c.id_doctor AS ID_DOCTOR,
+            c.estado AS ESTADO,
             CONCAT(
-              p.NOMBRES,
+              p.nombres,
               ' ',
-              p.APELLIDOS
+              p.apellidos
             ) AS NOMBRE_PACIENTE
           FROM tbl_citas c
           INNER JOIN tbl_paciente p
-            ON p.ID_PACIENTE = c.ID_PACIENTE
-          WHERE c.ID_CITA = ?
+            ON p.id_paciente = c.id_paciente
+          WHERE c.id_cita = ?
           LIMIT 1
         `,
         [idCita]
@@ -1867,18 +1867,18 @@ router.post(
       const [preclinicas] = await pool.query(
         `
           SELECT
-            ID_PRECLINICA,
-            TEMPERATURA,
-            PRESION_SISTOLICA,
-            PRESION_DIASTOLICA,
-            FRECUENCIA_CARDIACA,
-            FRECUENCIA_RESPIRATORIA,
-            SATURACION_OXIGENO,
-            PESO,
-            TALLA,
-            SIGNOS_VITALES_JSON
-          FROM TBL_PRECLINICA
-          WHERE ID_CITA = ?
+            id_preclinica AS ID_PRECLINICA,
+            temperatura AS TEMPERATURA,
+            presion_sistolica AS PRESION_SISTOLICA,
+            presion_diastolica AS PRESION_DIASTOLICA,
+            frecuencia_cardiaca AS FRECUENCIA_CARDIACA,
+            frecuencia_respiratoria AS FRECUENCIA_RESPIRATORIA,
+            saturacion_oxigeno AS SATURACION_OXIGENO,
+            peso AS PESO,
+            talla AS TALLA,
+            signos_vitales_json AS SIGNOS_VITALES_JSON
+          FROM tbl_preclinica
+          WHERE id_cita = ?
           LIMIT 1
         `,
         [idCita]
@@ -1996,10 +1996,10 @@ router.post(
           `
             UPDATE tbl_citas
             SET
-              ESTADO = 'CONSULTA_MEDICA',
-              FECHA_MODIFICACION = CURRENT_TIMESTAMP,
-              USUARIO_MODIFICACION = ?
-            WHERE ID_CITA = ?
+              estado = 'CONSULTA_MEDICA',
+              fecha_modificacion = CURRENT_TIMESTAMP,
+              usuario_modificacion = ?
+            WHERE id_cita = ?
           `,
           [getUsuario(req), idCita]
         );
@@ -2063,9 +2063,9 @@ router.delete("/eliminar/:id", async (req, res) => {
 
     const [citas] = await pool.query(
       `
-        SELECT ID_CITA, ESTADO
+        SELECT id_cita AS ID_CITA, estado AS ESTADO
         FROM tbl_citas
-        WHERE ID_CITA = ?
+        WHERE id_cita = ?
         LIMIT 1
       `,
       [idCita]
@@ -2081,7 +2081,7 @@ router.delete("/eliminar/:id", async (req, res) => {
     const [result] = await pool.query(
       `
         DELETE FROM tbl_citas
-        WHERE ID_CITA = ?
+        WHERE id_cita = ?
       `,
       [idCita]
     );
