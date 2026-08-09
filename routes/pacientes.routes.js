@@ -93,7 +93,7 @@ router.get("/api/:id", async (req, res) => {
         h.ANTECEDENTES_FAMILIARES,
         h.HABITOS
       FROM tbl_paciente p
-      LEFT JOIN tbl_especialidades h ON p.ID_PACIENTE = h.ID_PACIENTE
+      LEFT JOIN tbl_historial_medico h ON p.ID_PACIENTE = h.ID_PACIENTE
       WHERE p.ID_PACIENTE = ?
     `,
       [id]
