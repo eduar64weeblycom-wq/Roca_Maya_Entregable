@@ -118,7 +118,7 @@ class AutoCloseService {
                 cm.FECHA_CONSULTA,
                 GREATEST(COALESCE(c.FECHA_MODIFICACION, cm.FECHA_CONSULTA, c.FECHA_CITA), cm.FECHA_CONSULTA) AS ULTIMA_ACTIVIDAD
             FROM tbl_citas c
-            INNER JOIN TBL_CONSULTA_MEDICA cm ON c.ID_CITA = cm.ID_CITA
+            INNER JOIN tbl_consulta_medica cm ON c.ID_CITA = cm.ID_CITA
             INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
             WHERE c.ESTADO = 'CONSULTA_MEDICA'
                 AND GREATEST(COALESCE(c.FECHA_MODIFICACION, cm.FECHA_CONSULTA, c.FECHA_CITA), cm.FECHA_CONSULTA) < DATE_SUB(NOW(), INTERVAL ? HOUR)
@@ -140,7 +140,7 @@ class AutoCloseService {
                 CONCAT(p.NOMBRES, ' ', p.APELLIDOS) AS NOMBRE_PACIENTE,
                 GREATEST(COALESCE(c.FECHA_MODIFICACION, cm.FECHA_CONSULTA, c.FECHA_CITA), cm.FECHA_CONSULTA) AS ULTIMA_ACTIVIDAD
             FROM tbl_citas c
-            INNER JOIN TBL_CONSULTA_MEDICA cm ON c.ID_CITA = cm.ID_CITA
+            INNER JOIN tbl_consulta_medica cm ON c.ID_CITA = cm.ID_CITA
             INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
             WHERE c.ESTADO = 'CONSULTA_MEDICA'
                 AND DATE(c.FECHA_CITA) < CURDATE()

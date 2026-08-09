@@ -236,7 +236,7 @@ router.get("/api/historial-rapido/:idPaciente", async (req, res) => {
         cm.TIPO_CONSULTA,
         cm.ID_PACIENTE,
         u.NOMBRE_USUARIO AS DOCTOR
-      FROM TBL_CONSULTA_MEDICA cm
+      FROM tbl_consulta_medica cm
       INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
       WHERE cm.ID_PACIENTE = ?
       ORDER BY cm.FECHA_CONSULTA DESC
@@ -283,7 +283,7 @@ router.get("/api/imprimir-consulta/:idConsulta", async (req, res) => {
         u.NOMBRE_USUARIO AS NOMBRE_DOCTOR,
         c.FECHA_CITA,
         c.ESTADO AS ESTADO_CITA
-      FROM TBL_CONSULTA_MEDICA cm
+      FROM tbl_consulta_medica cm
       INNER JOIN tbl_paciente p ON cm.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
       INNER JOIN tbl_citas c ON cm.ID_CITA = c.ID_CITA
@@ -420,7 +420,7 @@ router.get("/api/datos", async (req, res) => {
 
     const [consultasExistentes] = await pool.query(`
       SELECT ID_CONSULTA, ID_CITA 
-      FROM TBL_CONSULTA_MEDICA
+      FROM tbl_consulta_medica
     `);
 
     const tipos = ["PRIMERA_VEZ", "CONTROL", "EMERGENCIA", "PROCEDIMIENTO"];
@@ -547,7 +547,7 @@ router.post("/nueva", async (req, res) => {
     const proximaCita = body.proximaCita || body.PROXIMA_CITA_RECOMENDADA || null;
 
     const [consultaExistente] = await connection.query(
-      "SELECT ID_CONSULTA FROM TBL_CONSULTA_MEDICA WHERE ID_CITA = ?",
+      "SELECT ID_CONSULTA FROM tbl_consulta_medica WHERE ID_CITA = ?",
       [idCita]
     );
     let idConsulta = null;
@@ -555,7 +555,7 @@ router.post("/nueva", async (req, res) => {
     if (consultaExistente.length > 0) {
       idConsulta = consultaExistente[0].ID_CONSULTA;
       await connection.query(
-        `UPDATE TBL_CONSULTA_MEDICA SET
+        `UPDATE tbl_consulta_medica SET
           MOTIVO_CONSULTA = ?, SINTOMAS = ?, EXAMEN_FISICO = ?,
           DIAGNOSTICO_PRINCIPAL = ?, CODIGO_CIE10_PRINCIPAL = ?,
           DIAGNOSTICO_SECUNDARIO = ?, CODIGO_CIE10_SECUNDARIO = ?,
@@ -583,7 +583,7 @@ router.post("/nueva", async (req, res) => {
       console.log(`✅ Consulta #${idConsulta} actualizada para cita #${idCita}`);
     } else {
       const [result] = await connection.query(
-        `INSERT INTO TBL_CONSULTA_MEDICA (
+        `INSERT INTO tbl_consulta_medica (
           ID_CITA, ID_PACIENTE, ID_DOCTOR, MOTIVO_CONSULTA, SINTOMAS, EXAMEN_FISICO,
           DIAGNOSTICO_PRINCIPAL, CODIGO_CIE10_PRINCIPAL, DIAGNOSTICO_SECUNDARIO,
           CODIGO_CIE10_SECUNDARIO, TRATAMIENTO, RECOMENDACIONES, OBSERVACIONES,
@@ -748,7 +748,7 @@ router.post("/nueva", async (req, res) => {
       descripcion: `${consultaExistente.length > 0 ? 'Actualizada' : 'Creada'} consulta ID #${idConsulta} para cita #${idCita} (Paciente: ${nombrePaciente})`,
       modulo: "CONSULTA_MEDICA",
       idRegistro: idConsulta,
-      tabla: "TBL_CONSULTA_MEDICA",
+      tabla: "tbl_consulta_medica",
       estado: "EXITO",
       req: req
     });
@@ -774,7 +774,7 @@ router.post("/nueva", async (req, res) => {
         accion: "ERROR_CREACION_CONSULTA",
         descripcion: `Error al guardar consulta: ${err.message}`,
         modulo: "CONSULTA_MEDICA",
-        tabla: "TBL_CONSULTA_MEDICA",
+        tabla: "tbl_consulta_medica",
         estado: "ERROR",
         detalleError: err.message,
         req: req
@@ -808,7 +808,7 @@ router.post("/actualizar", async (req, res) => {
     }
 
     const [consultaExists] = await connection.query(
-      "SELECT ID_CONSULTA, ID_CITA FROM TBL_CONSULTA_MEDICA WHERE ID_CONSULTA = ?",
+      "SELECT ID_CONSULTA, ID_CITA FROM tbl_consulta_medica WHERE ID_CONSULTA = ?",
       [idConsulta]
     );
 
@@ -838,7 +838,7 @@ router.post("/actualizar", async (req, res) => {
     const usuarioModificacion = req.user?.NOMBRE_USUARIO || req.user?.USUARIO || 'SISTEMA';
 
     await connection.query(`
-      UPDATE TBL_CONSULTA_MEDICA SET
+      UPDATE tbl_consulta_medica SET
         MOTIVO_CONSULTA = ?, SINTOMAS = ?, EXAMEN_FISICO = ?,
         DIAGNOSTICO_PRINCIPAL = ?, CODIGO_CIE10_PRINCIPAL = ?,
         DIAGNOSTICO_SECUNDARIO = ?, CODIGO_CIE10_SECUNDARIO = ?,
@@ -901,7 +901,7 @@ router.post("/actualizar", async (req, res) => {
       descripcion: `El usuario ${usuarioModificacion} actualizó la consulta médica ID #${idConsulta} (incluye medicamentos)`,
       modulo: "CONSULTA_MEDICA",
       idRegistro: idConsulta,
-      tabla: "TBL_CONSULTA_MEDICA",
+      tabla: "tbl_consulta_medica",
       estado: "EXITO",
       req: req
     });
@@ -940,7 +940,7 @@ router.get("/por-cita/:idCita", async (req, res) => {
         cm.FECHA_CONSULTA, cm.PROXIMA_CITA_RECOMENDADA, cm.TIPO_CONSULTA,
         CONCAT(p.NOMBRES, ' ', p.APELLIDOS) AS NOMBRE_PACIENTE,
         u.NOMBRE_USUARIO AS NOMBRE_DOCTOR
-      FROM TBL_CONSULTA_MEDICA cm
+      FROM tbl_consulta_medica cm
       INNER JOIN tbl_paciente p ON cm.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
       WHERE cm.ID_CITA = ?
@@ -1027,7 +1027,7 @@ router.get("/api/cita/:idCita", async (req, res) => {
     const [consultasPrevias] = await pool.query(`
       SELECT ID_CONSULTA, FECHA_CONSULTA, DIAGNOSTICO_PRINCIPAL,
         TRATAMIENTO, u.NOMBRE_USUARIO AS DOCTOR
-      FROM TBL_CONSULTA_MEDICA cm
+      FROM tbl_consulta_medica cm
       INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
       WHERE cm.ID_PACIENTE = ?
       ORDER BY cm.FECHA_CONSULTA DESC LIMIT 5
@@ -1062,7 +1062,7 @@ router.get("/api/consulta/:idConsulta", async (req, res) => {
              pre.SATURACION_OXIGENO, pre.PESO, pre.TALLA, pre.GLUCOSA,
              pre.PERIMETRO_ABDOMINAL, pre.ESTADO_GENERAL,
              pre.OBSERVACIONES AS PRECLINICA_OBSERVACIONES
-      FROM TBL_CONSULTA_MEDICA cm
+      FROM tbl_consulta_medica cm
       INNER JOIN tbl_paciente p ON cm.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
       LEFT JOIN TBL_PRECLINICA pre ON cm.ID_CITA = pre.ID_CITA
@@ -1128,7 +1128,7 @@ router.put("/api/consulta/:idConsulta", async (req, res) => {
     const usuarioModificacion = req.user?.USUARIO || 'SISTEMA';
 
     await pool.query(`
-      UPDATE TBL_CONSULTA_MEDICA SET
+      UPDATE tbl_consulta_medica SET
         MOTIVO_CONSULTA = ?, SINTOMAS = ?, EXAMEN_FISICO = ?,
         DIAGNOSTICO_PRINCIPAL = ?, CODIGO_CIE10_PRINCIPAL = ?,
         DIAGNOSTICO_SECUNDARIO = ?, CODIGO_CIE10_SECUNDARIO = ?,

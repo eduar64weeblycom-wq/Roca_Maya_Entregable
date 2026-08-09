@@ -51,7 +51,7 @@ router.get("/", async (req, res) => {
         stats.citasHoy = citas[0]?.total || 0;
       }
       if (rol === 'ADMINISTRADOR' || rol === 'DOCTOR') {
-        const [consultas] = await db.query("SELECT COUNT(*) as total FROM TBL_CONSULTA_MEDICA WHERE DATE(FECHA_CONSULTA) = CURDATE()");
+        const [consultas] = await db.query("SELECT COUNT(*) as total FROM tbl_consulta_medica WHERE DATE(FECHA_CONSULTA) = CURDATE()");
         stats.consultasDiarias = consultas[0]?.total || 0;
       }
       if (rol === 'ADMINISTRADOR') {
@@ -273,7 +273,7 @@ router.get('/stats', async (req, res) => {
       stats.citasHoy = citas[0]?.total || 0;
     }
     if (rol === 'ADMINISTRADOR' || rol === 'DOCTOR') {
-      const [consultas] = await db.query("SELECT COUNT(*) as total FROM TBL_CONSULTA_MEDICA WHERE DATE(FECHA_CONSULTA) = CURDATE()");
+      const [consultas] = await db.query("SELECT COUNT(*) as total FROM tbl_consulta_medica WHERE DATE(FECHA_CONSULTA) = CURDATE()");
       stats.consultasHoy = consultas[0]?.total || 0;
     }
     if (rol === 'ADMINISTRADOR') {

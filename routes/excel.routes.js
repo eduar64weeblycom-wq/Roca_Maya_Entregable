@@ -446,7 +446,7 @@ router.get("/consultas", async (req, res) => {
             INNER JOIN tbl_paciente p ON c.ID_PACIENTE = p.ID_PACIENTE
             INNER JOIN tbl_ms_usuario u ON c.ID_DOCTOR = u.ID_USUARIO
             LEFT JOIN TBL_PRECLINICA pr ON c.ID_CITA = pr.ID_CITA
-            LEFT JOIN TBL_CONSULTA_MEDICA cm ON c.ID_CITA = cm.ID_CITA
+            LEFT JOIN tbl_consulta_medica cm ON c.ID_CITA = cm.ID_CITA
             WHERE c.ESTADO IN ('CONSULTA_MEDICA', 'PRECLINICA')
         `;
 
@@ -1089,7 +1089,7 @@ router.get("/historial/:idPaciente", async (req, res) => {
                 cm.RECOMENDACIONES,
                 cm.TIPO_CONSULTA,
                 u.NOMBRE_USUARIO AS DOCTOR
-            FROM TBL_CONSULTA_MEDICA cm
+            FROM tbl_consulta_medica cm
             LEFT JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
             WHERE cm.ID_PACIENTE = ?
             ORDER BY cm.FECHA_CONSULTA DESC
@@ -1133,7 +1133,7 @@ router.get("/historial/:idPaciente", async (req, res) => {
                 pr.ESTADO
             FROM TBL_PRESCRIPCION pr
             LEFT JOIN TBL_INVENTARIO_MEDICAMENTOS m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
-            LEFT JOIN TBL_CONSULTA_MEDICA cm ON pr.ID_CONSULTA = cm.ID_CONSULTA
+            LEFT JOIN tbl_consulta_medica cm ON pr.ID_CONSULTA = cm.ID_CONSULTA
             WHERE cm.ID_PACIENTE = ?
             ORDER BY pr.FECHA_PRESCRIPCION DESC
             LIMIT 20

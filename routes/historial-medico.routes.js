@@ -135,7 +135,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
         cm.OBSERVACIONES,
         cm.TIPO_CONSULTA,
         u.NOMBRE_USUARIO AS DOCTOR
-      FROM TBL_CONSULTA_MEDICA cm
+      FROM tbl_consulta_medica cm
       INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
       WHERE cm.ID_PACIENTE = ?
       ORDER BY cm.FECHA_CONSULTA DESC
@@ -202,7 +202,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
         cm.FECHA_CONSULTA
       FROM TBL_PRESCRIPCION pr
       INNER JOIN TBL_INVENTARIO_MEDICAMENTOS m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
-      INNER JOIN TBL_CONSULTA_MEDICA cm ON pr.ID_CONSULTA = cm.ID_CONSULTA
+      INNER JOIN tbl_consulta_medica cm ON pr.ID_CONSULTA = cm.ID_CONSULTA
       WHERE cm.ID_PACIENTE = ?
       ORDER BY pr.FECHA_PRESCRIPCION DESC
       LIMIT 10
@@ -211,7 +211,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
     // 7. TOTALES
     const [countRows] = await db.query(`
       SELECT
-        (SELECT COUNT(*) FROM TBL_CONSULTA_MEDICA WHERE ID_PACIENTE = ?) AS TOTAL_CONSULTAS,
+        (SELECT COUNT(*) FROM tbl_consulta_medica WHERE ID_PACIENTE = ?) AS TOTAL_CONSULTAS,
         (SELECT COUNT(*) FROM tbl_citas WHERE ID_PACIENTE = ?) AS TOTAL_CITAS
     `, [pacienteId, pacienteId]);
 
@@ -485,7 +485,7 @@ router.get("/:pacienteId/exportar-pdf", async (req, res) => {
     const [consultas] = await db.query(`
       SELECT cm.FECHA_CONSULTA, cm.MOTIVO_CONSULTA, cm.DIAGNOSTICO_PRINCIPAL, cm.TRATAMIENTO,
              cm.RECOMENDACIONES, cm.OBSERVACIONES, cm.TIPO_CONSULTA, u.NOMBRE_USUARIO AS DOCTOR
-      FROM TBL_CONSULTA_MEDICA cm
+      FROM tbl_consulta_medica cm
       INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
       WHERE cm.ID_PACIENTE = ? ORDER BY cm.FECHA_CONSULTA DESC LIMIT 10
     `, [pacienteId]);
@@ -508,7 +508,7 @@ router.get("/:pacienteId/exportar-pdf", async (req, res) => {
              pr.DURACION, pr.ESTADO
       FROM TBL_PRESCRIPCION pr
       INNER JOIN TBL_INVENTARIO_MEDICAMENTOS m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
-      INNER JOIN TBL_CONSULTA_MEDICA cm ON pr.ID_CONSULTA = cm.ID_CONSULTA
+      INNER JOIN tbl_consulta_medica cm ON pr.ID_CONSULTA = cm.ID_CONSULTA
       WHERE cm.ID_PACIENTE = ? ORDER BY pr.FECHA_PRESCRIPCION DESC LIMIT 10
     `, [pacienteId]);
 
@@ -730,7 +730,7 @@ router.get("/excel/historial/:pacienteId", async (req, res) => {
             SELECT cm.FECHA_CONSULTA, cm.MOTIVO_CONSULTA, cm.DIAGNOSTICO_PRINCIPAL, 
                    cm.TRATAMIENTO, cm.RECOMENDACIONES, 
                    cm.TIPO_CONSULTA, u.NOMBRE_USUARIO AS DOCTOR
-            FROM TBL_CONSULTA_MEDICA cm
+            FROM tbl_consulta_medica cm
             INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
             WHERE cm.ID_PACIENTE = ? ORDER BY cm.FECHA_CONSULTA DESC
         `, [pacienteId]);
@@ -753,7 +753,7 @@ router.get("/excel/historial/:pacienteId", async (req, res) => {
                    pr.DURACION, pr.ESTADO
             FROM TBL_PRESCRIPCION pr
             INNER JOIN TBL_INVENTARIO_MEDICAMENTOS m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
-            INNER JOIN TBL_CONSULTA_MEDICA cm ON pr.ID_CONSULTA = cm.ID_CONSULTA
+            INNER JOIN tbl_consulta_medica cm ON pr.ID_CONSULTA = cm.ID_CONSULTA
             WHERE cm.ID_PACIENTE = ? ORDER BY pr.FECHA_PRESCRIPCION DESC
         `, [pacienteId]);
 

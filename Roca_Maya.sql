@@ -931,7 +931,7 @@ BEGIN
         CONCAT('Consulta médica registrada para paciente ID: ', NEW.ID_PACIENTE, ' - Diagnóstico: ', COALESCE(LEFT(NEW.DIAGNOSTICO_PRINCIPAL, 50), 'SIN DIAGNÓSTICO')),
         'CONSULTAS',
         NEW.ID_CONSULTA,
-        'TBL_CONSULTA_MEDICA',
+        'tbl_consulta_medica',
         NULL, NULL, 'EXITO', NULL,
         'TRIGGER'
     );
@@ -1161,7 +1161,7 @@ BEGIN
     
     SELECT COALESCE(ID_DOCTOR, 1) 
     INTO v_id_doctor 
-    FROM TBL_CONSULTA_MEDICA 
+    FROM tbl_consulta_medica 
     WHERE ID_CONSULTA = NEW.ID_CONSULTA;
     
     CALL SP_REGISTRAR_BITACORA(
