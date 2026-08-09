@@ -198,7 +198,7 @@ router.delete("/eliminar/:id", async (req, res) => {
 
 router.post("/cambiar-estado", async (req, res) => {
   try {
-    const idEspecialidad = convertirId(req.body.id || req.body.ID_ESPECIALIDAD);
+    const idEspecialidad = convertirId(req.body.id || req.body.ID_ESPECIALIDAD || req.body.idEspecialidad);
     const nuevoEstado = normalizarEstado(req.body.estado || req.body.ESTADO);
 
     if (!idEspecialidad) {
