@@ -112,7 +112,7 @@ router.post('/guardar', validarParametrosBackend, async (req, res) => {
 
         for (const param of parametros) {
             await pool.query(
-                'UPDATE tbl_ms_PARAMETROS SET VALOR = ?, USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW() WHERE ID_PARAMETRO = ?',
+                'UPDATE tbl_ms_parametros SET VALOR = ?, USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW() WHERE ID_PARAMETRO = ?',
                 [param.valor, usuario.id, param.id]
             );
             
@@ -142,11 +142,10 @@ router.post('/guardar', validarParametrosBackend, async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const [parametros] = await pool.query(`
-            SELECT * FROM tbl_ms_PARAMETROS 
+            SELECT * FROM tbl_ms_parametros 
             ORDER BY ID_PARAMETRO
         `);
         
-        // Renderiza tu archivo EJS (por ejemplo: views/parametros.ejs)
         return res.render('parametros', { parametros });
         
     } catch (error) {
@@ -157,6 +156,7 @@ router.get('/', async (req, res) => {
         });
     }
 });
+
 // Funciones auxiliares
 function esParametroNumerico(clave) {
     const parametrosNumericos = [
