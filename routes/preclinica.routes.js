@@ -159,7 +159,7 @@ router.get("/", async (req, res) => {
         "PRECLINICA",
 
       tabla:
-        "TBL_PRECLINICA",
+        "tbl_preclinica",
 
       estado:
         "EXITO",
@@ -243,7 +243,7 @@ router.get(
             GLUCOSA,
             PERIMETRO_ABDOMINAL,
             SIGNOS_VITALES_JSON
-          FROM TBL_PRECLINICA
+          FROM tbl_preclinica
         `);
 
       res.json({
@@ -292,7 +292,7 @@ router.get(
         await pool.query(
           `
             SELECT *
-            FROM TBL_PRECLINICA
+            FROM tbl_preclinica
             WHERE ID_CITA = ?
             LIMIT 1
           `,
@@ -393,7 +393,7 @@ router.post(
       const [exists] = await pool.query(
         `
           SELECT ID_PRECLINICA
-          FROM TBL_PRECLINICA
+          FROM tbl_preclinica
           WHERE ID_CITA = ?
         `,
         [idCitaNum]
@@ -435,7 +435,7 @@ router.post(
 
       const [result] = await pool.query(
         `
-          INSERT INTO TBL_PRECLINICA (
+          INSERT INTO tbl_preclinica (
             ID_CITA,
             ID_USUARIO_ENFERMERIA,
             TEMPERATURA,
@@ -496,7 +496,7 @@ router.post(
             : ""),
         modulo: "PRECLINICA",
         idRegistro: idPre,
-        tabla: "TBL_PRECLINICA",
+        tabla: "tbl_preclinica",
         estado: "EXITO",
         req,
       });
@@ -557,7 +557,7 @@ router.post(
           accion: "ERROR_CREACION_PRECLINICA",
           descripcion: err.message,
           modulo: "PRECLINICA",
-          tabla: "TBL_PRECLINICA",
+          tabla: "tbl_preclinica",
           estado: "ERROR",
           detalleError: err.message,
           req,
@@ -617,7 +617,7 @@ router.post(
       const [registroActual] = await pool.query(
         `
           SELECT ID_CITA
-          FROM TBL_PRECLINICA
+          FROM tbl_preclinica
           WHERE ID_PRECLINICA = ?
           LIMIT 1
         `,
@@ -662,7 +662,7 @@ router.post(
 
       const [result] = await pool.query(
         `
-          UPDATE TBL_PRECLINICA
+          UPDATE tbl_preclinica
           SET
             TEMPERATURA = ?,
             PRESION_SISTOLICA = ?,
@@ -745,7 +745,7 @@ router.post(
             : ""),
         modulo: "PRECLINICA",
         idRegistro: idPre,
-        tabla: "TBL_PRECLINICA",
+        tabla: "tbl_preclinica",
         estado: "EXITO",
         req,
       });
@@ -785,7 +785,7 @@ router.post(
           accion: "ERROR_ACTUALIZACION_PRECLINICA",
           descripcion: err.message,
           modulo: "PRECLINICA",
-          tabla: "TBL_PRECLINICA",
+          tabla: "tbl_preclinica",
           estado: "ERROR",
           detalleError: err.message,
           req,
@@ -847,7 +847,7 @@ router.delete(
               p.ID_PRECLINICA,
               p.ID_CITA,
               c.ESTADO AS ESTADO_CITA
-            FROM TBL_PRECLINICA p
+            FROM tbl_preclinica p
             INNER JOIN tbl_citas c
               ON c.ID_CITA =
                  p.ID_CITA
@@ -892,7 +892,7 @@ router.delete(
       const [resultado] =
         await connection.query(
           `
-            DELETE FROM TBL_PRECLINICA
+            DELETE FROM tbl_preclinica
             WHERE ID_PRECLINICA = ?
               AND ID_CITA = ?
           `,
@@ -981,7 +981,7 @@ router.delete(
             idPreclinica,
 
           tabla:
-            "TBL_PRECLINICA",
+            "tbl_preclinica",
 
           estado:
             "EXITO",
@@ -1093,7 +1093,7 @@ router.delete(
             "PRECLINICA",
 
           tabla:
-            "TBL_PRECLINICA",
+            "tbl_preclinica",
 
           estado:
             "ERROR",
@@ -1160,7 +1160,7 @@ router.post(
             GLUCOSA,
             PERIMETRO_ABDOMINAL,
             SIGNOS_VITALES_JSON
-          FROM TBL_PRECLINICA
+          FROM tbl_preclinica
           WHERE ID_CITA = ?
           LIMIT 1
         `,
@@ -1202,7 +1202,7 @@ router.post(
 
       await pool.query(
         `
-          UPDATE TBL_PRECLINICA
+          UPDATE tbl_preclinica
           SET
             SIGNOS_VITALES_JSON = ?,
             USUARIO_MODIFICACION = ?
@@ -1290,7 +1290,7 @@ router.get(
             GLUCOSA,
             PERIMETRO_ABDOMINAL,
             SIGNOS_VITALES_JSON
-          FROM TBL_PRECLINICA
+          FROM tbl_preclinica
           WHERE ID_CITA = ?
           LIMIT 1
         `,
@@ -1400,7 +1400,7 @@ router.get(
               AS ENFERMERA,
             c.ESTADO
               AS ESTADO_CITA
-          FROM TBL_PRECLINICA p
+          FROM tbl_preclinica p
           INNER JOIN tbl_citas c
             ON p.ID_CITA =
                c.ID_CITA
@@ -1449,7 +1449,7 @@ router.get(
             "PRECLINICA",
 
           tabla:
-            "TBL_PRECLINICA",
+            "tbl_preclinica",
 
           estado:
             "EXITO",
@@ -1555,7 +1555,7 @@ router.delete(
       // 2. Eliminar dependencias (Preclínicas) para evitar error de llave foránea
       await connection.query(
         `
-          DELETE FROM TBL_PRECLINICA
+          DELETE FROM tbl_preclinica
           WHERE ID_CITA = ?
         `,
         [idCita]
