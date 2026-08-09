@@ -339,7 +339,7 @@ async function obtenerEspecialidadesPorIds(ids) {
         id_especialidad,
         nombre_especialidad,
         estado
-      FROM tbl_especialidadess
+      FROM tbl_especialidades
       WHERE id_especialidad IN (${placeholders})
     `,
     idsValidos
