@@ -85,7 +85,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
     if (!paciente.FECHA_REGISTRO) {
       const [bitacoraRows] = await db.query(`
         SELECT FECHA_HORA
-        FROM tbl_ms_BITACORA
+        FROM tbl_ms_bitacora
         WHERE ACCION = 'CREACION_PACIENTE'
           AND TABLA_AFECTADA = 'tbl_paciente'
           AND ID_REGISTRO_AFECTADO = ?

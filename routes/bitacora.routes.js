@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
     // 1. Obtener los registros de la bitácora
     const [rows] = await pool.query(`
       SELECT b.FECHA_HORA, u.USUARIO, b.ACCION, b.DESCRIPCION, b.MODULO
-      FROM tbl_ms_BITACORA b
+      FROM tbl_ms_bitacora b
       LEFT JOIN tbl_ms_usuario u ON b.ID_USUARIO = u.ID_USUARIO
       ORDER BY b.FECHA_HORA DESC LIMIT 50
     `);
@@ -75,7 +75,7 @@ router.post("/parametros/guardar", async (req, res) => {
       );
 
       await pool.query(
-        `INSERT INTO tbl_ms_BITACORA (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
+        `INSERT INTO tbl_ms_bitacora (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
          VALUES (NOW(), ?, ?, ?, ?)`,
         [
           idUsuario,
@@ -256,7 +256,7 @@ try {
             if (!downloadError) {
               try {
                 await pool.query(
-                  `INSERT INTO tbl_ms_BITACORA 
+                  `INSERT INTO tbl_ms_bitacora 
                      (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
                    VALUES (NOW(), ?, ?, ?, ?)`,
                   [

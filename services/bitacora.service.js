@@ -56,7 +56,7 @@ async function registrarBitacora({
 
     // 2. Insertar directamente en la tabla de bitácora (evitando procedimientos almacenados)
     const query = `
-      INSERT INTO tbl_ms_BITACORA (
+      INSERT INTO tbl_ms_bitacora (
         ID_USUARIO, ACCION, DESCRIPCION, MODULO,
         ID_REGISTRO_AFECTADO, TABLA_AFECTADA, IP_CLIENTE, USER_AGENT,
         ESTADO_OPERACION, DETALLE_ERROR, USUARIO_CREACION

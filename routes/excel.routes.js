@@ -701,7 +701,7 @@ router.get("/bitacora", async (req, res) => {
                 b.ACCION,
                 b.MODULO,
                 b.DESCRIPCION
-            FROM tbl_ms_BITACORA b
+            FROM tbl_ms_bitacora b
             LEFT JOIN tbl_ms_usuario u ON b.ID_USUARIO = u.ID_USUARIO
             ORDER BY b.FECHA_HORA DESC
             LIMIT 500
