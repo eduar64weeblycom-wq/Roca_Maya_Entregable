@@ -20,7 +20,7 @@ router.get("/", async (req, res) => {
 
     // 2. Consultar el estado actual del parámetro de la bitácora
     const [paramRows] = await pool.query(`
-      SELECT VALOR FROM tbl_ms_PARAMETROS WHERE PARAMETRO = 'BITACORA_ACTIVA'
+      SELECT VALOR FROM tbl_ms_parametros WHERE PARAMETRO = 'BITACORA_ACTIVA'
     `);
 
     // Si el valor es '0', está pausada. Si es '1' o no existe, está activa.
@@ -43,7 +43,7 @@ router.get("/parametros", async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT ID_PARAMETRO, PARAMETRO, VALOR, DESCRIPCION
-      FROM tbl_ms_PARAMETROS
+      FROM tbl_ms_parametros
       ORDER BY ID_PARAMETRO
     `);
 
@@ -70,7 +70,7 @@ router.post("/parametros/guardar", async (req, res) => {
 
     for (const p of parametros) {
       await pool.query(
-        "UPDATE tbl_ms_PARAMETROS SET VALOR = ?, FECHA_MODIFICACION = NOW(), USUARIO_MODIFICACION = ? WHERE ID_PARAMETRO = ?",
+        "UPDATE tbl_ms_parametros SET VALOR = ?, FECHA_MODIFICACION = NOW(), USUARIO_MODIFICACION = ? WHERE ID_PARAMETRO = ?",
         [p.valor, nombreUsuario, p.id]
       );
 
@@ -102,7 +102,7 @@ router.post("/parametros/update", async (req, res) => {
     const { id, valor, usuario } = req.body;
 
     await pool.query(
-      `UPDATE tbl_ms_PARAMETROS 
+      `UPDATE tbl_ms_parametros 
        SET VALOR = ?, FECHA_MODIFICACION = NOW(), USUARIO_MODIFICACION = ? 
        WHERE ID_PARAMETRO = ?`,
       [valor, usuario || 'system', id]
@@ -135,7 +135,7 @@ router.get("/parametros/backup", async (req, res) => {
 
 try {
   const [paramRows] = await pool.query(
-    "SELECT VALOR FROM tbl_ms_PARAMETROS WHERE PARAMETRO = 'RUTA_MYSQLDUMP' LIMIT 1"
+    "SELECT VALOR FROM tbl_ms_parametros WHERE PARAMETRO = 'RUTA_MYSQLDUMP' LIMIT 1"
   );
 
   console.log(">>> Resultado SQL RUTA_MYSQLDUMP:", paramRows);
@@ -284,6 +284,7 @@ try {
     res.status(500).send("Error al generar el respaldo: " + error.message);
   }
 });
+
 // ============================================================
 // POST /bitacora/gestion (Activar, Pausar, Limpiar)
 // ============================================================
