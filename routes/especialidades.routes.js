@@ -138,6 +138,116 @@ router.put("/actualizar/:id", async (req, res) => {
   }
 });
 /* ============================================================
+   DELETE /especialidades/eliminar/:id
+   ELIMINAR ESPECIALIDAD
+============================================================ */
+
+router.delete("/eliminar/:id", async (req, res) => {
+  try {
+    const idEspecialidad = convertirId(req.params.id);
+
+    if (!idEspecialidad) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de especialidad inválido."
+      });
+    }
+
+    const [resultado] = await pool.query(
+      `DELETE FROM tbl_especialidades WHERE ID_ESPECIALIDAD = ?`,
+      [idEspecialidad]
+    );
+
+    if (resultado.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "La especialidad especificada no existe."
+      });
+    }
+
+    await registrarEventoBitacora({
+      usuario: getUsuario(req),
+      accion: "ELIMINAR_ESPECIALIDAD",
+      descripcion: `Se eliminó la especialidad médica ID: ${idEspecialidad}`,
+      modulo: "ESPECIALIDADES",
+      idRegistro: idEspecialidad,
+      tabla: "tbl_especialidades",
+      estado: "EXITO",
+      req
+    });
+
+    res.json({
+      success: true,
+      message: "Especialidad eliminada exitosamente."
+    });
+  } catch (error) {
+    console.error(`❌ Error DELETE /especialidades/eliminar/${req.params.id}:`, error);
+    await registrarErrorBitacora({ req, accion: "ERROR_ELIMINAR_ESPECIALIDAD", error, idRegistro: req.params.id });
+
+    res.status(500).json({
+      success: false,
+      message: "Error al eliminar la especialidad. Es posible que tenga registros asociados."
+    });
+  }
+});
+
+/* ============================================================
+   POST /especialidades/cambiar-estado
+   CAMBIAR ESTADO DE ESPECIALIDAD (ACTIVA/INACTIVA)
+============================================================ */
+
+router.post("/cambiar-estado", async (req, res) => {
+  try {
+    const idEspecialidad = convertirId(req.body.id || req.body.ID_ESPECIALIDAD);
+    const nuevoEstado = normalizarEstado(req.body.estado || req.body.ESTADO);
+
+    if (!idEspecialidad) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de especialidad inválido."
+      });
+    }
+
+    const [resultado] = await pool.query(
+      `UPDATE tbl_especialidades 
+       SET ESTADO = ?, USUARIO_MODIFICACION = ? 
+       WHERE ID_ESPECIALIDAD = ?`,
+      [nuevoEstado, getUsuario(req), idEspecialidad]
+    );
+
+    if (resultado.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "La especialidad especificada no existe."
+      });
+    }
+
+    await registrarEventoBitacora({
+      usuario: getUsuario(req),
+      accion: "CAMBIAR_ESTADO_ESPECIALIDAD",
+      descripcion: `Se cambió el estado de la especialidad ID ${idEspecialidad} a ${nuevoEstado}`,
+      modulo: "ESPECIALIDADES",
+      idRegistro: idEspecialidad,
+      tabla: "tbl_especialidades",
+      estado: "EXITO",
+      req
+    });
+
+    res.json({
+      success: true,
+      message: `Estado actualizado a ${nuevoEstado} exitosamente.`
+    });
+  } catch (error) {
+    console.error("❌ Error POST /especialidades/cambiar-estado:", error);
+    await registrarErrorBitacora({ req, accion: "ERROR_CAMBIAR_ESTADO_ESPECIALIDAD", error });
+
+    res.status(500).json({
+      success: false,
+      message: "Error al cambiar el estado de la especialidad."
+    });
+  }
+});
+/* ============================================================
     FUNCIONES AUXILIARES
 ============================================================ */
 
