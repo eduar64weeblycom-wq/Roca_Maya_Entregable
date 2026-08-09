@@ -112,7 +112,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
         h.FECHA_ACTUALIZACION,
         h.USUARIO_CREACION,
         h.USUARIO_MODIFICACION
-      FROM tbl_historial_medico h
+      FROM tbl_historial_medico 
       WHERE h.ID_PACIENTE = ?
     `, [pacienteId]);
 
