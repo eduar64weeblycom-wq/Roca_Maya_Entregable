@@ -1757,89 +1757,37 @@
     }
   }
 
-  async function solicitarCambioEstado(
-    especialidad,
-    boton
-  ) {
-    const nuevoEstado =
-      especialidad.ESTADO === "ACTIVA"
-        ? "INACTIVA"
-        : "ACTIVA";
+  async function ejecutarCambioEstado(id) {
+        const especialidad = especialidadesData.find((item) => idsIguales(item.ID_ESPECIALIDAD, id));
+        if (!especialidad) return;
 
-    const verbo =
-      nuevoEstado === "ACTIVA"
-        ? "activar"
-        : "inactivar";
+        const nuevoEstado = especialidad.ESTADO === "ACTIVA" ? "INACTIVA" : "ACTIVA";
 
-    const confirmado = window.confirm(
-      `¿Deseas ${verbo} la especialidad "${especialidad.NOMBRE_ESPECIALIDAD}"?`
-    );
+        try {
+          const response = await fetch(CAMBIAR_ESTADO_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json"
+            },
+            body: JSON.stringify({
+              idEspecialidad:
+                especialidad.ID_ESPECIALIDAD,
+              nuevoEstado
+            })
+          });
 
-    if (!confirmado) {
-      return;
-    }
+          const payload = await leerJsonRespuesta(response);
+          if (!response.ok) {
+            throw new Error(payload.message || "Error al cambiar el estado de la especialidad.");
+          }
 
-    establecerBotonCargando(
-      boton,
-      true
-    );
-
-    try {
-      const response = await fetch(
-        CAMBIAR_ESTADO_URL,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-          body: JSON.stringify({
-            idEspecialidad:
-              especialidad.ID_ESPECIALIDAD,
-            nuevoEstado
-          })
+          mostrarMensaje("success", `Especialidad actualizada correctamente.`);
+          cargarDatosReales();
+        } catch (error) {
+          mostrarMensaje("error", error.message);
         }
-      );
-
-      const payload =
-        await leerJsonRespuesta(response);
-
-      if (
-        !response.ok ||
-        payload.success === false
-      ) {
-        throw new Error(
-          payload.message ||
-            `No se pudo ${verbo} la especialidad.`
-        );
-      }
-
-      mostrarMensaje(
-        "success",
-        payload.message ||
-          `Especialidad ${nuevoEstado.toLowerCase()} correctamente.`
-      );
-
-      await cargarDatosReales();
-    } catch (error) {
-      console.error(
-        "Error cambiando estado:",
-        error
-      );
-
-      mostrarMensaje(
-        "error",
-        error.message
-      );
-    } finally {
-      establecerBotonCargando(
-        boton,
-        false
-      );
-    }
-  }
-
-  async function solicitarEliminacion(
+      }  async function solicitarEliminacion(
     especialidad,
     boton
   ) {
