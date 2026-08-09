@@ -8,7 +8,135 @@ const xl = require("excel4node");
 const {
   registrarBitacora
 } = require("../services/bitacora.service");
+/* ============================================================
+   POST /especialidades/nueva
+   REGISTRAR NUEVA ESPECIALIDAD
+============================================================ */
 
+router.post("/nueva", async (req, res) => {
+  try {
+    const nombre = normalizarTexto(req.body.nombre || req.body.NOMBRE_ESPECIALIDAD);
+    const descripcion = normalizarTexto(req.body.descripcion || req.body.DESCRIPCION);
+    const colorHex = normalizarColor(req.body.color || req.body.COLOR_HEXADECIMAL);
+    const icono = normalizarIcono(req.body.icono || req.body.ICONO);
+    const estado = normalizarEstado(req.body.estado || req.body.ESTADO);
+
+    if (!nombre) {
+      return res.status(400).json({
+        success: false,
+        message: "El nombre de la especialidad es obligatorio."
+      });
+    }
+
+    const [resultado] = await pool.query(
+      `INSERT INTO tbl_especialidades 
+       (NOMBRE_ESPECIALIDAD, DESCRIPCION, COLOR_HEXADECIMAL, ICONO, ESTADO, USUARIO_CREACION) 
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [nombre, descripcion, colorHex, icono, estado, getUsuario(req)]
+    );
+
+    const nuevoId = resultado.insertId;
+
+    await registrarEventoBitacora({
+      usuario: getUsuario(req),
+      accion: "CREAR_ESPECIALIDAD",
+      descripcion: `Se creó la especialidad médica: ${nombre}`,
+      modulo: "ESPECIALIDADES",
+      idRegistro: nuevoId,
+      tabla: "tbl_especialidades",
+      estado: "EXITO",
+      req
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Especialidad creada exitosamente.",
+      ID_ESPECIALIDAD: nuevoId
+    });
+  } catch (error) {
+    console.error("❌ Error POST /especialidades/nueva:", error);
+    await registrarErrorBitacora({ req, accion: "ERROR_CREAR_ESPECIALIDAD", error });
+
+    res.status(500).json({
+      success: false,
+      message: "Error al registrar la nueva especialidad."
+    });
+  }
+});
+
+/* ============================================================
+   PUT /especialidades/actualizar/:id
+   ACTUALIZAR ESPECIALIDAD EXISTENTE
+============================================================ */
+
+router.put("/actualizar/:id", async (req, res) => {
+  try {
+    const idEspecialidad = convertirId(req.params.id);
+
+    if (!idEspecialidad) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de especialidad inválido."
+      });
+    }
+
+    const nombre = normalizarTexto(req.body.nombre || req.body.NOMBRE_ESPECIALIDAD);
+    const descripcion = normalizarTexto(req.body.descripcion || req.body.DESCRIPCION);
+    const colorHex = normalizarColor(req.body.color || req.body.COLOR_HEXADECIMAL);
+    const icono = normalizarIcono(req.body.icono || req.body.ICONO);
+    const estado = normalizarEstado(req.body.estado || req.body.ESTADO);
+
+    if (!nombre) {
+      return res.status(400).json({
+        success: false,
+        message: "El nombre de la especialidad es obligatorio."
+      });
+    }
+
+    const [resultado] = await pool.query(
+      `UPDATE tbl_especialidades 
+       SET NOMBRE_ESPECIALIDAD = ?, 
+           DESCRIPCION = ?, 
+           COLOR_HEXADECIMAL = ?, 
+           ICONO = ?, 
+           ESTADO = ?, 
+           USUARIO_MODIFICACION = ? 
+       WHERE ID_ESPECIALIDAD = ?`,
+      [nombre, descripcion, colorHex, icono, estado, getUsuario(req), idEspecialidad]
+    );
+
+    if (resultado.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "La especialidad especificada no existe."
+      });
+    }
+
+    await registrarEventoBitacora({
+      usuario: getUsuario(req),
+      accion: "ACTUALIZAR_ESPECIALIDAD",
+      descripcion: `Se actualizó la especialidad médica ID: ${idEspecialidad}`,
+      modulo: "ESPECIALIDADES",
+      idRegistro: idEspecialidad,
+      tabla: "tbl_especialidades",
+      estado: "EXITO",
+      req
+    });
+
+    res.json({
+      success: true,
+      message: "Especialidad actualizada exitosamente."
+    });
+  } catch (error) {
+    console.error(`❌ Error PUT /especialidades/actualizar/${req.params.id}:`, error);
+    await registrarErrorBitacora({ req, accion: "ERROR_ACTUALIZAR_ESPECIALIDAD", error, idRegistro: req.params.id });
+
+    res.status(500).json({
+      success: false,
+      message: "Error al actualizar la especialidad."
+    });
+  }
+});
 /* ============================================================
     FUNCIONES AUXILIARES
 ============================================================ */
