@@ -15,7 +15,7 @@ router.get("/", async (req, res) => {
     
     const [objetos] = await pool.query(`
       SELECT ID_OBJETO, OBJETO, DESCRIPCION, TIPO_OBJETO 
-      FROM TBL_OBJETOS 
+      FROM tbl_objetos 
       ORDER BY ID_OBJETO
     `);
     
@@ -23,8 +23,8 @@ router.get("/", async (req, res) => {
       SELECT p.ID_PERMISO, p.ID_ROL, p.ID_OBJETO, 
              p.PERMISO_CONSULTA,
              o.OBJETO
-      FROM TBL_PERMISOS p
-      INNER JOIN TBL_OBJETOS o ON p.ID_OBJETO = o.ID_OBJETO
+      FROM tbl_permisos p
+      INNER JOIN tbl_objetos o ON p.ID_OBJETO = o.ID_OBJETO
       ORDER BY p.ID_ROL, o.ID_OBJETO
     `);
     
@@ -85,7 +85,7 @@ router.get("/api/objetos", async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT ID_OBJETO, OBJETO, DESCRIPCION, TIPO_OBJETO 
-       FROM TBL_OBJETOS 
+       FROM tbl_objetos 
        ORDER BY ID_OBJETO`
     );
     res.json({ ok: true, objetos: rows });
@@ -106,8 +106,8 @@ router.get("/api/permisos/:idRol", async (req, res) => {
       SELECT p.ID_PERMISO, p.ID_ROL, p.ID_OBJETO, 
              p.PERMISO_CONSULTA,
              o.OBJETO, o.DESCRIPCION AS OBJETO_DESCRIPCION
-      FROM TBL_PERMISOS p
-      INNER JOIN TBL_OBJETOS o ON p.ID_OBJETO = o.ID_OBJETO
+      FROM tbl_permisos p
+      INNER JOIN tbl_objetos o ON p.ID_OBJETO = o.ID_OBJETO
       WHERE p.ID_ROL = ?
       ORDER BY o.ID_OBJETO
     `, [idRol]);
@@ -130,7 +130,7 @@ router.post("/api/permisos/guardar", async (req, res) => {
       return res.status(400).json({ ok: false, msg: "ID de rol requerido" });
     }
     
-    await pool.query(`DELETE FROM TBL_PERMISOS WHERE ID_ROL = ?`, [idRol]);
+    await pool.query(`DELETE FROM tbl_permisos WHERE ID_ROL = ?`, [idRol]);
     
     if (permisos && permisos.length > 0) {
       const values = permisos.map(p => [
@@ -141,7 +141,7 @@ router.post("/api/permisos/guardar", async (req, res) => {
       ]);
       
       const query = `
-        INSERT INTO TBL_PERMISOS 
+        INSERT INTO tbl_permisos 
         (ID_ROL, ID_OBJETO, PERMISO_CONSULTA, USUARIO_CREACION) 
         VALUES ?
       `;
@@ -167,7 +167,6 @@ router.post("/api/crear", async (req, res) => {
       return res.status(400).json({ ok: false, msg: "El nombre del rol es obligatorio" });
     }
 
-    // Validar estado: solo 'ACTIVO' o 'INACTIVO', por defecto 'ACTIVO'
     let estadoFinal = 'ACTIVO';
     if (estado) {
       const upper = estado.toUpperCase();
@@ -193,19 +192,18 @@ router.post("/api/crear", async (req, res) => {
 
     const nuevoIdRol = result.insertId;
 
-    // Asignar permisos mínimos: SOLO CONSULTA en todos los objetos
-    const [objetos] = await pool.query(`SELECT ID_OBJETO FROM TBL_OBJETOS`);
+    const [objetos] = await pool.query(`SELECT ID_OBJETO FROM tbl_objetos`);
     
     if (objetos.length > 0) {
       const values = objetos.map(o => [
         nuevoIdRol,
         o.ID_OBJETO,
-        0,  // PERMISO_CONSULTA
+        0, 
         usuarioAccion || 'SISTEMA'
       ]);
       
       await pool.query(`
-        INSERT INTO TBL_PERMISOS 
+        INSERT INTO tbl_permisos 
         (ID_ROL, ID_OBJETO, PERMISO_CONSULTA, USUARIO_CREACION) 
         VALUES ?
       `, [values]);
@@ -236,7 +234,6 @@ router.put("/api/actualizar/:id", async (req, res) => {
       return res.status(400).json({ ok: false, msg: "El nombre del rol es obligatorio" });
     }
 
-    // Validar estado
     let estadoFinal = 'ACTIVO';
     if (estado) {
       const upper = estado.toUpperCase();
@@ -278,7 +275,6 @@ router.put("/api/actualizar/:id", async (req, res) => {
 router.delete("/api/eliminar/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { usuarioAccion } = req.body;
 
     if (parseInt(id) <= 5) {
       return res.status(400).json({ 
@@ -299,7 +295,7 @@ router.delete("/api/eliminar/:id", async (req, res) => {
       });
     }
 
-    await pool.query(`DELETE FROM TBL_PERMISOS WHERE ID_ROL = ?`, [id]);
+    await pool.query(`DELETE FROM tbl_permisos WHERE ID_ROL = ?`, [id]);
 
     const [rolData] = await pool.query(
       `SELECT ROL FROM tbl_ms_roles WHERE ID_ROL = ?`,
