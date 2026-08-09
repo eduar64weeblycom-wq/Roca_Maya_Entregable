@@ -1381,30 +1381,22 @@ router.post("/nueva", async (req, res) => {
     }
 
     if (fallbackCreado && idCitaCreada) {
-     await eliminarEspecialidadFallback(
-      idCitaCreada
-    ).catch(() => {});
+    await eliminarEspecialidadFallback(idCitaCreada).catch(() => {});
+    }
+
+    console.error("POST /citas/nueva error:", error);
+
+    return res.status(500).json({
+        success: false,
+        message: "no se pudo crear la cita medica.",
+        error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  } finally {
+    if (claveCreacion) {
+        clavesCreacionCitaEnProceso.delete(claveCreacion);
+    }
+    connection?.release();
   }
-
-  console.error("POST /citas/nueva error:", error);
-
-  return res.status(500).json({
-    success: false,
-    message: "No se pudo registrar la cita médica.",
-    error:
-      process.env.NODE_ENV === "development"
-        ? error.message
-        : undefined,
-  });
-} finally {
-  if (claveCreacion) {
-    clavesCreacionCitaEnProceso.delete(
-      claveCreacion
-    );
-  }
-
-  connection?.release();
-}
 });
 
 /* ============================================================
