@@ -112,7 +112,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
         h.FECHA_ACTUALIZACION,
         h.USUARIO_CREACION,
         h.USUARIO_MODIFICACION
-      FROM TBL_HISTORIAL_MEDICO h
+      FROM tbl_historial_medico h
       WHERE h.ID_PACIENTE = ?
     `, [pacienteId]);
 
@@ -160,7 +160,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
         pr.ESTADO_GENERAL,
         pr.OBSERVACIONES,
         u.NOMBRE_USUARIO AS ENFERMERA
-      FROM TBL_PRECLINICA pr
+      FROM tbl_preclinica pr
       INNER JOIN tbl_ms_usuario u ON pr.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
       WHERE pr.ID_CITA IN (
         SELECT ID_CITA FROM tbl_citas WHERE ID_PACIENTE = ?
@@ -496,7 +496,7 @@ router.get("/:pacienteId/exportar-pdf", async (req, res) => {
              pr.FRECUENCIA_CARDIACA, pr.FRECUENCIA_RESPIRATORIA, pr.SATURACION_OXIGENO,
              pr.PESO, pr.TALLA, pr.IMC, pr.GLUCOSA, pr.ESTADO_GENERAL, pr.OBSERVACIONES,
              u.NOMBRE_USUARIO AS ENFERMERA
-      FROM TBL_PRECLINICA pr
+      FROM tbl_preclinica pr
       INNER JOIN tbl_ms_usuario u ON pr.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
       WHERE pr.ID_CITA IN (SELECT ID_CITA FROM tbl_citas WHERE ID_PACIENTE = ?)
       ORDER BY pr.FECHA_REGISTRO DESC LIMIT 10
@@ -741,7 +741,7 @@ router.get("/excel/historial/:pacienteId", async (req, res) => {
                    pr.FRECUENCIA_CARDIACA, pr.SATURACION_OXIGENO,
                    pr.PESO, pr.TALLA, pr.IMC, pr.GLUCOSA, pr.ESTADO_GENERAL,
                    u.NOMBRE_USUARIO AS ENFERMERA
-            FROM TBL_PRECLINICA pr
+            FROM tbl_preclinica pr
             INNER JOIN tbl_ms_usuario u ON pr.ID_USUARIO_ENFERMERIA = u.ID_USUARIO
             WHERE pr.ID_CITA IN (SELECT ID_CITA FROM tbl_citas WHERE ID_PACIENTE = ?)
             ORDER BY pr.FECHA_REGISTRO DESC
