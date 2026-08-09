@@ -1757,37 +1757,37 @@
     }
   }
 
-  async function ejecutarCambioEstado(id) {
-        const especialidad = especialidadesData.find((item) => idsIguales(item.ID_ESPECIALIDAD, id));
-        if (!especialidad) return;
+ async function ejecutarCambioEstado(id) {
+    const especialidad = especialidadesData.find((item) => idsIguales(item.ID_ESPECIALIDAD, id));
+    if (!especialidad) return;
 
-        const nuevoEstado = especialidad.ESTADO === "ACTIVA" ? "INACTIVA" : "ACTIVA";
+    const nuevoEstado = especialidad.ESTADO === "ACTIVA" ? "INACTIVA" : "ACTIVA";
 
-        try {
-          const response = await fetch(CAMBIAR_ESTADO_URL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json"
-            },
-            body: JSON.stringify({
-              idEspecialidad:
-                especialidad.ID_ESPECIALIDAD,
-              nuevoEstado
-            })
-          });
+    try {
+      const response = await fetch(CAMBIAR_ESTADO_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({
+          idEspecialidad: especialidad.ID_ESPECIALIDAD,
+          nuevoEstado
+        })
+      });
 
-          const payload = await leerJsonRespuesta(response);
-          if (!response.ok) {
-            throw new Error(payload.message || "Error al cambiar el estado de la especialidad.");
-          }
+      const payload = await leerJsonRespuesta(response);
+      if (!response.ok) {
+        throw new Error(payload.message || "Error al cambiar el estado de la especialidad.");
+      }
 
-          mostrarMensaje("success", `Especialidad actualizada correctamente.`);
-          cargarDatosReales();
-        } catch (error) {
-          mostrarMensaje("error", error.message);
-        }
-      }  async function solicitarEliminacion(
+      mostrarMensaje("success", "Especialidad actualizada correctamente.");
+      cargarDatosReales();
+    } catch (error) {
+      mostrarMensaje("error", error.message);
+    }
+  }
+  async function solicitarEliminacion(
     especialidad,
     boton
   ) {
