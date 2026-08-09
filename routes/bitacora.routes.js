@@ -189,7 +189,7 @@ try {
         // Último intento: buscar en el PATH del sistema
         try {
           const { execSync } = require("child_process");
-          const resultado = execSync("where mysqldump", { encoding: "utf8" });
+          const resultado = execSync("which mysqldump", { encoding: "utf8" });
           const rutaPath = resultado.split("\n")[0].trim();
           if (rutaPath && fs.existsSync(rutaPath)) {
             console.log(`✅ mysqldump encontrado en PATH: ${rutaPath}`);
