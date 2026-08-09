@@ -51,7 +51,7 @@ router.get("/api/especialidades", async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT ID_ESPECIALIDAD, NOMBRE_ESPECIALIDAD 
-       FROM TBL_ESPECIALIDADES 
+       FROM tbl_especialidade 
        WHERE ESTADO = 'ACTIVA' 
        ORDER BY NOMBRE_ESPECIALIDAD`
     );
@@ -83,7 +83,7 @@ router.get("/api/usuario/:id", async (req, res) => {
     // Si es doctor (ID_ROL = 2 según tu base de datos)
     if (usuario.ID_ROL === 2) {
       const [espRows] = await pool.query(
-        `SELECT ID_ESPECIALIDAD FROM TBL_DOCTOR_ESPECIALIDAD WHERE ID_DOCTOR = ?`,
+        `SELECT ID_ESPECIALIDAD FROM tbl_doctor_especialidad WHERE ID_DOCTOR = ?`,
         [id]
       );
       especialidades = espRows.map(row => row.ID_ESPECIALIDAD);
@@ -137,13 +137,13 @@ router.post("/api/update", async (req, res) => {
     // ============================================================
     if (parseInt(id_rol) === 2) {
       // Eliminar especialidades existentes
-      await pool.query(`DELETE FROM TBL_DOCTOR_ESPECIALIDAD WHERE ID_DOCTOR = ?`, [id]);
+      await pool.query(`DELETE FROM tbl_doctor_especialidad WHERE ID_DOCTOR = ?`, [id]);
       
       // Insertar nuevas especialidades si hay
       if (especialidades && especialidades.length > 0) {
         const values = especialidades.map(espId => [parseInt(id), parseInt(espId)]);
         await pool.query(
-          `INSERT INTO TBL_DOCTOR_ESPECIALIDAD (ID_DOCTOR, ID_ESPECIALIDAD) VALUES ?`,
+          `INSERT INTO tbl_doctor_especialidad (ID_DOCTOR, ID_ESPECIALIDAD) VALUES ?`,
           [values]
         );
       }

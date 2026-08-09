@@ -103,7 +103,7 @@ async function registrarErrorBitacora({
     descripcion: error.message,
     modulo: "ESPECIALIDADES",
     idRegistro,
-    tabla: "TBL_ESPECIALIDADES",
+    tabla: "tbl_especialidade",
     estado: "ERROR",
     detalleError: error.message,
     req
@@ -123,7 +123,7 @@ router.get("/", async (req, res) => {
       descripcion:
         "Acceso a la vista de especialidades médicas",
       modulo: "ESPECIALIDADES",
-      tabla: "TBL_ESPECIALIDADES",
+      tabla: "tbl_especialidade",
       estado: "EXITO",
       req
     });
@@ -148,9 +148,9 @@ router.get("/", async (req, res) => {
 
    RELACIÓN UTILIZADA:
 
-   TBL_ESPECIALIDADES
+   tbl_especialidade
           ↓
-   TBL_DOCTOR_ESPECIALIDAD
+   tbl_doctor_especialidad
           ↓
    tbl_ms_usuario
           ↓
@@ -267,9 +267,9 @@ router.get("/api/datos", async (req, res) => {
           ''
         ) AS ESTADO_PACIENTE
 
-      FROM TBL_ESPECIALIDADES e
+      FROM tbl_especialidade e
 
-      LEFT JOIN TBL_DOCTOR_ESPECIALIDAD de
+      LEFT JOIN tbl_doctor_especialidad de
         ON de.ID_ESPECIALIDAD =
            e.ID_ESPECIALIDAD
 
@@ -283,8 +283,8 @@ router.get("/api/datos", async (req, res) => {
             ORDER BY e_resumen.NOMBRE_ESPECIALIDAD
             SEPARATOR ' | '
           ) AS ESPECIALIDADES_DOCTOR
-        FROM TBL_DOCTOR_ESPECIALIDAD de_resumen
-        INNER JOIN TBL_ESPECIALIDADES e_resumen
+        FROM tbl_doctor_especialidad de_resumen
+        INNER JOIN tbl_especialidade e_resumen
           ON e_resumen.ID_ESPECIALIDAD =
              de_resumen.ID_ESPECIALIDAD
         GROUP BY de_resumen.ID_DOCTOR
@@ -960,8 +960,8 @@ router.get("/excel", async (req, res) => {
             p.TELEFONO,
             ''
           ) AS TELEFONO_PACIENTE
-        FROM TBL_ESPECIALIDADES e
-        LEFT JOIN TBL_DOCTOR_ESPECIALIDAD de
+        FROM tbl_especialidade e
+        LEFT JOIN tbl_doctor_especialidad de
           ON de.ID_ESPECIALIDAD =
              e.ID_ESPECIALIDAD
         LEFT JOIN (
@@ -974,8 +974,8 @@ router.get("/excel", async (req, res) => {
               ORDER BY e_resumen.NOMBRE_ESPECIALIDAD
               SEPARATOR ' | '
             ) AS ESPECIALIDADES_DOCTOR
-          FROM TBL_DOCTOR_ESPECIALIDAD de_resumen
-          INNER JOIN TBL_ESPECIALIDADES e_resumen
+          FROM tbl_doctor_especialidad de_resumen
+          INNER JOIN tbl_especialidade e_resumen
             ON e_resumen.ID_ESPECIALIDAD =
                de_resumen.ID_ESPECIALIDAD
           GROUP BY de_resumen.ID_DOCTOR
@@ -2310,7 +2310,7 @@ router.get("/excel", async (req, res) => {
       descripcion:
         `Exportadas ${rows.length} filas del directorio de especialidades médicas`,
       modulo: "ESPECIALIDADES",
-      tabla: "TBL_ESPECIALIDADES",
+      tabla: "tbl_especialidade",
       estado: "EXITO",
       req
     });
@@ -2415,7 +2415,7 @@ router.post("/nueva", async (req, res) => {
       await pool.query(
         `
           SELECT ID_ESPECIALIDAD
-          FROM TBL_ESPECIALIDADES
+          FROM tbl_especialidade
           WHERE UPPER(
             TRIM(NOMBRE_ESPECIALIDAD)
           ) = UPPER(TRIM(?))
@@ -2435,7 +2435,7 @@ router.post("/nueva", async (req, res) => {
     const [result] =
       await pool.query(
         `
-          INSERT INTO TBL_ESPECIALIDADES (
+          INSERT INTO tbl_especialidade (
             NOMBRE_ESPECIALIDAD,
             DESCRIPCION,
             COLOR_HEXADECIMAL,
@@ -2464,7 +2464,7 @@ router.post("/nueva", async (req, res) => {
       idRegistro:
         result.insertId,
       tabla:
-        "TBL_ESPECIALIDADES",
+        "tbl_especialidade",
       estado:
         "EXITO",
       req
@@ -2585,7 +2585,7 @@ router.put(
         await pool.query(
           `
             SELECT ID_ESPECIALIDAD
-            FROM TBL_ESPECIALIDADES
+            FROM tbl_especialidade
             WHERE UPPER(
               TRIM(NOMBRE_ESPECIALIDAD)
             ) = UPPER(TRIM(?))
@@ -2609,7 +2609,7 @@ router.put(
       const [result] =
         await pool.query(
           `
-            UPDATE TBL_ESPECIALIDADES
+            UPDATE tbl_especialidade
             SET
               NOMBRE_ESPECIALIDAD = ?,
               DESCRIPCION = ?,
@@ -2651,7 +2651,7 @@ router.put(
         idRegistro:
           id,
         tabla:
-          "TBL_ESPECIALIDADES",
+          "tbl_especialidade",
         estado:
           "EXITO",
         req
@@ -2745,7 +2745,7 @@ router.post(
           `
             SELECT
               NOMBRE_ESPECIALIDAD
-            FROM TBL_ESPECIALIDADES
+            FROM tbl_especialidade
             WHERE ID_ESPECIALIDAD = ?
             LIMIT 1
           `,
@@ -2765,7 +2765,7 @@ router.post(
       const [result] =
         await pool.query(
           `
-            UPDATE TBL_ESPECIALIDADES
+            UPDATE tbl_especialidade
             SET
               ESTADO = ?,
               USUARIO_MODIFICACION = ?
@@ -2799,7 +2799,7 @@ router.post(
         idRegistro:
           id,
         tabla:
-          "TBL_ESPECIALIDADES",
+          "tbl_especialidade",
         estado:
           "EXITO",
         req
@@ -2867,7 +2867,7 @@ router.delete(
             SELECT
               ID_ESPECIALIDAD,
               NOMBRE_ESPECIALIDAD
-            FROM TBL_ESPECIALIDADES
+            FROM tbl_especialidade
             WHERE ID_ESPECIALIDAD = ?
             LIMIT 1
           `,
@@ -2892,7 +2892,7 @@ router.delete(
           `
             SELECT
               COUNT(*) AS TOTAL
-            FROM TBL_DOCTOR_ESPECIALIDAD
+            FROM tbl_doctor_especialidad
             WHERE ID_ESPECIALIDAD = ?
           `,
           [id]
@@ -2916,7 +2916,7 @@ router.delete(
       const [result] =
         await pool.query(
           `
-            DELETE FROM TBL_ESPECIALIDADES
+            DELETE FROM tbl_especialidade
             WHERE ID_ESPECIALIDAD = ?
           `,
           [id]
@@ -2943,7 +2943,7 @@ router.delete(
         idRegistro:
           id,
         tabla:
-          "TBL_ESPECIALIDADES",
+          "tbl_especialidade",
         estado:
           "EXITO",
         req

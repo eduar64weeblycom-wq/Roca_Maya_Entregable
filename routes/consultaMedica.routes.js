@@ -150,8 +150,8 @@ router.get("/api/calendario", async (req, res) => {
         GROUP_CONCAT(DISTINCT COALESCE(e.NOMBRE_ESPECIALIDAD, 'Medicina General') SEPARATOR ', ') AS ESPECIALIDAD,
         u.CORREO_ELECTRONICO
       FROM tbl_ms_usuario u
-      LEFT JOIN TBL_DOCTOR_ESPECIALIDAD de ON u.ID_USUARIO = de.ID_DOCTOR
-      LEFT JOIN TBL_ESPECIALIDADES e ON de.ID_ESPECIALIDAD = e.ID_ESPECIALIDAD
+      LEFT JOIN tbl_doctor_especialidad de ON u.ID_USUARIO = de.ID_DOCTOR
+      LEFT JOIN tbl_especialidade e ON de.ID_ESPECIALIDAD = e.ID_ESPECIALIDAD
       WHERE u.ESTADO = 'ACTIVO' 
         AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_roles WHERE ROL = 'DOCTOR')
       GROUP BY u.ID_USUARIO, u.NOMBRE_USUARIO, u.CORREO_ELECTRONICO
@@ -403,8 +403,8 @@ router.get("/api/datos", async (req, res) => {
         u.CORREO_ELECTRONICO,
         GROUP_CONCAT(DISTINCT COALESCE(e.NOMBRE_ESPECIALIDAD, 'Medicina General') SEPARATOR ', ') AS ESPECIALIDAD
       FROM tbl_ms_usuario u
-      LEFT JOIN TBL_DOCTOR_ESPECIALIDAD de ON u.ID_USUARIO = de.ID_DOCTOR
-      LEFT JOIN TBL_ESPECIALIDADES e ON de.ID_ESPECIALIDAD = e.ID_ESPECIALIDAD
+      LEFT JOIN tbl_doctor_especialidad de ON u.ID_USUARIO = de.ID_DOCTOR
+      LEFT JOIN tbl_especialidade e ON de.ID_ESPECIALIDAD = e.ID_ESPECIALIDAD
       WHERE u.ESTADO = 'ACTIVO' 
         AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_roles WHERE ROL = 'DOCTOR')
       GROUP BY u.ID_USUARIO, u.NOMBRE_USUARIO, u.CORREO_ELECTRONICO

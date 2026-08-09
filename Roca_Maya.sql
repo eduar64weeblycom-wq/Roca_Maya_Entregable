@@ -79,7 +79,7 @@ DROP TABLE IF EXISTS `tbl_ms_bitacora`;
 DROP TABLE IF EXISTS `tbl_paciente`;
 DROP TABLE IF EXISTS `tbl_ms_usuario`;
 DROP TABLE IF EXISTS `tbl_servicios_medicos`;
-DROP TABLE IF EXISTS `tbl_especialidades`;
+DROP TABLE IF EXISTS `tbl_especialidade`;
 DROP TABLE IF EXISTS `tbl_ms_parametros`;
 DROP TABLE IF EXISTS `tbl_objetos`;
 DROP TABLE IF EXISTS `tbl_ms_roles`;
@@ -223,9 +223,9 @@ INSERT INTO `tbl_ms_parametros` (`ID_PARAMETRO`, `PARAMETRO`, `VALOR`, `DESCRIPC
 (18, '2FA_OBLIGATORIO_ADMIN', 'SI', '2FA OBLIGATORIO PARA USUARIOS ADMINISTRADORES');
 
 -- ------------------------------------------------------------
--- Tabla: `tbl_especialidades`
+-- Tabla: `tbl_especialidade`
 -- ------------------------------------------------------------
-CREATE TABLE `tbl_especialidades` (
+CREATE TABLE `tbl_especialidade` (
   `ID_ESPECIALIDAD` int NOT NULL AUTO_INCREMENT,
   `NOMBRE_ESPECIALIDAD` varchar(100) NOT NULL,
   `DESCRIPCION` text,
@@ -239,7 +239,7 @@ CREATE TABLE `tbl_especialidades` (
   UNIQUE KEY `NOMBRE_ESPECIALIDAD` (`NOMBRE_ESPECIALIDAD`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `tbl_especialidades` (`ID_ESPECIALIDAD`, `NOMBRE_ESPECIALIDAD`, `DESCRIPCION`, `COLOR_HEXADECIMAL`, `ESTADO`) VALUES
+INSERT INTO `tbl_especialidade` (`ID_ESPECIALIDAD`, `NOMBRE_ESPECIALIDAD`, `DESCRIPCION`, `COLOR_HEXADECIMAL`, `ESTADO`) VALUES
 (1, 'MEDICINA GENERAL', 'ATENCIÓN PRIMARIA Y GENERAL', '#3498DB', 'ACTIVA'),
 (2, 'PEDIATRÍA', 'ESPECIALIDAD EN NIÑOS', '#3498DB', 'ACTIVA'),
 (3, 'GINECOLOGÍA', 'SALUD FEMENINA', '#3498DB', 'ACTIVA'),
@@ -465,11 +465,11 @@ CREATE TABLE `tbl_doctor_especialidad` (
   `FECHA_MODIFICACION` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `USUARIO_MODIFICACION` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`ID_DOCTOR_ESPECIALIDAD`),
-  UNIQUE KEY `UNIQUE_TBL_DOCTOR_ESPECIALIDAD` (`ID_DOCTOR`,`ID_ESPECIALIDAD`),
+  UNIQUE KEY `UNIQUE_tbl_doctor_especialidad` (`ID_DOCTOR`,`ID_ESPECIALIDAD`),
   KEY `ID_ESPECIALIDAD` (`ID_ESPECIALIDAD`),
   KEY `idx_doctor_especialidad_estado` (`ESTADO`),
   CONSTRAINT `tbl_doctor_especialidad_ibfk_1` FOREIGN KEY (`ID_DOCTOR`) REFERENCES `tbl_ms_usuario` (`ID_USUARIO`) ON DELETE CASCADE,
-  CONSTRAINT `tbl_doctor_especialidad_ibfk_2` FOREIGN KEY (`ID_ESPECIALIDAD`) REFERENCES `tbl_especialidades` (`ID_ESPECIALIDAD`) ON DELETE CASCADE
+  CONSTRAINT `tbl_doctor_especialidad_ibfk_2` FOREIGN KEY (`ID_ESPECIALIDAD`) REFERENCES `tbl_especialidade` (`ID_ESPECIALIDAD`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
@@ -1225,7 +1225,7 @@ FROM `tbl_citas` c
 JOIN `tbl_paciente` p ON c.`ID_PACIENTE` = p.`ID_PACIENTE`
 JOIN `tbl_ms_usuario` u ON c.`ID_DOCTOR` = u.`ID_USUARIO`
 LEFT JOIN `tbl_doctor_especialidad` de ON u.`ID_USUARIO` = de.`ID_DOCTOR` AND de.`ES_PRIMARIA` = 1
-LEFT JOIN `tbl_especialidades` e ON de.`ID_ESPECIALIDAD` = e.`ID_ESPECIALIDAD`;
+LEFT JOIN `tbl_especialidade` e ON de.`ID_ESPECIALIDAD` = e.`ID_ESPECIALIDAD`;
 
 DROP VIEW IF EXISTS `vw_estadisticas_bitacora`;
 CREATE ALGORITHM=UNDEFINED
