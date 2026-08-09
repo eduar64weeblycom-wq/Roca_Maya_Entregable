@@ -130,80 +130,63 @@ router.get("/parametros/backup", async (req, res) => {
       database: process.env.DB_NAME || "Roca_Maya"
     };
 
-    // ========== 1. Intentar obtener la ruta desde parámetros ==========
-    let rutaMysqldump = null;
+  // ========== 1. Intentar obtener la ruta desde parámetros ==========
+  let rutaMysqldump = null;
 
-try {
-  const [paramRows] = await pool.query(
-    "SELECT VALOR FROM tbl_ms_parametros WHERE PARAMETRO = 'RUTA_MYSQLDUMP' LIMIT 1"
-  );
+  try {
+    const [paramRows] = await pool.query(
+      "SELECT VALOR FROM tbl_ms_parametros WHERE PARAMETRO = 'RUTA_MYSQLDUMP' LIMIT 1"
+    );
 
-  console.log(">>> Resultado SQL RUTA_MYSQLDUMP:", paramRows);
+    console.log(">>> Resultado SQL RUTA_MYSQLDUMP:", paramRows);
 
-  if (paramRows.length > 0 && paramRows[0].VALOR) {
-    let rutaParametro = String(paramRows[0].VALOR).trim();
+    if (paramRows.length > 0 && paramRows[0].VALOR) {
+      let rutaParametro = String(paramRows[0].VALOR).trim();
+      rutaParametro = rutaParametro.replace(/^["']|["']$/g, "").trim();
 
-    // Quitar comillas si las hubiera
-    rutaParametro = rutaParametro.replace(/^["']|["']$/g, "").trim();
-
-    console.log(">>> Ruta limpia:", rutaParametro);
-    console.log(">>> ¿Existe?:", fs.existsSync(rutaParametro));
-
-    if (fs.existsSync(rutaParametro)) {
-      rutaMysqldump = rutaParametro;
-      console.log("✅ Usando ruta del parámetro:", rutaMysqldump);
-    } else {
-      console.warn("⚠️ El archivo NO existe en esa ruta");
-    }
-  } else {
-    console.warn("⚠️ Parámetro RUTA_MYSQLDUMP vacío o no encontrado");
-  }
-} catch (err) {
-  console.error("Error leyendo RUTA_MYSQLDUMP:", err.message);
-}
-    // ========== 2. Si no hay parámetro válido, buscar automáticamente ==========
-    if (!rutaMysqldump) {
-      function encontrarMysqldump() {
-        const rutas = [
-          // Rutas más comunes de MySQL instalado normal
-          "C:\\Program Files\\MySQL\\MySQL Server 8.4\\bin\\mysqldump.exe",
-          "C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe",
-          "C:\\Program Files\\MySQL\\MySQL Server 9.0\\bin\\mysqldump.exe",
-          "C:\\Program Files\\MySQL\\MySQL Server 5.7\\bin\\mysqldump.exe",
-          "C:\\Program Files (x86)\\MySQL\\MySQL Server 5.7\\bin\\mysqldump.exe",
-          // XAMPP / WAMP / Laragon (por si acaso)
-          "C:\\xampp\\mysql\\bin\\mysqldump.exe",
-          "C:\\wamp64\\bin\\mysql\\mysql8.0.31\\bin\\mysqldump.exe",
-          "C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysqldump.exe",
-          // MySQL Workbench
-          "C:\\Program Files\\MySQL\\MySQL Workbench 8.0\\mysqldump.exe",
-        ];
-
-        for (const ruta of rutas) {
-          if (fs.existsSync(ruta)) {
-            console.log(`✅ mysqldump encontrado automáticamente: ${ruta}`);
-            return ruta;
-          }
-        }
-
-        // Último intento: buscar en el PATH del sistema
-        try {
-          const { execSync } = require("child_process");
-          const resultado = execSync("which mysqldump", { encoding: "utf8" });
-          const rutaPath = resultado.split("\n")[0].trim();
-          if (rutaPath && fs.existsSync(rutaPath)) {
-            console.log(`✅ mysqldump encontrado en PATH: ${rutaPath}`);
-            return rutaPath;
-          }
-        } catch (e) {
-          // No está en el PATH
-        }
-
-        return null;
+      if (rutaParametro && fs.existsSync(rutaParametro)) {
+        rutaMysqldump = rutaParametro;
+        console.log("✅ Usando ruta del parámetro:", rutaMysqldump);
+      } else {
+        console.warn("⚠️ La ruta del parámetro no existe físicamente o está vacía");
       }
-
-      rutaMysqldump = encontrarMysqldump();
     }
+  } catch (err) {
+    console.error("Error leyendo RUTA_MYSQLDUMP:", err.message);
+  }
+
+  // ========== 2. Si no hay ruta válida, detectar según el sistema operativo ==========
+  if (!rutaMysqldump) {
+    const esWindows = process.platform === "win32";
+
+    if (esWindows) {
+      // Búsqueda para entornos locales en Windows
+      const rutasWindows = [
+        "C:\\Program Files\\MySQL\\MySQL Server 8.4\\bin\\mysqldump.exe",
+        "C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe",
+        "C:\\Program Files\\MySQL\\MySQL Server 9.0\\bin\\mysqldump.exe",
+        "C:\\Program Files\\MySQL\\MySQL Server 5.7\\bin\\mysqldump.exe",
+        "C:\\Program Files (x86)\\MySQL\\MySQL Server 5.7\\bin\\mysqldump.exe",
+        "C:\\xampp\\mysql\\bin\\mysqldump.exe",
+        "C:\\wamp64\\bin\\mysql\\mysql8.0.31\\bin\\mysqldump.exe",
+        "C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysqldump.exe",
+        "C:\\Program Files\\MySQL\\MySQL Workbench 8.0\\mysqldump.exe",
+      ];
+
+      for (const r of rutasWindows) {
+        if (fs.existsSync(r)) {
+          rutaMysqldump = r;
+          console.log(`✅ mysqldump encontrado en Windows: ${r}`);
+          break;
+        }
+      }
+    } else {
+      // Entorno Linux (Render / servidores cloud)
+      // Por defecto intentamos invocar directamente 'mysqldump' asumiendo que está en el PATH del sistema
+      rutaMysqldump = "mysqldump";
+      console.log("🐧 Entorno Linux detectado, usando comando global: mysqldump");
+    }
+  }
 
     // ========== 3. Si aún no se encontró, mostrar error ==========
     if (!rutaMysqldump) {
