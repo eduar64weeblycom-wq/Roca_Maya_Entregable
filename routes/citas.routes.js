@@ -284,7 +284,7 @@ async function obtenerEspecialidadesActivasPorDoctores(
         e.id_especialidad,
         e.nombre_especialidad
       FROM tbl_doctor_especialidad de
-      INNER JOIN tbl_especialidades eS
+      INNER JOIN tbl_especialidades e
         ON e.id_especialidad =
            de.id_especialidad
       WHERE de.id_doctor IN (${placeholders})
