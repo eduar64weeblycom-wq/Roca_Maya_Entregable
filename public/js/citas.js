@@ -806,104 +806,58 @@
                 hora = c.HORA_CITA || c.hora_cita || c.HORA || c.hora || "";
             }
 
-            const nombrePaciente = c.NOMBRE_PACIENTE || c.paciente_nombre || c.PACIENTE_NOMBRE || c.NOMBRE || "";
-            const apellidosPaciente = c.APELLIDOS_PACIENTE || c.paciente_apellidos || c.PACIENTE_APELLIDOS || c.APELLIDOS || "";
-            const nombreCompleto = `${nombrePaciente} ${apellidosPaciente}`.trim() || nombrePaciente;
-            const nombreDoctor = c.NOMBRE_DOCTOR || c.doctor_nombre || c.DOCTOR_NOMBRE || c.DOCTOR || "";
-            const telefonoPaciente = c.TELEFONO_PACIENTE || c.telefono_paciente || c.TELEFONO || c.telefono || "";
-            const especialidadCita =
-                c.ESPECIALIDAD_CITA ||
-                c.NOMBRE_ESPECIALIDAD_CITA ||
-                c.ESPECIALIDAD ||
-                "Pendiente de asignar";
+     const apellidosPaciente = c.APELLIDOS_PACIENTE || c.paciente_apellidos || c.PACIENTE_APELLIDOS || c.APELLIDOS || "";
+            const pacienteCompleto = `${nombrePaciente} ${apellidosPaciente}`.trim() || "Paciente sin nombre";
+            const nombreDoctor = c.NOMBRE_DOCTOR || c.doctor_nombre || c.DOCTOR_NOMBRE || c.DOCTOR || "Por asignar";
+            const especialidadCita = c.ESPECIALIDAD_CITA || c.NOMBRE_ESPECIALIDAD_CITA || c.ESPECIALIDAD || "General";
+            const estado = c.ESTADO || c.estado || "PROGRAMADA";
+            const idCita = c.ID_CITA || c.id_cita || c.ID || c.id;
 
-            const especialidadPendiente =
-                c.ESPECIALIDAD_PENDIENTE === true ||
-                c.ESPECIALIDAD_ASIGNADA === false ||
-                !c.ID_ESPECIALIDAD_CITA;
-
-            const estadoCita = c.ESTADO || c.estado || "";
-            const estadoNormalizado = String(estadoCita).toUpperCase();
-            const idCita = c.ID_CITA || c.id_cita || c.id;
-            const esEstadoCerrado = ["FINALIZADA", "CANCELADA", "NO_ASISTIO"].includes(estadoNormalizado);
-            const fueAtendido = estadoNormalizado === "FINALIZADA";
+            const badgeClass = 
+                estado === 'CONFIRMADA' ? 'success' :
+                estado === 'PROGRAMADA' ? 'primary' :
+                estado === 'PRECLINICA' ? 'warning' :
+                estado === 'CONSULTA_MEDICA' ? 'info' :
+                estado === 'FINALIZADA' ? 'secondary' : 'danger';
 
             html += `
-                <tr class="${esEstadoCerrado ? "fila-cita-cerrada" : ""}">
+                <tr>
                     <td>
-                        <div class="paciente-cita-nombre">
-                            <strong>${escapeHtml(nombreCompleto)}</strong>
-                            ${
-                                fueAtendido
-                                    ? `
-                                        <span class="paciente-atendido-badge">
-                                            <i class="fas fa-user-check"></i>
-                                            ATENDIDO
-                                        </span>
-                                    `
-                                    : ""
-                            }
+                        <div class="paciente-info">
+                            <span class="paciente-nombre">${escapeHtml(pacienteCompleto)}</span>
+                            <span class="paciente-tel">${escapeHtml(c.TELEFONO_PACIENTE || c.telefono || 'Sin teléfono')}</span>
                         </div>
-                        <small>${escapeHtml(telefonoPaciente)}</small>
                     </td>
                     <td>Dr. ${escapeHtml(nombreDoctor)}</td>
+                    <td><span class="badge badge-especialidad">${escapeHtml(especialidadCita)}</span></td>
                     <td>
-                        ${
-                            especialidadPendiente
-                                ? `
-                                    <div class="cita-especialidad-pendiente">
-                                        <span class="cita-especialidad cita-especialidad--pendiente">
-                                            <i class="fas fa-exclamation-triangle"></i>
-                                            Pendiente
-                                        </span>
-
-                                        <button
-                                            type="button"
-                                            class="btn-asignar-especialidad"
-                                            data-id-cita="${idCita}"
-                                            title="Asignar la especialidad real de la cita"
-                                        >
-                                            <i class="fas fa-plus-circle"></i>
-                                            Asignar
-                                        </button>
-                                    </div>
-                                `
-                                : `
-                                    <span class="cita-especialidad">
-                                        <i class="fas fa-stethoscope"></i>
-                                        ${escapeHtml(especialidadCita)}
-                                    </span>
-                                `
-                        }
+                        <div class="fecha-hora">
+                            <span class="fecha">${escapeHtml(fecha)}</span>
+                            <span class="hora"><i class="far fa-clock"></i> ${escapeHtml(hora)}</span>
+                        </div>
                     </td>
+                    <td><span class="badge badge-${badgeClass}">${escapeHtml(formatLabel(estado))}</span></td>
                     <td>
-                        <strong>${fecha}</strong><br>
-                        <small>${hora}</small>
-                    </td>
-                    <td><span class="ctestado-badge ctestado-${String(estadoCita).toLowerCase()}">${escapeHtml(estadoCita)}</span></td>
-                    <td class="ctacciones-columna">
-                        <div class="ctacciones-cita ${esEstadoCerrado ? "ctacciones-cita--compacta" : ""}">
-                            <button
-                                class="btn-editar-cita"
-                                data-action="editar"
-                                data-id="${idCita}"
-                                title="Editar cita"
-                                aria-label="Editar cita"
-                            >
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            ${generarBotonesEstado(c)}
+                        <div class="btn-group">
+                            <button class="btn-accion btn-ver" title="Ver detalles" onclick="verCita(${idCita})"><i class="fas fa-eye"></i></button>
+                            <button class="btn-accion btn-editar" title="Editar cita" onclick="editarCita(${idCita})"><i class="fas fa-edit"></i></button>
+                            <button class="btn-accion btn-consulta-express" title="Consulta Médica Express" onclick="abrirConsultaMedicaExpress(${idCita}, this)"><i class="fas fa-stethoscope"></i></button>
+                            <button class="btn-accion btn-cancelar" title="Cancelar cita" onclick="cancelarCita(${idCita})"><i class="fas fa-times"></i></button>
                         </div>
                     </td>
                 </tr>
             `;
         });
 
-        html += `</tbody></table>`;
-        target.innerHTML = html;
+        html += `
+            </tbody>
+            </table>
+        `;
 
-        activarBotonesAsignarEspecialidad();
+        target.innerHTML = html;
     }
+
+    // Resto del script y funciones del calendario...
 
     function mostrarCalendario(lista = []) {
         const dias = document.getElementById("calendar-days");
