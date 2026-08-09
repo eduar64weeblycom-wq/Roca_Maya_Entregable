@@ -5,7 +5,7 @@ const inventarioController = {
     // =====================================================
     // HELPER: Registrar en bitácora usando el SP real
     // =====================================================
-    registrarBitacora: async (idUsuario, accion, descripcion, modulo = 'FARMACIA', idRegistro = null, tabla = 'TBL_INVENTARIO_MEDICAMENTOS', estado = 'EXITO', detalleError = null, usuarioCreacion = 'SISTEMA') => {
+    registrarBitacora: async (idUsuario, accion, descripcion, modulo = 'FARMACIA', idRegistro = null, tabla = 'tbl_inventario_medicamentos', estado = 'EXITO', detalleError = null, usuarioCreacion = 'SISTEMA') => {
         try {
             await db.query(
                 `CALL SP_REGISTRAR_BITACORA(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -307,7 +307,7 @@ const inventarioController = {
                 `Se creó el medicamento: ${NOMBRE_MEDICAMENTO} (ID: ${result.insertId})`,
                 'FARMACIA',
                 result.insertId,
-                'TBL_INVENTARIO_MEDICAMENTOS',
+                'tbl_inventario_medicamentos',
                 'EXITO',
                 null,
                 usuario
@@ -436,7 +436,7 @@ const inventarioController = {
                 `Se actualizó el medicamento: ${nombreAnterior} → ${NOMBRE_MEDICAMENTO} (ID: ${id})`,
                 'FARMACIA',
                 id,
-                'TBL_INVENTARIO_MEDICAMENTOS',
+                'tbl_inventario_medicamentos',
                 'EXITO',
                 null,
                 usuario
@@ -499,7 +499,7 @@ const inventarioController = {
                 `Se inactivó el medicamento: ${nombreMedicamento} (ID: ${id})`,
                 'FARMACIA',
                 id,
-                'TBL_INVENTARIO_MEDICAMENTOS',
+                'tbl_inventario_medicamentos',
                 'EXITO',
                 null,
                 usuario
@@ -584,7 +584,7 @@ const inventarioController = {
                 `Stock ${accion === 'agregar' ? 'aumentado' : 'disminuido'} para ${nombreMedicamento}: ${stockActual} → ${nuevoStock} (${accion === 'agregar' ? '+' : '-'}${cantidad})`,
                 'FARMACIA',
                 id,
-                'TBL_INVENTARIO_MEDICAMENTOS',
+                'tbl_inventario_medicamentos',
                 'EXITO',
                 null,
                 usuario

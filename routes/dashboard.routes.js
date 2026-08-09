@@ -55,7 +55,7 @@ router.get("/", async (req, res) => {
         stats.consultasDiarias = consultas[0]?.total || 0;
       }
       if (rol === 'ADMINISTRADOR') {
-        const [medicamentos] = await db.query("SELECT COUNT(*) as total FROM TBL_INVENTARIO_MEDICAMENTOS WHERE ESTADO = 'ACTIVO'");
+        const [medicamentos] = await db.query("SELECT COUNT(*) as total FROM tbl_inventario_medicamentos WHERE ESTADO = 'ACTIVO'");
         stats.medicamentos = medicamentos[0]?.total || 0;
       }
     }
@@ -277,7 +277,7 @@ router.get('/stats', async (req, res) => {
       stats.consultasHoy = consultas[0]?.total || 0;
     }
     if (rol === 'ADMINISTRADOR') {
-      const [medicamentos] = await db.query("SELECT COUNT(*) as total FROM TBL_INVENTARIO_MEDICAMENTOS WHERE ESTADO = 'ACTIVO'");
+      const [medicamentos] = await db.query("SELECT COUNT(*) as total FROM tbl_inventario_medicamentos WHERE ESTADO = 'ACTIVO'");
       stats.medicamentosActivos = medicamentos[0]?.total || 0;
     }
     res.json(stats);

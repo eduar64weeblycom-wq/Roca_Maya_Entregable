@@ -201,7 +201,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
         pr.ESTADO,
         cm.FECHA_CONSULTA
       FROM TBL_PRESCRIPCION pr
-      INNER JOIN TBL_INVENTARIO_MEDICAMENTOS m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
+      INNER JOIN tbl_inventario_medicamentos m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
       INNER JOIN tbl_consulta_medica cm ON pr.ID_CONSULTA = cm.ID_CONSULTA
       WHERE cm.ID_PACIENTE = ?
       ORDER BY pr.FECHA_PRESCRIPCION DESC
@@ -507,7 +507,7 @@ router.get("/:pacienteId/exportar-pdf", async (req, res) => {
       SELECT pr.FECHA_PRESCRIPCION, m.NOMBRE_MEDICAMENTO, pr.DOSIS, pr.FRECUENCIA,
              pr.DURACION, pr.ESTADO
       FROM TBL_PRESCRIPCION pr
-      INNER JOIN TBL_INVENTARIO_MEDICAMENTOS m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
+      INNER JOIN tbl_inventario_medicamentos m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
       INNER JOIN tbl_consulta_medica cm ON pr.ID_CONSULTA = cm.ID_CONSULTA
       WHERE cm.ID_PACIENTE = ? ORDER BY pr.FECHA_PRESCRIPCION DESC LIMIT 10
     `, [pacienteId]);
@@ -752,7 +752,7 @@ router.get("/excel/historial/:pacienteId", async (req, res) => {
             SELECT pr.FECHA_PRESCRIPCION, m.NOMBRE_MEDICAMENTO, pr.DOSIS, pr.FRECUENCIA,
                    pr.DURACION, pr.ESTADO
             FROM TBL_PRESCRIPCION pr
-            INNER JOIN TBL_INVENTARIO_MEDICAMENTOS m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
+            INNER JOIN tbl_inventario_medicamentos m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
             INNER JOIN tbl_consulta_medica cm ON pr.ID_CONSULTA = cm.ID_CONSULTA
             WHERE cm.ID_PACIENTE = ? ORDER BY pr.FECHA_PRESCRIPCION DESC
         `, [pacienteId]);

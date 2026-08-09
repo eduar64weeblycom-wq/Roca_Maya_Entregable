@@ -457,7 +457,7 @@ async function getOrCreateMedicamento(nombre, usuarioCreacion = 'SISTEMA') {
   if (!nombre || typeof nombre !== 'string' || nombre.trim() === '') return null;
   const nombreLimpio = nombre.trim().toUpperCase();
   const [rows] = await pool.query(
-    `SELECT ID_MEDICAMENTO FROM TBL_INVENTARIO_MEDICAMENTOS 
+    `SELECT ID_MEDICAMENTO FROM tbl_inventario_medicamentos 
      WHERE NOMBRE_MEDICAMENTO = ? OR NOMBRE_GENERICO = ?`,
     [nombreLimpio, nombreLimpio]
   );
@@ -465,7 +465,7 @@ async function getOrCreateMedicamento(nombre, usuarioCreacion = 'SISTEMA') {
 
   console.log(`🆕 Creando nuevo medicamento: "${nombreLimpio}"`);
   const [result] = await pool.query(`
-    INSERT INTO TBL_INVENTARIO_MEDICAMENTOS (
+    INSERT INTO tbl_inventario_medicamentos (
       NOMBRE_MEDICAMENTO, NOMBRE_GENERICO,
       STOCK_ACTUAL, STOCK_MINIMO, STOCK_MAXIMO,
       PRECIO_COMPRA, PRECIO_VENTA, ESTADO,
@@ -1368,7 +1368,7 @@ router.get("/api/medicamentos/:idConsulta", async (req, res) => {
         const [rows] = await pool.query(`
             SELECT pr.*, m.NOMBRE_MEDICAMENTO, m.NOMBRE_GENERICO, m.PRESENTACION
             FROM TBL_PRESCRIPCION pr
-            INNER JOIN TBL_INVENTARIO_MEDICAMENTOS m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
+            INNER JOIN tbl_inventario_medicamentos m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
             WHERE pr.ID_CONSULTA = ? AND pr.ESTADO = 'ACTIVA'
             ORDER BY pr.FECHA_PRESCRIPCION DESC
         `, [idConsulta]);
