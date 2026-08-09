@@ -292,7 +292,7 @@ router.post("/guardar-desde-consulta/:pacienteId", async (req, res) => {
 
     if (existe.length > 0) {
       await db.query(`
-        UPDATE tbl_especialidades SET
+        UPDATE FROM tbl_historial_medico SET
           ALERGIAS = ?,
           ENFERMEDADES_CRONICAS = ?,
           CIRUGIAS_PREVIAS = ?,
@@ -320,7 +320,7 @@ router.post("/guardar-desde-consulta/:pacienteId", async (req, res) => {
       res.json({ success: true, message: "Historial médico actualizado correctamente desde consulta" });
     } else {
       await db.query(`
-        INSERT INTO tbl_especialidades
+        INSERT INTO FROM tbl_historial_medico
         (ID_PACIENTE, ALERGIAS, ENFERMEDADES_CRONICAS, CIRUGIAS_PREVIAS,
          MEDICAMENTOS_ACTUALES, ANTECEDENTES_FAMILIARES, HABITOS, VACUNAS,
          NOTAS_IMPORTANTES, USUARIO_CREACION, FECHA_ACTUALIZACION)
@@ -401,7 +401,7 @@ router.post("/:pacienteId", async (req, res) => {
 
     if (existe.length > 0) {
       await db.query(`
-        UPDATE tbl_especialidades SET
+        UPDATE FROM tbl_historial_medico SET
           ALERGIAS = ?,
           ENFERMEDADES_CRONICAS = ?,
           CIRUGIAS_PREVIAS = ?,
@@ -428,7 +428,7 @@ router.post("/:pacienteId", async (req, res) => {
       res.json({ success: true, message: "Historial actualizado correctamente" });
     } else {
       await db.query(`
-        INSERT INTO tbl_especialidades
+        INSERT INTO FROM tbl_historial_medico
         (ID_PACIENTE, ALERGIAS, ENFERMEDADES_CRONICAS, CIRUGIAS_PREVIAS, MEDICAMENTOS_ACTUALES,
          ANTECEDENTES_FAMILIARES, HABITOS, VACUNAS, NOTAS_IMPORTANTES, USUARIO_CREACION)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
