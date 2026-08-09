@@ -1757,58 +1757,55 @@
     }
   }
 
-  async function solicitarCambioEstado(especialidad, boton) {
-    const esActiva = especialidad.ESTADO === "ACTIVA";
-    const accion = esActiva ? "inactivar" : "activar";
-    const nuevoEstado = esActiva ? "INACTIVA" : "ACTIVA";
+async function solicitarCambioEstado(especialidad, boton) {
+  const esActiva = especialidad.ESTADO === "ACTIVA";
+  const accion = esActiva ? "inactivar" : "activar";
+  const nuevoEstado = esActiva ? "INACTIVA" : "ACTIVA";
 
-    const confirmado = window.confirm(
-      `¿Seguro que deseas ${accion} la especialidad "${especialidad.NOMBRE_ESPECIALIDAD}"?`
-    );
+  const confirmado = window.confirm(
+    `¿Seguro que deseas ${accion} la especialidad "${especialidad.NOMBRE_ESPECIALIDAD}"?`
+  );
 
-    if (!confirmado) {
-      return;
-    }
-
-    establecerBotonCargando(boton, true);
-
-    try {
-      const response = await fetch(CAMBIAR_ESTADO_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify({
-          idEspecialidad: especialidad.ID_ESPECIALIDAD,
-          nuevoEstado
-        })
-      });
-
-      const payload = await leerJsonRespuesta(response);
-
-      if (!response.ok || payload.success === false) {
-        throw new Error(
-          payload.message ||
-            `No se pudo ${accion} la especialidad.`
-        );
-      }
-
-      mostrarMensaje(
-        "success",
-        payload.message ||
-          `Especialidad ${accion}da correctamente.`
-      );
-
-      await cargarDatosReales();
-    } catch (error) {
-      console.error("Error cambiando estado:", error);
-      mostrarMensaje("error", error.message);
-    } finally {
-      establecerBotonCargando(boton, false);
-    }
+  if (!confirmado) {
+    return;
   }
 
+  establecerBotonCargando(boton, true);
+
+  try {
+    const response = await fetch(CAMBIAR_ESTADO_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify({
+        idEspecialidad: especialidad.ID_ESPECIALIDAD,
+        estado: nuevoEstado          // ← CLAVE CORRECTA (antes era "nuevoEstado")
+      })
+    });
+
+    const payload = await leerJsonRespuesta(response);
+
+    if (!response.ok || payload.success === false) {
+      throw new Error(
+        payload.message || `No se pudo ${accion} la especialidad.`
+      );
+    }
+
+    mostrarMensaje(
+      "success",
+      payload.message || `Especialidad ${accion}da correctamente.`
+    );
+
+    await cargarDatosReales();
+  } catch (error) {
+    console.error("Error cambiando estado:", error);
+    mostrarMensaje("error", error.message);
+  } finally {
+    establecerBotonCargando(boton, false);
+  }
+}
   async function solicitarEliminacion(
     especialidad,
     boton
