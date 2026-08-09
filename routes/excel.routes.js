@@ -1072,7 +1072,7 @@ router.get("/historial/:idPaciente", async (req, res) => {
                 VACUNAS,
                 NOTAS_IMPORTANTES,
                 FECHA_ACTUALIZACION
-            FROM TBL_HISTORIAL_MEDICO
+            FROM tbl_especialidades
             WHERE ID_PACIENTE = ?
         `, [idPaciente]);
 

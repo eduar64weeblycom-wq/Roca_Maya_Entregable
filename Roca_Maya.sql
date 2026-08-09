@@ -71,7 +71,7 @@ DROP TABLE IF EXISTS `tbl_preclinica`;
 DROP TABLE IF EXISTS `tbl_permisos`;
 DROP TABLE IF EXISTS `tbl_ms_hist_contraseña`;
 DROP TABLE IF EXISTS `tbl_inventario_medicamentos`;
-DROP TABLE IF EXISTS `tbl_historial_medico`;
+DROP TABLE IF EXISTS `tbl_especialidades`;
 DROP TABLE IF EXISTS `tbl_doctor_especialidad`;
 DROP TABLE IF EXISTS `tbl_consulta_medica`;
 DROP TABLE IF EXISTS `tbl_citas`;
@@ -473,9 +473,9 @@ CREATE TABLE `tbl_doctor_especialidad` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
--- Tabla: `tbl_historial_medico`
+-- Tabla: `tbl_especialidades`
 -- ------------------------------------------------------------
-CREATE TABLE `tbl_historial_medico` (
+CREATE TABLE `tbl_especialidades` (
   `ID_HISTORIAL` int NOT NULL AUTO_INCREMENT,
   `ID_PACIENTE` int NOT NULL,
   `ALERGIAS` json DEFAULT NULL,
@@ -493,8 +493,8 @@ CREATE TABLE `tbl_historial_medico` (
   PRIMARY KEY (`ID_HISTORIAL`),
   UNIQUE KEY `ID_PACIENTE` (`ID_PACIENTE`),
   KEY `ID_USUARIO_ACTUALIZO` (`ID_USUARIO_ACTUALIZO`),
-  CONSTRAINT `tbl_historial_medico_ibfk_1` FOREIGN KEY (`ID_PACIENTE`) REFERENCES `tbl_paciente` (`ID_PACIENTE`) ON DELETE CASCADE,
-  CONSTRAINT `tbl_historial_medico_ibfk_2` FOREIGN KEY (`ID_USUARIO_ACTUALIZO`) REFERENCES `tbl_ms_usuario` (`ID_USUARIO`)
+  CONSTRAINT `tbl_especialidades_ibfk_1` FOREIGN KEY (`ID_PACIENTE`) REFERENCES `tbl_paciente` (`ID_PACIENTE`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_especialidades_ibfk_2` FOREIGN KEY (`ID_USUARIO_ACTUALIZO`) REFERENCES `tbl_ms_usuario` (`ID_USUARIO`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------

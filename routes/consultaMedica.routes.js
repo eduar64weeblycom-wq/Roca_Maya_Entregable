@@ -249,7 +249,7 @@ router.get("/api/historial-rapido/:idPaciente", async (req, res) => {
         MEDICAMENTOS_ACTUALES,
         ENFERMEDADES_CRONICAS,
         NOTAS_IMPORTANTES
-      FROM TBL_HISTORIAL_MEDICO
+      FROM tbl_especialidades
       WHERE ID_PACIENTE = ?
     `, [idPaciente]);
 
@@ -698,7 +698,7 @@ router.post("/nueva", async (req, res) => {
       }
 
       const [existeHistorial] = await connection.query(
-        "SELECT ID_HISTORIAL FROM TBL_HISTORIAL_MEDICO WHERE ID_PACIENTE = ?",
+        "SELECT ID_HISTORIAL FROM tbl_especialidades WHERE ID_PACIENTE = ?",
         [idPaciente]
       );
 
@@ -714,7 +714,7 @@ router.post("/nueva", async (req, res) => {
         values.push(usuarioCreacion);
         values.push(idPaciente);
         await connection.query(
-          `UPDATE TBL_HISTORIAL_MEDICO SET ${setClauses.join(', ')} WHERE ID_PACIENTE = ?`,
+          `UPDATE tbl_especialidades SET ${setClauses.join(', ')} WHERE ID_PACIENTE = ?`,
           values
         );
         console.log(`📝 Historial actualizado para paciente ${idPaciente}`);
@@ -723,7 +723,7 @@ router.post("/nueva", async (req, res) => {
         const placeholders = columnas.map(() => '?').join(', ');
         const valores = [idPaciente, ...Object.values(historialUpdates)];
         await connection.query(
-          `INSERT INTO TBL_HISTORIAL_MEDICO (${columnas.join(', ')}, USUARIO_CREACION, FECHA_ACTUALIZACION)
+          `INSERT INTO tbl_especialidades (${columnas.join(', ')}, USUARIO_CREACION, FECHA_ACTUALIZACION)
            VALUES (${placeholders}, ?, CURRENT_TIMESTAMP)`,
           [...valores, usuarioCreacion]
         );
@@ -1021,7 +1021,7 @@ router.get("/api/cita/:idCita", async (req, res) => {
       SELECT ALERGIAS, ENFERMEDADES_CRONICAS, CIRUGIAS_PREVIAS,
         MEDICAMENTOS_ACTUALES, ANTECEDENTES_FAMILIARES, HABITOS,
         VACUNAS, NOTAS_IMPORTANTES
-      FROM TBL_HISTORIAL_MEDICO WHERE ID_PACIENTE = ?
+      FROM tbl_especialidades WHERE ID_PACIENTE = ?
     `, [cita.ID_PACIENTE]);
 
     const [consultasPrevias] = await pool.query(`
@@ -1171,7 +1171,7 @@ router.get("/api/historial/:idPaciente", async (req, res) => {
       SELECT ALERGIAS, ENFERMEDADES_CRONICAS, CIRUGIAS_PREVIAS,
         MEDICAMENTOS_ACTUALES, ANTECEDENTES_FAMILIARES, HABITOS,
         VACUNAS, NOTAS_IMPORTANTES, FECHA_ACTUALIZACION
-      FROM TBL_HISTORIAL_MEDICO WHERE ID_PACIENTE = ?
+      FROM tbl_especialidades WHERE ID_PACIENTE = ?
     `, [idPaciente]);
 
     res.json({
@@ -1196,7 +1196,7 @@ router.post("/api/historial/:idPaciente", async (req, res) => {
     const usuarioModificacion = req.user?.USUARIO || 'SISTEMA';
 
     const [existe] = await pool.query(
-      "SELECT ID_HISTORIAL FROM TBL_HISTORIAL_MEDICO WHERE ID_PACIENTE = ?",
+      "SELECT ID_HISTORIAL FROM tbl_especialidades WHERE ID_PACIENTE = ?",
       [idPaciente]
     );
 
@@ -1214,7 +1214,7 @@ router.post("/api/historial/:idPaciente", async (req, res) => {
 
     if (existe.length > 0) {
       await pool.query(`
-        UPDATE TBL_HISTORIAL_MEDICO SET
+        UPDATE tbl_especialidades SET
           ALERGIAS = ?, ENFERMEDADES_CRONICAS = ?, CIRUGIAS_PREVIAS = ?,
           MEDICAMENTOS_ACTUALES = ?, ANTECEDENTES_FAMILIARES = ?,
           HABITOS = ?, VACUNAS = ?, NOTAS_IMPORTANTES = ?,
@@ -1234,7 +1234,7 @@ router.post("/api/historial/:idPaciente", async (req, res) => {
       ]);
     } else {
       await pool.query(`
-        INSERT INTO TBL_HISTORIAL_MEDICO (
+        INSERT INTO tbl_especialidades (
           ID_PACIENTE, ALERGIAS, ENFERMEDADES_CRONICAS, CIRUGIAS_PREVIAS,
           MEDICAMENTOS_ACTUALES, ANTECEDENTES_FAMILIARES, HABITOS, VACUNAS,
           NOTAS_IMPORTANTES, USUARIO_CREACION, FECHA_ACTUALIZACION

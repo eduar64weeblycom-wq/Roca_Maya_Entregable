@@ -112,7 +112,7 @@ router.get("/consolidado/:pacienteId", async (req, res) => {
         h.FECHA_ACTUALIZACION,
         h.USUARIO_CREACION,
         h.USUARIO_MODIFICACION
-      FROM tbl_historial_medico h
+      FROM tbl_especialidades h
       WHERE h.ID_PACIENTE = ?
     `, [pacienteId]);
 
@@ -255,7 +255,7 @@ router.post("/guardar-desde-consulta/:pacienteId", async (req, res) => {
     }
 
     const [existe] = await db.query(
-      "SELECT ID_HISTORIAL FROM TBL_HISTORIAL_MEDICO WHERE ID_PACIENTE = ?",
+      "SELECT ID_HISTORIAL FROM tbl_especialidades WHERE ID_PACIENTE = ?",
       [pacienteId]
     );
 
@@ -292,7 +292,7 @@ router.post("/guardar-desde-consulta/:pacienteId", async (req, res) => {
 
     if (existe.length > 0) {
       await db.query(`
-        UPDATE TBL_HISTORIAL_MEDICO SET
+        UPDATE tbl_especialidades SET
           ALERGIAS = ?,
           ENFERMEDADES_CRONICAS = ?,
           CIRUGIAS_PREVIAS = ?,
@@ -320,7 +320,7 @@ router.post("/guardar-desde-consulta/:pacienteId", async (req, res) => {
       res.json({ success: true, message: "Historial médico actualizado correctamente desde consulta" });
     } else {
       await db.query(`
-        INSERT INTO TBL_HISTORIAL_MEDICO
+        INSERT INTO tbl_especialidades
         (ID_PACIENTE, ALERGIAS, ENFERMEDADES_CRONICAS, CIRUGIAS_PREVIAS,
          MEDICAMENTOS_ACTUALES, ANTECEDENTES_FAMILIARES, HABITOS, VACUNAS,
          NOTAS_IMPORTANTES, USUARIO_CREACION, FECHA_ACTUALIZACION)
@@ -362,7 +362,7 @@ router.get("/:pacienteId", async (req, res) => {
     }
 
     const [historialRows] = await db.query(`
-      SELECT * FROM TBL_HISTORIAL_MEDICO WHERE ID_PACIENTE = ?
+      SELECT * FROM tbl_especialidades WHERE ID_PACIENTE = ?
     `, [pacienteId]);
 
     res.json({
@@ -384,7 +384,7 @@ router.post("/:pacienteId", async (req, res) => {
 
   try {
     const [existe] = await db.query(
-      "SELECT * FROM TBL_HISTORIAL_MEDICO WHERE ID_PACIENTE = ?",
+      "SELECT * FROM tbl_especialidades WHERE ID_PACIENTE = ?",
       [pacienteId]
     );
 
@@ -401,7 +401,7 @@ router.post("/:pacienteId", async (req, res) => {
 
     if (existe.length > 0) {
       await db.query(`
-        UPDATE TBL_HISTORIAL_MEDICO SET
+        UPDATE tbl_especialidades SET
           ALERGIAS = ?,
           ENFERMEDADES_CRONICAS = ?,
           CIRUGIAS_PREVIAS = ?,
@@ -428,7 +428,7 @@ router.post("/:pacienteId", async (req, res) => {
       res.json({ success: true, message: "Historial actualizado correctamente" });
     } else {
       await db.query(`
-        INSERT INTO TBL_HISTORIAL_MEDICO
+        INSERT INTO tbl_especialidades
         (ID_PACIENTE, ALERGIAS, ENFERMEDADES_CRONICAS, CIRUGIAS_PREVIAS, MEDICAMENTOS_ACTUALES,
          ANTECEDENTES_FAMILIARES, HABITOS, VACUNAS, NOTAS_IMPORTANTES, USUARIO_CREACION)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -477,7 +477,7 @@ router.get("/:pacienteId/exportar-pdf", async (req, res) => {
     const [historialRows] = await db.query(`
       SELECT ALERGIAS, ENFERMEDADES_CRONICAS, CIRUGIAS_PREVIAS, MEDICAMENTOS_ACTUALES,
              ANTECEDENTES_FAMILIARES, HABITOS, VACUNAS, NOTAS_IMPORTANTES, FECHA_ACTUALIZACION
-      FROM TBL_HISTORIAL_MEDICO WHERE ID_PACIENTE = ?
+      FROM tbl_especialidades WHERE ID_PACIENTE = ?
     `, [pacienteId]);
     const historial = historialRows.length > 0 ? historialRows[0] : null;
 
@@ -721,7 +721,7 @@ router.get("/excel/historial/:pacienteId", async (req, res) => {
         const [historialRows] = await db.query(`
             SELECT ALERGIAS, ENFERMEDADES_CRONICAS, CIRUGIAS_PREVIAS, MEDICAMENTOS_ACTUALES,
                    VACUNAS, ANTECEDENTES_FAMILIARES, HABITOS, NOTAS_IMPORTANTES, FECHA_ACTUALIZACION
-            FROM TBL_HISTORIAL_MEDICO WHERE ID_PACIENTE = ?
+            FROM tbl_especialidades WHERE ID_PACIENTE = ?
         `, [pacienteId]);
         const historial = historialRows.length > 0 ? historialRows[0] : null;
 
