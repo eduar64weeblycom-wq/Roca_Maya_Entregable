@@ -244,7 +244,7 @@ router.post("/api", async (req, res) => {
         medicamentosArray.length > 0 || vacunasArray.length > 0 || antecedentesArray.length > 0 || habitosArray.length > 0) {
       await pool.query(
         `
-        INSERT INTO tbl_especialidades (
+        INSERT INTO tbl_historial_medico (
           ID_PACIENTE,
           ALERGIAS,
           ENFERMEDADES_CRONICAS,
@@ -410,14 +410,14 @@ router.put("/api/:id", async (req, res) => {
     const habitosArray = parseArray(HABITOS);
 
     const [historialExistente] = await pool.query(
-      `SELECT ID_PACIENTE FROM tbl_especialidades WHERE ID_PACIENTE = ?`,
+      `SELECT ID_PACIENTE FROM tbl_historial_medico WHERE ID_PACIENTE = ?`,
       [id]
     );
 
     if (historialExistente.length > 0) {
       await pool.query(
         `
-        UPDATE tbl_especialidades SET
+        UPDATE tbl_historial_medico SET
           ALERGIAS = ?,
           ENFERMEDADES_CRONICAS = ?,
           CIRUGIAS_PREVIAS = ?,
@@ -446,7 +446,7 @@ router.put("/api/:id", async (req, res) => {
           medicamentosArray.length > 0 || vacunasArray.length > 0 || antecedentesArray.length > 0 || habitosArray.length > 0) {
         await pool.query(
           `
-          INSERT INTO tbl_especialidades (
+          INSERT INTO tbl_historial_medico (
             ID_PACIENTE,
             ALERGIAS,
             ENFERMEDADES_CRONICAS,
