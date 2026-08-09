@@ -245,7 +245,7 @@ async function validarEspecialidadDelDoctor(
         e.id_especialidad,
         e.nombre_especialidad
       FROM tbl_doctor_especialidad de
-      INNER JOIN tbl_especialidades
+      INNER JOIN tbl_especialidades e
         ON e.id_especialidad = de.id_especialidad
       WHERE de.id_doctor = ?
         AND de.id_especialidad = ?
@@ -915,7 +915,7 @@ router.get(
             e.descripcion AS DESCRIPCION,
             e.estado AS ESTADO
           FROM tbl_doctor_especialidad de
-          INNER JOIN tbl_especialidades
+          INNER JOIN tbl_especialidades e
             ON e.id_especialidad = de.id_especialidad
           WHERE de.id_doctor = ?
             AND e.estado = 'ACTIVA'
