@@ -825,172 +825,168 @@ router.get("/excel/historial/:pacienteId", async (req, res) => {
             ['Nombre Completo:', `${paciente.NOMBRES || ''} ${paciente.APELLIDOS || ''}`.trim()],
             ['Nombres:', paciente.NOMBRES],
             ['Apellidos:', paciente.APELLIDOS],
-            ['Fecha de Nacimiento:', paciente.FECHA_NACIMIENTO ? new Date(paciente.FECHA_NACIMIENTO).toLocaleDateString('es-HN') : 'N/A'],
-            ['Edad:', paciente.FECHA_NACIMIENTO ? `${Math.floor((Date.now() - new Date(paciente.FECHA_NACIMIENTO)) / (365.25 * 24 * 3600 * 1000))} años` : 'N/A'],
-            ['Género:', paciente.GENERO || 'N/A'],
-            ['Teléfono:', paciente.TELEFONO || 'N/A'],
-            ['Correo Electrónico:', paciente.CORREO_ELECTRONICO || 'N/A'],
-            ['Dirección:', paciente.DIRECCION || 'N/A'],
-            ['RTN:', paciente.RTN_PACIENTE || 'N/A'],
-            ['Ocupación:', paciente.OCUPACION || 'N/A'],
-            ['Estado Civil:', paciente.ESTADO_CIVIL || 'N/A'],
-            ['Tipo Documento:', 'DNI'],
-            ['Número Documento:', paciente.NUMERO_DOCUMENTO_IDENTIDAD || 'N/A'],
-            ['Estado:', paciente.ESTADO || 'N/A']
+           ['Fecha de Nacimiento:', paciente.FECHA_NACIMIENTO ? new Date(paciente.FECHA_NACIMIENTO).toISOString().split('T')[0] : 'N/A'],
+            ['Género:', paciente.GENERO],
+            ['Teléfono:', paciente.TELEFONO],
+            ['Correo Electrónico:', paciente.CORREO_ELECTRONICO],
+            ['Dirección:', paciente.DIRECCION],
+            ['Estado:', paciente.ESTADO],
+            ['RTN:', paciente.RTN_PACIENTE],
+            ['Ocupación:', paciente.OCUPACION],
+            ['Estado Civil:', paciente.ESTADO_CIVIL],
+            ['Número de Documento:', paciente.NUMERO_DOCUMENTO_IDENTIDAD],
+            ['Fecha de Registro:', paciente.FECHA_REGISTRO ? new Date(paciente.FECHA_REGISTRO).toLocaleString() : 'N/A']
         ];
 
-        datosPaciente.forEach((fila, idx) => {
-            const row = idx + 3;
-            wsPaciente.row(row).setHeight(20);
-            wsPaciente.cell(row, 1).string(fila[0]).style(labelStyle);
-            
-            const valorTexto = fila[1] !== null && fila[1] !== undefined ? String(fila[1]) : 'N/A';
-            wsPaciente.cell(row, 2).string(valorTexto).style(valueStyle);
+        let currentRow = 3;
+        wsPaciente.cell(currentRow, 1).string('INFORMACIÓN GENERAL DEL PACIENTE').style(titleStyle);
+        currentRow++;
+
+        datosPaciente.forEach(([label, value]) => {
+            wsPaciente.cell(currentRow, 1).string(label).style(labelStyle);
+            wsPaciente.cell(currentRow, 2).string(value !== null && value !== undefined ? String(value) : 'N/A').style(valueStyle);
+            currentRow++;
         });
 
-        wsPaciente.column(1).setWidth(28);
-        wsPaciente.column(2).setWidth(45);
-
         // ============================================================
-        // HOJA 2: HISTORIAL MÉDICO (CON ANTECEDENTES FAMILIARES Y HÁBITOS)
+        // HOJA 2: HISTORIAL CLÍNICO (Alergias, Antecedentes, etc.)
         // ============================================================
-        const wsHistorial = wb.addWorksheet('2. Historial Médico');
-        wsHistorial.cell(1, 1).string('HISTORIAL MÉDICO').style(titleStyle);
-        wsHistorial.row(1).setHeight(25);
+        const wsHistorial = wb.addWorksheet('2. Historial Clínico');
+        wsHistorial.cell(1, 1).string('ANTECEDENTES Y CONDICIONES MÉDICAS').style(titleStyle);
 
-        // Se agregaron los dos nuevos campos al array
-        const camposHistorial = [
-            ['Alergias:', historial ? historial.ALERGIAS : ''],
-            ['Enfermedades Crónicas:', historial ? historial.ENFERMEDADES_CRONICAS : ''],
-            ['Cirugías Previas:', historial ? historial.CIRUGIAS_PREVIAS : ''],
-            ['Medicamentos Actuales:', historial ? historial.MEDICAMENTOS_ACTUALES : ''],
-            ['Vacunas:', historial ? historial.VACUNAS : ''],
-            ['Antecedentes Familiares:', historial ? historial.ANTECEDENTES_FAMILIARES : ''],   // NUEVO
-            ['Hábitos:', historial ? historial.HABITOS : ''],                                     // NUEVO
-            ['Notas Importantes:', historial ? historial.NOTAS_IMPORTANTES : ''],
-            ['Última Actualización:', historial && historial.FECHA_ACTUALIZACION ? new Date(historial.FECHA_ACTUALIZACION).toLocaleString('es-HN') : '']
-        ];
-
-        camposHistorial.forEach((item, idx) => {
-            const row = idx + 3;
-            wsHistorial.row(row).setHeight(20);
-            wsHistorial.cell(row, 1).string(item[0]).style(labelStyle);
-            let valor = item[1] || 'Ninguno';
+        const formatearArrayExcel = (valor) => {
+            if (!valor) return 'N/A';
+            if (Array.isArray(valor)) return valor.join(', ');
             if (typeof valor === 'string' && valor.startsWith('[')) {
                 try {
                     const parsed = JSON.parse(valor);
-                    valor = parsed.join(', ');
-                } catch {}
+                    if (Array.isArray(parsed)) return parsed.join(', ');
+                    return String(parsed);
+                } catch {
+                    return valor;
+                }
             }
-            wsHistorial.cell(row, 2).string(String(valor)).style(valueStyle);
-        });
+            return String(valor);
+        };
 
-        wsHistorial.column(1).setWidth(28);
-        wsHistorial.column(2).setWidth(50);
+        const datosHistorial = historial ? [
+            ['Alergias:', formatearArrayExcel(historial.ALERGIAS)],
+            ['Enfermedades Crónicas:', formatearArrayExcel(historial.ENFERMEDADES_CRONICAS)],
+            ['Cirugías Previas:', formatearArrayExcel(historial.CIRUGIAS_PREVIAS)],
+            ['Medicamentos Actuales:', formatearArrayExcel(historial.MEDICAMENTOS_ACTUALES)],
+            ['Vacunas:', formatearArrayExcel(historial.VACUNAS)],
+            ['Antecedentes Familiares:', formatearArrayExcel(historial.ANTECEDENTES_FAMILIARES)],
+            ['Hábitos:', formatearArrayExcel(historial.HABITOS)],
+            ['Notas Importantes:', historial.NOTAS_IMPORTANTES || 'N/A'],
+            ['Última Actualización:', historial.FECHA_ACTUALIZACION ? new Date(historial.FECHA_ACTUALIZACION).toLocaleString() : 'N/A']
+        ] : [['Estado', 'No hay información de historial registrada']];
+
+        currentRow = 3;
+        datosHistorial.forEach(([label, value]) => {
+            wsHistorial.cell(currentRow, 1).string(label).style(labelStyle);
+            wsHistorial.cell(currentRow, 2).string(value).style(valueStyle);
+            currentRow++;
+        });
 
         // ============================================================
         // HOJA 3: CONSULTAS MÉDICAS
         // ============================================================
         const wsConsultas = wb.addWorksheet('3. Consultas Médicas');
-        wsConsultas.cell(1, 1).string('CONSULTAS MÉDICAS').style(titleStyle);
-        wsConsultas.row(1).setHeight(25);
+        wsConsultas.cell(1, 1).string('HISTORIAL DE CONSULTAS MÉDICAS').style(titleStyle);
 
-        const cHeaders = ['Fecha', 'Motivo', 'Diagnóstico', 'Tratamiento', 'Recomendaciones', 'Tipo', 'Doctor'];
-        cHeaders.forEach((h, i) => {
-            wsConsultas.cell(2, i + 1).string(h).style(headerStyle);
+        const headersConsultas = ['Fecha', 'Tipo', 'Doctor', 'Motivo', 'Diagnóstico Principal', 'Tratamiento', 'Recomendaciones'];
+        headersConsultas.forEach((h, idx) => {
+            wsConsultas.cell(3, idx + 1).string(h).style(headerStyle);
         });
-        wsConsultas.row(2).setHeight(25);
 
-        if (consultas.length === 0) {
-            wsConsultas.cell(3, 1, 3, 7).string('No hay consultas registradas.').style(cellStyle);
-        } else {
+        if (consultas.length > 0) {
             consultas.forEach((c, idx) => {
-                const row = idx + 3;
-                wsConsultas.cell(row, 1).string(c.FECHA_CONSULTA ? new Date(c.FECHA_CONSULTA).toLocaleDateString('es-HN') : '').style(cellStyle);
-                wsConsultas.cell(row, 2).string(c.MOTIVO_CONSULTA || '').style(cellStyle);
-                wsConsultas.cell(row, 3).string(c.DIAGNOSTICO_PRINCIPAL || '').style(cellStyle);
-                wsConsultas.cell(row, 4).string(c.TRATAMIENTO || '').style(cellStyle);
-                wsConsultas.cell(row, 5).string(c.RECOMENDACIONES || '').style(cellStyle);
-                wsConsultas.cell(row, 6).string(c.TIPO_CONSULTA || '').style(cellStyle);
-                wsConsultas.cell(row, 7).string(c.DOCTOR || '').style(cellStyle);
+                const r = 4 + idx;
+                wsConsultas.cell(r, 1).string(c.FECHA_CONSULTA ? new Date(c.FECHA_CONSULTA).toLocaleDateString() : 'N/A').style(cellStyle);
+                wsConsultas.cell(r, 2).string(c.TIPO_CONSULTA || 'GENERAL').style(cellStyle);
+                wsConsultas.cell(r, 3).string(c.DOCTOR || 'N/A').style(cellStyle);
+                wsConsultas.cell(r, 4).string(c.MOTIVO_CONSULTA || 'N/A').style(cellStyle);
+                wsConsultas.cell(r, 5).string(c.DIAGNOSTICO_PRINCIPAL || 'N/A').style(cellStyle);
+                wsConsultas.cell(r, 6).string(c.TRATAMIENTO || 'N/A').style(cellStyle);
+                wsConsultas.cell(r, 7).string(c.RECOMENDACIONES || 'N/A').style(cellStyle);
             });
         }
-        [1,2,3,4,5,6,7].forEach(c => wsConsultas.column(c).setWidth(20));
 
         // ============================================================
-        // HOJA 4: SIGNOS VITALES
+        // HOJA 4: PRECLÍNICAS (Signos Vitales)
         // ============================================================
-        const wsVitales = wb.addWorksheet('4. Signos Vitales');
-        wsVitales.cell(1, 1).string('SIGNOS VITALES').style(titleStyle);
-        wsVitales.row(1).setHeight(25);
+        const wsPreclinica = wb.addWorksheet('4. Preclínicas');
+        wsPreclinica.cell(1, 1).string('REGISTROS PRECLÍNICOS Y SIGNOS VITALES').style(titleStyle);
 
-        const vHeaders = ['Fecha', 'Temp °C', 'P. Sist.', 'P. Diast.', 'F.C.', 'Sat O₂ %', 'Peso (kg)', 'Talla (cm)', 'IMC', 'Glucosa', 'Estado General', 'Enfermera'];
-        vHeaders.forEach((h, i) => {
-            wsVitales.cell(2, i + 1).string(h).style(headerStyle);
+        const headersPreclinica = ['Fecha', 'Enfermera(o)', 'Temp (°C)', 'Presión', 'FC (bpm)', 'Sat O2 (%)', 'Peso (kg)', 'Talla (cm)', 'IMC', 'Glucosa', 'Estado General', 'Observaciones'];
+        headersPreclinica.forEach((h, idx) => {
+            wsPreclinica.cell(3, idx + 1).string(h).style(headerStyle);
         });
-        wsVitales.row(2).setHeight(25);
 
-        if (preclinicas.length === 0) {
-            wsVitales.cell(3, 1, 3, 12).string('No hay registros de signos vitales.').style(cellStyle);
-        } else {
+        if (preclinicas.length > 0) {
             preclinicas.forEach((p, idx) => {
-                const row = idx + 3;
-                wsVitales.cell(row, 1).string(p.FECHA_REGISTRO ? new Date(p.FECHA_REGISTRO).toLocaleDateString('es-HN') : '').style(cellStyle);
-                wsVitales.cell(row, 2).number(parseFloat(p.TEMPERATURA) || 0).style(numberStyle);
-                wsVitales.cell(row, 3).number(parseFloat(p.PRESION_SISTOLICA) || 0).style(numberStyle);
-                wsVitales.cell(row, 4).number(parseFloat(p.PRESION_DIASTOLICA) || 0).style(numberStyle);
-                wsVitales.cell(row, 5).number(parseFloat(p.FRECUENCIA_CARDIACA) || 0).style(numberStyle);
-                wsVitales.cell(row, 6).number(parseFloat(p.SATURACION_OXIGENO) || 0).style(numberStyle);
-                wsVitales.cell(row, 7).number(parseFloat(p.PESO) || 0).style(numberStyle);
-                wsVitales.cell(row, 8).number(parseFloat(p.TALLA) || 0).style(numberStyle);
-                wsVitales.cell(row, 9).number(parseFloat(p.IMC) || 0).style(numberStyle);
-                wsVitales.cell(row, 10).number(parseFloat(p.GLUCOSA) || 0).style(numberStyle);
-                wsVitales.cell(row, 11).string(p.ESTADO_GENERAL || '').style(cellStyle);
-                wsVitales.cell(row, 12).string(p.ENFERMERA || '').style(cellStyle);
+                const r = 4 + idx;
+                wsPreclinica.cell(r, 1).string(p.FECHA_REGISTRO ? new Date(p.FECHA_REGISTRO).toLocaleString() : 'N/A').style(cellStyle);
+                wsPreclinica.cell(r, 2).string(p.ENFERMERA || 'N/A').style(cellStyle);
+                wsPreclinica.cell(r, 3).string(p.TEMPERATURA ? String(p.TEMPERATURA) : 'N/A').style(numberStyle);
+                wsPreclinica.cell(r, 4).string(`${p.PRESION_SISTOLICA || '0'}/${p.PRESION_DIASTOLICA || '0'}`).style(cellStyle);
+                wsPreclinica.cell(r, 5).string(p.FRECUENCIA_CARDIACA ? String(p.FRECUENCIA_CARDIACA) : 'N/A').style(numberStyle);
+                wsPreclinica.cell(r, 6).string(p.SATURACION_OXIGENO ? String(p.SATURACION_OXIGENO) : 'N/A').style(numberStyle);
+                wsPreclinica.cell(r, 7).string(p.PESO ? String(p.PESO) : 'N/A').style(numberStyle);
+                wsPreclinica.cell(r, 8).string(p.TALLA ? String(p.TALLA) : 'N/A').style(numberStyle);
+                wsPreclinica.cell(r, 9).string(p.IMC ? String(p.IMC) : 'N/A').style(numberStyle);
+                wsPreclinica.cell(r, 10).string(p.GLUCOSA ? String(p.GLUCOSA) : 'N/A').style(numberStyle);
+                wsPreclinica.cell(r, 11).string(p.ESTADO_GENERAL || 'N/A').style(cellStyle);
+                wsPreclinica.cell(r, 12).string(p.OBSERVACIONES || 'N/A').style(cellStyle);
             });
         }
-        [1,2,3,4,5,6,7,8,9,10,11,12].forEach(c => wsVitales.column(c).setWidth(15));
 
         // ============================================================
-        // HOJA 5: MEDICAMENTOS
+        // HOJA 5: MEDICAMENTOS PRESCRITOS
         // ============================================================
         const wsMedicamentos = wb.addWorksheet('5. Medicamentos');
-        wsMedicamentos.cell(1, 1).string('MEDICAMENTOS PRESCRITOS').style(titleStyle);
-        wsMedicamentos.row(1).setHeight(25);
+        wsMedicamentos.cell(1, 1).string('HISTORIAL DE MEDICAMENTOS PRESCRITOS').style(titleStyle);
 
-        const mHeaders = ['Fecha', 'Medicamento', 'Dosis', 'Frecuencia', 'Duración', 'Estado'];
-        mHeaders.forEach((h, i) => {
-            wsMedicamentos.cell(2, i + 1).string(h).style(headerStyle);
+        const headersMedicamentos = ['Fecha', 'Medicamento', 'Dosis', 'Frecuencia', 'Duración', 'Estado'];
+        headersMedicamentos.forEach((h, idx) => {
+            wsMedicamentos.cell(3, idx + 1).string(h).style(headerStyle);
         });
-        wsMedicamentos.row(2).setHeight(25);
 
-        if (medicamentos.length === 0) {
-            wsMedicamentos.cell(3, 1, 3, 6).string('No hay medicamentos prescritos.').style(cellStyle);
-        } else {
+        if (medicamentos.length > 0) {
             medicamentos.forEach((m, idx) => {
-                const row = idx + 3;
-                wsMedicamentos.cell(row, 1).string(m.FECHA_PRESCRIPCION ? new Date(m.FECHA_PRESCRIPCION).toLocaleDateString('es-HN') : '').style(cellStyle);
-                wsMedicamentos.cell(row, 2).string(m.NOMBRE_MEDICAMENTO || '').style(cellStyle);
-                wsMedicamentos.cell(row, 3).string(m.DOSIS || '').style(cellStyle);
-                wsMedicamentos.cell(row, 4).string(m.FRECUENCIA || '').style(cellStyle);
-                wsMedicamentos.cell(row, 5).string(m.DURACION || '').style(cellStyle);
-                wsMedicamentos.cell(row, 6).string(m.ESTADO || '').style(cellStyle);
+                const r = 4 + idx;
+                wsMedicamentos.cell(r, 1).string(m.FECHA_PRESCRIPCION ? new Date(m.FECHA_PRESCRIPCION).toLocaleDateString() : 'N/A').style(cellStyle);
+                wsMedicamentos.cell(r, 2).string(m.NOMBRE_MEDICAMENTO || 'N/A').style(cellStyle);
+                wsMedicamentos.cell(r, 3).string(m.DOSIS || 'N/A').style(cellStyle);
+                wsMedicamentos.cell(r, 4).string(m.FRECUENCIA || 'N/A').style(cellStyle);
+                wsMedicamentos.cell(r, 5).string(m.DURACION || 'N/A').style(cellStyle);
+                wsMedicamentos.cell(r, 6).string(m.ESTADO || 'N/A').style(cellStyle);
             });
         }
-        [1,2,3,4,5,6].forEach(c => wsMedicamentos.column(c).setWidth(20));
 
-        // ============================================================
-        // ENVIAR ARCHIVO
-        // ============================================================
-        const fecha = new Date().toISOString().split('T')[0];
-        const fileName = `Historial_${paciente.NOMBRES}_${paciente.APELLIDOS}_${fecha}.xlsx`;
+        // Ajustar anchos automáticos básicos o fijos seguros para las hojas
+        [wsPaciente, wsHistorial].forEach(ws => {
+            ws.column(1).setWidth(30);
+            ws.column(2).setWidth(50);
+        });
+
+        [wsConsultas, wsPreclinica, wsMedicamentos].forEach(ws => {
+            for (let i = 1; i <= 15; i++) {
+                ws.column(i).setWidth(20);
+            }
+        });
+
+        const nombreArchivo = `historial_completo_${pacienteId}_${new Date().toISOString().split('T')[0]}.xlsx`;
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-        wb.write(fileName, res);
+        res.setHeader('Content-Disposition', `attachment; filename="${nombreArchivo}"`);
+
+        wb.write(nombreArchivo, res);
 
     } catch (err) {
-        console.error("❌ Error al generar Excel:", err);
-        res.status(500).json({ error: "Error al generar Excel: " + err.message });
+        console.error("❌ Error al exportar Excel del historial:", err);
+        if (!res.headersSent) {
+            res.status(500).json({ error: "Error al generar el archivo Excel: " + err.message });
+        }
     }
 });
 

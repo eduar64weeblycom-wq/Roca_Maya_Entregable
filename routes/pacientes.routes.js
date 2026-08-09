@@ -131,7 +131,7 @@ router.get("/api/:id", async (req, res) => {
 });
 
 // ============================================================
-// POST /pacientes/api -> Crear paciente (CORREGIDO)
+// POST /pacientes/api -> Crear paciente
 // ============================================================
 router.post("/api", async (req, res) => {
   try {
@@ -157,8 +157,8 @@ router.post("/api", async (req, res) => {
       CIRUGIAS_PREVIAS,
       MEDICAMENTOS_ACTUALES,
       VACUNAS,
-      ANTECEDENTES_FAMILIARES,   // NUEVO
-      HABITOS                    // NUEVO
+      ANTECEDENTES_FAMILIARES,
+      HABITOS
     } = req.body;
 
     if (!NOMBRES || !APELLIDOS || !NUMERO_DOCUMENTO_IDENTIDAD) {
@@ -218,8 +218,18 @@ router.post("/api", async (req, res) => {
     const pacienteId = result.insertId;
 
     const parseArray = (str) => {
-      if (!str || typeof str !== 'string') return [];
-      return str.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      if (!str) return [];
+      if (Array.isArray(str)) return str.map(s => String(s).trim()).filter(s => s.length > 0);
+      if (typeof str === 'string') {
+        try {
+          const parsed = JSON.parse(str);
+          if (Array.isArray(parsed)) return parsed.map(s => String(s).trim()).filter(s => s.length > 0);
+        } catch (e) {
+          // No era JSON válido, se procesa como texto plano separado por comas
+        }
+        return str.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      }
+      return [];
     };
 
     const alergiasArray = parseArray(ALERGIAS);
@@ -227,8 +237,8 @@ router.post("/api", async (req, res) => {
     const cirugiasArray = parseArray(CIRUGIAS_PREVIAS);
     const medicamentosArray = parseArray(MEDICAMENTOS_ACTUALES);
     const vacunasArray = parseArray(VACUNAS);
-    const antecedentesArray = parseArray(ANTECEDENTES_FAMILIARES);   // NUEVO
-    const habitosArray = parseArray(HABITOS);                         // NUEVO
+    const antecedentesArray = parseArray(ANTECEDENTES_FAMILIARES);
+    const habitosArray = parseArray(HABITOS);
 
     if (alergiasArray.length > 0 || enfermedadesArray.length > 0 || cirugiasArray.length > 0 || 
         medicamentosArray.length > 0 || vacunasArray.length > 0 || antecedentesArray.length > 0 || habitosArray.length > 0) {
@@ -284,7 +294,7 @@ router.post("/api", async (req, res) => {
 });
 
 // ============================================================
-// PUT /pacientes/api/:id -> Actualizar paciente (CORREGIDO)
+// PUT /pacientes/api/:id -> Actualizar paciente
 // ============================================================
 router.put("/api/:id", async (req, res) => {
   try {
@@ -311,8 +321,8 @@ router.put("/api/:id", async (req, res) => {
       CIRUGIAS_PREVIAS,
       MEDICAMENTOS_ACTUALES,
       VACUNAS,
-      ANTECEDENTES_FAMILIARES,   // NUEVO
-      HABITOS                    // NUEVO
+      ANTECEDENTES_FAMILIARES,
+      HABITOS
     } = req.body;
 
     if (!NOMBRES || !APELLIDOS || !NUMERO_DOCUMENTO_IDENTIDAD) {
@@ -377,8 +387,18 @@ router.put("/api/:id", async (req, res) => {
     }
 
     const parseArray = (str) => {
-      if (!str || typeof str !== 'string') return [];
-      return str.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      if (!str) return [];
+      if (Array.isArray(str)) return str.map(s => String(s).trim()).filter(s => s.length > 0);
+      if (typeof str === 'string') {
+        try {
+          const parsed = JSON.parse(str);
+          if (Array.isArray(parsed)) return parsed.map(s => String(s).trim()).filter(s => s.length > 0);
+        } catch (e) {
+          // No era JSON válido, se procesa como texto plano separado por comas
+        }
+        return str.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      }
+      return [];
     };
 
     const alergiasArray = parseArray(ALERGIAS);
@@ -386,11 +406,11 @@ router.put("/api/:id", async (req, res) => {
     const cirugiasArray = parseArray(CIRUGIAS_PREVIAS);
     const medicamentosArray = parseArray(MEDICAMENTOS_ACTUALES);
     const vacunasArray = parseArray(VACUNAS);
-    const antecedentesArray = parseArray(ANTECEDENTES_FAMILIARES);   // NUEVO
-    const habitosArray = parseArray(HABITOS);                         // NUEVO
+    const antecedentesArray = parseArray(ANTECEDENTES_FAMILIARES);
+    const habitosArray = parseArray(HABITOS);
 
     const [historialExistente] = await pool.query(
-      `SELECT ID_HISTORIAL FROM tbl_especialidades WHERE ID_PACIENTE = ?`,
+      `SELECT ID_PACIENTE FROM tbl_especialidades WHERE ID_PACIENTE = ?`,
       [id]
     );
 
