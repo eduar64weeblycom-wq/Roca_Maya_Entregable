@@ -93,10 +93,10 @@ router.get('/permisos', async (req, res) => {
     if (userData.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
 
     const idRol = userData[0].ID_ROL;
-    const [permisos] = await db.query(`
+const [permisos] = await db.query(`
       SELECT p.ID_OBJETO as id, p.PERMISO_CONSULTA as consulta, o.OBJETO as nombre, o.TIPO_OBJETO as tipo
-      FROM TBL_PERMISOS p
-      INNER JOIN TBL_OBJETOS o ON p.ID_OBJETO = o.ID_OBJETO
+      FROM tbl_permisos p
+      INNER JOIN tbl_objetos o ON p.ID_OBJETO = o.ID_OBJETO
       WHERE p.ID_ROL = ?
       ORDER BY o.ID_OBJETO
     `, [idRol]);
