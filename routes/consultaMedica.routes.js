@@ -151,7 +151,7 @@ router.get("/api/calendario", async (req, res) => {
         u.CORREO_ELECTRONICO
       FROM tbl_ms_usuario u
       LEFT JOIN tbl_doctor_especialidad de ON u.ID_USUARIO = de.ID_DOCTOR
-      LEFT JOIN tbl_especialidade e ON de.ID_ESPECIALIDAD = e.ID_ESPECIALIDAD
+      LEFT JOIN tbl_especialidades e ON de.ID_ESPECIALIDAD = e.ID_ESPECIALIDAD
       WHERE u.ESTADO = 'ACTIVO' 
         AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_roles WHERE ROL = 'DOCTOR')
       GROUP BY u.ID_USUARIO, u.NOMBRE_USUARIO, u.CORREO_ELECTRONICO
@@ -317,7 +317,7 @@ router.get("/api/imprimir-consulta/:idConsulta", async (req, res) => {
         GLUCOSA,
         PERIMETRO_ABDOMINAL,
         ESTADO_GENERAL
-      FROM TBL_PRECLINICA
+      FROM tbl_preclinica
       WHERE ID_CITA = ?
       ORDER BY FECHA_REGISTRO DESC
       LIMIT 1
@@ -404,7 +404,7 @@ router.get("/api/datos", async (req, res) => {
         GROUP_CONCAT(DISTINCT COALESCE(e.NOMBRE_ESPECIALIDAD, 'Medicina General') SEPARATOR ', ') AS ESPECIALIDAD
       FROM tbl_ms_usuario u
       LEFT JOIN tbl_doctor_especialidad de ON u.ID_USUARIO = de.ID_DOCTOR
-      LEFT JOIN tbl_especialidade e ON de.ID_ESPECIALIDAD = e.ID_ESPECIALIDAD
+      LEFT JOIN tbl_especialidades e ON de.ID_ESPECIALIDAD = e.ID_ESPECIALIDAD
       WHERE u.ESTADO = 'ACTIVO' 
         AND u.ID_ROL = (SELECT ID_ROL FROM tbl_ms_roles WHERE ROL = 'DOCTOR')
       GROUP BY u.ID_USUARIO, u.NOMBRE_USUARIO, u.CORREO_ELECTRONICO
@@ -973,7 +973,7 @@ router.get("/preclinica/por-cita/:idCita", async (req, res) => {
   const { idCita } = req.params;
   try {
     const [preclinicaRows] = await pool.query(`
-      SELECT * FROM TBL_PRECLINICA WHERE ID_CITA = ? ORDER BY FECHA_REGISTRO DESC LIMIT 1
+      SELECT * FROM tbl_preclinica WHERE ID_CITA = ? ORDER BY FECHA_REGISTRO DESC LIMIT 1
     `, [idCita]);
 
     if (preclinicaRows.length === 0) {
@@ -1014,7 +1014,7 @@ router.get("/api/cita/:idCita", async (req, res) => {
     const cita = citaRows[0];
 
     const [preclinicaRows] = await pool.query(`
-      SELECT * FROM TBL_PRECLINICA WHERE ID_CITA = ? ORDER BY FECHA_REGISTRO DESC LIMIT 1
+      SELECT * FROM tbl_preclinica WHERE ID_CITA = ? ORDER BY FECHA_REGISTRO DESC LIMIT 1
     `, [idCita]);
 
     const [historialRows] = await pool.query(`
@@ -1065,7 +1065,7 @@ router.get("/api/consulta/:idConsulta", async (req, res) => {
       FROM tbl_consulta_medica cm
       INNER JOIN tbl_paciente p ON cm.ID_PACIENTE = p.ID_PACIENTE
       INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
-      LEFT JOIN TBL_PRECLINICA pre ON cm.ID_CITA = pre.ID_CITA
+      LEFT JOIN tbl_preclinica pre ON cm.ID_CITA = pre.ID_CITA
       WHERE cm.ID_CONSULTA = ?
     `, [idConsulta]);
 
@@ -1268,7 +1268,7 @@ router.get("/api/preclinica/:idCita", async (req, res) => {
   const { idCita } = req.params;
   try {
     const [rows] = await pool.query(`
-      SELECT * FROM TBL_PRECLINICA WHERE ID_CITA = ? ORDER BY FECHA_REGISTRO DESC LIMIT 1
+      SELECT * FROM tbl_preclinica WHERE ID_CITA = ? ORDER BY FECHA_REGISTRO DESC LIMIT 1
     `, [idCita]);
 
     res.json({ success: true, preclinica: rows.length > 0 ? rows[0] : null });
