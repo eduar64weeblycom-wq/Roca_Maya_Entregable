@@ -8,6 +8,10 @@ const Importer = require('mysql-import');
 const fs = require('fs');
 const path = require('path');
 
+const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
+
 router.post("/restore", upload.single('backup'), async (req, res) => {
   let tempPath = null;
 
@@ -23,24 +27,25 @@ router.post("/restore", upload.single('backup'), async (req, res) => {
     tempPath = path.join(__dirname, '../temp_restore.sql');
     fs.writeFileSync(tempPath, req.file.buffer);
 
-    const importer = new Importer({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      port: Number(process.env.DB_PORT) || 3306
-    });
+    // Construir comando mysql
+    const host = process.env.DB_HOST;
+    const user = process.env.DB_USER;
+    const password = process.env.DB_PASSWORD;
+    const database = process.env.DB_NAME;
+    const port = process.env.DB_PORT || 3306;
 
-    await importer.import(tempPath);
+    // Nota: en Render a veces no está instalado el cliente mysql
+    const comando = `mysql -h ${host} -P ${port} -u ${user} -p${password} ${database} < "${tempPath}"`;
+
+    await execPromise(comando);
 
     return res.json({ ok: true, mensaje: "Restauración exitosa" });
 
   } catch (error) {
     console.error("Error crítico en restauración:", error);
-    // Siempre devolver JSON
     return res.status(500).json({ 
       ok: false, 
-      mensaje: "Error al aplicar SQL: " + (error.message || "Error desconocido")
+      mensaje: "Error al restaurar: " + (error.message || "Error desconocido")
     });
   } finally {
     if (tempPath && fs.existsSync(tempPath)) {

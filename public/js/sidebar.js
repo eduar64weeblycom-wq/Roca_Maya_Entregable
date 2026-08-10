@@ -2,152 +2,385 @@
 // SIDEBAR - COMPORTAMIENTO COMPLETO Y MEJORADO
 // ============================================================
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log(' Sidebar iniciado correctamente');
-    
+document.addEventListener('DOMContentLoaded', function () {
+
+    console.log('Sidebar iniciado correctamente');
+
     // ============================================================
-    // 1. LÓGICA DEL MENÚ LATERAL (SIDEBAR)
+    // 1. ELEMENTOS DEL SIDEBAR
     // ============================================================
+
     const sidebarModal = document.getElementById('sidebarModal');
     const modalOverlay = document.getElementById('modalOverlay');
     const menuToggle = document.getElementById('menuToggle');
     const closeSidebar = document.getElementById('closeSidebar');
 
     if (!sidebarModal || !modalOverlay || !menuToggle || !closeSidebar) {
-        console.error(" Error: Elementos del menú no encontrados.");
+        console.error('Error: Elementos del menú no encontrados.');
         return;
     }
+
+    // ============================================================
+    // 2. ABRIR SIDEBAR
+    // ============================================================
 
     function openMenu() {
         sidebarModal.classList.add('open');
         modalOverlay.classList.add('active');
-        document.body.style.overflow = "hidden";
+
+        // Evitar scroll del contenido de fondo
+        document.body.style.overflow = 'hidden';
     }
+
+    // ============================================================
+    // 3. CERRAR SIDEBAR
+    // ============================================================
 
     function closeMenu() {
         sidebarModal.classList.remove('open');
         modalOverlay.classList.remove('active');
-        document.body.style.overflow = "auto";
+
+        // Restaurar scroll
+        document.body.style.overflow = '';
     }
 
-    menuToggle.addEventListener('click', openMenu);
-    closeSidebar.addEventListener('click', closeMenu);
-    modalOverlay.addEventListener('click', closeMenu);
+    // ============================================================
+    // 4. EVENTOS DEL SIDEBAR
+    // ============================================================
 
-    document.addEventListener('keydown', function(e) {
-        if (e.key === "Escape") {
+    menuToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        openMenu();
+    });
+
+    closeSidebar.addEventListener('click', function (e) {
+        e.preventDefault();
+        closeMenu();
+    });
+
+    modalOverlay.addEventListener('click', function () {
+        closeMenu();
+    });
+
+    // ============================================================
+    // 5. CERRAR CON ESCAPE
+    // ============================================================
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sidebarModal.classList.contains('open')) {
             closeMenu();
         }
     });
 
     // ============================================================
-    // 2. CERRAR SIDEBAR AL HACER CLIC EN UN ENLACE (MEJORADO)
+    // 6. CERRAR SIDEBAR AL HACER CLIC EN ENLACES
     // ============================================================
-    const sidebarLinks = document.querySelectorAll('.sidebar-item:not(.logout-item)');
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', function() {
-            // Si es un enlace normal (no el botón de restaurar)
-            if (this.tagName === 'A' && this.id !== 'btnRestore') {
-                setTimeout(() => {
+
+    const sidebarLinks = document.querySelectorAll(
+        '.sidebar-item:not(.logout-item)'
+    );
+
+    sidebarLinks.forEach(function (link) {
+
+        link.addEventListener('click', function () {
+
+            // No cerrar automáticamente si es el botón de restauración
+            if (this.id === 'btnRestore') {
+                return;
+            }
+
+            // Si es un enlace, cerrar sidebar
+            if (this.tagName === 'A') {
+                setTimeout(function () {
                     if (sidebarModal.classList.contains('open')) {
                         closeMenu();
                     }
-                }, 150);
+                }, 100);
             }
         });
     });
 
     // ============================================================
-    // 3. LÓGICA DEL BOTÓN DE RESTAURAR BASE DE DATOS (MEJORADA)
+    // 7. RESTAURACIÓN DE BASE DE DATOS
     // ============================================================
+
     const btnRestore = document.getElementById('btnRestore');
     const fileRestore = document.getElementById('fileRestore');
     const loading = document.getElementById('loading');
 
+    let restauracionEnProceso = false;
+
     if (btnRestore && fileRestore) {
-        // Evento para abrir el selector de archivos
-        btnRestore.addEventListener('click', function(e) {
+
+        // ========================================================
+        // 7.1 ABRIR SELECTOR DE ARCHIVO
+        // ========================================================
+
+        btnRestore.addEventListener('click', function (e) {
+
             e.preventDefault();
             e.stopPropagation();
-            
-            if (confirm(' ADVERTENCIA: La restauración reemplazará TODOS los datos actuales.\n\n¿Estás seguro de que deseas continuar?')) {
-                fileRestore.click();
+
+            // Evitar doble ejecución
+            if (restauracionEnProceso) {
+                return;
             }
+
+            const confirmar = confirm(
+                '⚠️ ADVERTENCIA\n\n' +
+                'La restauración reemplazará los datos actuales de la base de datos.\n\n' +
+                'Esta operación puede ser irreversible.\n\n' +
+                '¿Estás seguro de que deseas continuar?'
+            );
+
+            if (!confirmar) {
+                return;
+            }
+
+            // Abrir selector de archivos
+            fileRestore.click();
         });
 
-        // Evento cuando se selecciona un archivo
-        fileRestore.addEventListener('change', async function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        // ========================================================
+        // 7.2 ARCHIVO SELECCIONADO
+        // ========================================================
 
-            //  Validar extensión
-            if (!file.name.endsWith('.sql') && !file.name.endsWith('.SQL')) {
-                alert(' Por favor, selecciona un archivo con extensión .sql');
+        fileRestore.addEventListener('change', async function () {
+
+            const file = this.files && this.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            // ====================================================
+            // VALIDAR EXTENSIÓN
+            // ====================================================
+
+            const extension = file.name
+                .split('.')
+                .pop()
+                .toLowerCase();
+
+            if (extension !== 'sql') {
+
+                alert(
+                    '❌ Archivo no válido.\n\n' +
+                    'Debes seleccionar un archivo con extensión .sql'
+                );
+
                 fileRestore.value = '';
                 return;
             }
 
-            //  Validar tamaño (máximo 50MB)
-            if (file.size > 50 * 1024 * 1024) {
-                alert(' El archivo es demasiado grande. El tamaño máximo permitido es 50MB.');
+            // ====================================================
+            // VALIDAR TAMAÑO
+            // ====================================================
+
+            const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
+
+            if (file.size > MAX_SIZE) {
+
+                alert(
+                    '❌ El archivo es demasiado grande.\n\n' +
+                    'Tamaño máximo permitido: 50 MB.'
+                );
+
                 fileRestore.value = '';
                 return;
             }
 
-            //  Mostrar estado de carga
-            if (loading) loading.style.display = 'flex';
+            // ====================================================
+            // VALIDAR ARCHIVO VACÍO
+            // ====================================================
 
-            // Guardar texto original del botón
+            if (file.size === 0) {
+
+                alert(
+                    '❌ El archivo seleccionado está vacío.'
+                );
+
+                fileRestore.value = '';
+                return;
+            }
+
+            // ====================================================
+            // ACTIVAR ESTADO DE RESTAURACIÓN
+            // ====================================================
+
+            restauracionEnProceso = true;
+
             const originalHTML = btnRestore.innerHTML;
-            btnRestore.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restaurando...';
+
+            btnRestore.innerHTML =
+                '<i class="fas fa-spinner fa-spin"></i> Restaurando...';
+
             btnRestore.style.cursor = 'wait';
-            btnRestore.disabled = true;
+
+            // Si es button, deshabilitarlo
+            if ('disabled' in btnRestore) {
+                btnRestore.disabled = true;
+            }
+
+            // Mostrar loading
+            if (loading) {
+                loading.style.display = 'flex';
+            }
+
+            // ====================================================
+            // CREAR FORMDATA
+            // ====================================================
 
             const formData = new FormData();
+
+            // IMPORTANTE:
+            // Este nombre debe coincidir con multer.single(...)
+            // del backend.
             formData.append('backup', file);
 
             try {
-                //  RUTA CORRECTA: /parametros/restore
+
+                console.log(
+                    'Iniciando restauración:',
+                    file.name,
+                    file.size,
+                    'bytes'
+                );
+
+                // =================================================
+                // PETICIÓN AL BACKEND
+                // =================================================
+
                 const response = await fetch('/parametros/restore', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'same-origin'
                 });
 
-                const data = await response.json();
-                
-                if (data.ok || data.success) {
-                    alert('✅ ' + (data.mensaje || data.message || 'Base de datos restaurada exitosamente.'));
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                } else {
-                    alert('❌ ' + (data.mensaje || data.message || 'Error al restaurar la base de datos.'));
+                // =================================================
+                // LEER RESPUESTA DE FORMA SEGURA
+                // =================================================
+
+                const responseText = await response.text();
+
+                let data;
+
+                try {
+                    data = JSON.parse(responseText);
+                } catch (jsonError) {
+
+                    console.error(
+                        'El servidor no devolvió JSON:',
+                        responseText
+                    );
+
+                    throw new Error(
+                        'El servidor devolvió una respuesta inesperada.'
+                    );
                 }
-            } catch (err) {
-                console.error(' Error al restaurar:', err);
-                alert(' Error al restaurar: ' + err.message);
+
+                // =================================================
+                // HTTP ERROR
+                // =================================================
+
+                if (!response.ok) {
+
+                    const mensajeError =
+                        data.mensaje ||
+                        data.message ||
+                        `Error HTTP ${response.status}`;
+
+                    throw new Error(mensajeError);
+                }
+
+                // =================================================
+                // RESPUESTA EXITOSA
+                // =================================================
+
+                if (data.ok === true || data.success === true) {
+
+                    alert(
+                        '✅ ' +
+                        (
+                            data.mensaje ||
+                            data.message ||
+                            'Base de datos restaurada exitosamente.'
+                        )
+                    );
+
+                    // Recargar después de la restauración
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1500);
+
+                } else {
+
+                    throw new Error(
+                        data.mensaje ||
+                        data.message ||
+                        'El servidor rechazó la restauración.'
+                    );
+                }
+
+            } catch (error) {
+
+                console.error(
+                    '❌ Error durante la restauración:',
+                    error
+                );
+
+                alert(
+                    '❌ No se pudo restaurar la base de datos.\n\n' +
+                    error.message
+                );
+
             } finally {
-                //  Restaurar estado del botón
-                if (loading) loading.style.display = 'none';
+
+                // =================================================
+                // RESTAURAR ESTADO DEL BOTÓN
+                // =================================================
+
+                if (loading) {
+                    loading.style.display = 'none';
+                }
+
                 fileRestore.value = '';
+
                 btnRestore.innerHTML = originalHTML;
                 btnRestore.style.cursor = 'pointer';
-                btnRestore.disabled = false;
+
+                if ('disabled' in btnRestore) {
+                    btnRestore.disabled = false;
+                }
+
+                restauracionEnProceso = false;
             }
         });
     }
 
     // ============================================================
-    // 4. CONFIRMACIÓN PARA CERRAR SESIÓN (MEJORADO)
+    // 8. CONFIRMACIÓN PARA CERRAR SESIÓN
     // ============================================================
+
     const logoutLink = document.querySelector('.logout-item');
+
     if (logoutLink) {
-        logoutLink.addEventListener('click', function(e) {
-            if (!confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+
+        logoutLink.addEventListener('click', function (e) {
+
+            const confirmar = confirm(
+                '¿Estás seguro de que deseas cerrar sesión?'
+            );
+
+            if (!confirmar) {
                 e.preventDefault();
             }
         });
     }
 
-    console.log(' Sidebar inicializado correctamente');
+    // ============================================================
+    // 9. FINALIZACIÓN
+    // ============================================================
+
+    console.log('✅ Sidebar inicializado correctamente');
 });
