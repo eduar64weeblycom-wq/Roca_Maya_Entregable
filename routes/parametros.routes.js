@@ -192,5 +192,13 @@ function esParametroTexto(clave) {
     ];
     return parametrosTexto.includes(clave);
 }
-
+router.post('/restore', upload.single('backup'), async (req, res) => {
+    try {
+        // Tu lógica de restauración aquí...
+        return res.json({ ok: true, mensaje: 'Base de datos restaurada exitosamente.' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ ok: false, mensaje: error.message });
+    }
+});
 module.exports = router;

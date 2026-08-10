@@ -230,10 +230,13 @@ document.addEventListener('DOMContentLoaded', function () {
             // ====================================================
             // CREAR FORMDATA
             // ====================================================
+const formData = new FormData();
+formData.append('backup', archivoSql);
 
-            const formData = new FormData();
-            formData.append('backup', file);
-
+const response = await fetch('/parametros/restore', {
+    method: 'POST',
+    body: formData
+});
             try {
 
                 console.log(
@@ -265,14 +268,13 @@ document.addEventListener('DOMContentLoaded', function () {
         return res.status(500).json({ ok: false, message: 'Error interno: ' + error.message });
     }
 });
-
 // =================================================
 // LEER RESPUESTA DE FORMA SEGURA
 // =================================================
 
 const responseText = await response.text();
 
-// 🔍 IMPRIMIR LO QUE EL SERVIDOR REALMENTE RESPONDIó
+// 🔍 IMPRIMIR LO QUE EL SERVIDOR REALMENTE RESPONDIÓ
 console.log("Respuesta cruda del servidor:", responseText);
 
 let data;
@@ -280,12 +282,16 @@ let data;
 try {
     data = JSON.parse(responseText);
 } catch (jsonError) {
-    console.error('El servidor no devolvió JSON. Respuesta recibida:', responseText);
-    
-    // Muestra el texto exacto en la alerta para verlo en pantalla
-    throw new Error('El servidor respondió esto:\n\n' + responseText.substring(0, 200));
-}
 
+    console.error(
+        'El servidor no devolvió JSON:',
+        responseText
+    );
+
+    throw new Error(
+        'El servidor respondió esto:\n\n' + responseText.substring(0, 300)
+    );
+}
                 // =================================================
                 // HTTP ERROR
                 // =================================================
