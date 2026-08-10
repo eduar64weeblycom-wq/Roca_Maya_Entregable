@@ -4,7 +4,7 @@ const pool = require('../database/db');
 const { registrarBitacora } = require('../utils/bitacora');
 const multer = require('multer');
 
-// 1. Declarar la variable uploadRestore antes de las rutas
+// Declaración correcta del middleware Multer para la restauración
 const uploadRestore = multer({ 
     dest: 'uploads/',
     limits: { fileSize: 50 * 1024 * 1024 } 
@@ -40,7 +40,7 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
         try {
             await connection.query("SET FOREIGN_KEY_CHECKS = 0;");
             
-            // Dividir el archivo SQL en sentencias individuales para evitar fallos de sintaxis masivos
+            // Dividir el archivo SQL en sentencias individuales para evitar errores de sintaxis
             const statements = sqlContent
                 .split(/;\s*[\r\n]+/)
                 .map(stmt => stmt.trim())
@@ -76,7 +76,6 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
     }
 });
 
-// (Resto de tus funciones de parámetros se mantienen igual...)
 // ==========================================
 // VALIDACIÓN DE PARÁMETROS
 // ==========================================
