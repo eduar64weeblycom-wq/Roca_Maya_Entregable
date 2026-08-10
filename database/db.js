@@ -28,7 +28,7 @@ const pool = mysql.createPool({
     multipleStatements: true,
 
     // Zona horaria
-    timezone: "Z",
+    timezone: "-06:00",
 
     // Devolver fechas como strings
     dateStrings: true
