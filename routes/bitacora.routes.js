@@ -223,30 +223,92 @@ router.get("/parametros/backup", async (req, res) => {
 // ============================================================
 router.post('/gestion', async (req, res) => {
   try {
-    const { accion, usuario } = req.body; 
-    const usuarioMod = usuario || 'SISTEMA';
+    const { accion, usuario } = req.body;
+    const usuarioMod = usuario || req.user?.USUARIO || 'SISTEMA';
 
     if (!['ACTIVAR', 'PAUSAR', 'LIMPIAR'].includes(accion)) {
       return res.status(400).json({ ok: false, mensaje: 'Acción inválida.' });
     }
 
-    const [resultado] = await pool.query(
-      'CALL SP_GESTIONAR_BITACORA(?, ?)', 
-      [accion, usuarioMod]
-    );
+    let mensaje = '';
 
-    const respuestaSP = resultado[0][0];
+    // ==================== ACTIVAR ====================
+    if (accion === 'ACTIVAR') {
+      const [update] = await pool.query(`
+        UPDATE tbl_ms_parametros 
+        SET VALOR = '1', 
+            USUARIO_MODIFICACION = ?, 
+            FECHA_MODIFICACION = NOW()
+        WHERE PARAMETRO = 'BITACORA_ACTIVA'
+      `, [usuarioMod]);
 
-    if (respuestaSP.RESULTADO === 'EXITO') {
-      return res.json({ ok: true, mensaje: respuestaSP.MENSAJE });
-    } else {
-      return res.status(400).json({ ok: false, mensaje: respuestaSP.MENSAJE });
+      // Si no existe el parámetro, lo creamos
+      if (update.affectedRows === 0) {
+        await pool.query(`
+          INSERT INTO tbl_ms_parametros 
+          (PARAMETRO, VALOR, DESCRIPCION, USUARIO_MODIFICACION, FECHA_MODIFICACION)
+          VALUES ('BITACORA_ACTIVA', '1', 'Indica si la bitácora está activa (1) o pausada (0)', ?, NOW())
+        `, [usuarioMod]);
+      }
+
+      mensaje = 'Bitácora activada correctamente.';
     }
+
+    // ==================== PAUSAR ====================
+    else if (accion === 'PAUSAR') {
+      const [update] = await pool.query(`
+        UPDATE tbl_ms_parametros 
+        SET VALOR = '0', 
+            USUARIO_MODIFICACION = ?, 
+            FECHA_MODIFICACION = NOW()
+        WHERE PARAMETRO = 'BITACORA_ACTIVA'
+      `, [usuarioMod]);
+
+      if (update.affectedRows === 0) {
+        await pool.query(`
+          INSERT INTO tbl_ms_parametros 
+          (PARAMETRO, VALOR, DESCRIPCION, USUARIO_MODIFICACION, FECHA_MODIFICACION)
+          VALUES ('BITACORA_ACTIVA', '0', 'Indica si la bitácora está activa (1) o pausada (0)', ?, NOW())
+        `, [usuarioMod]);
+      }
+
+      mensaje = 'Bitácora pausada correctamente.';
+    }
+
+    // ==================== LIMPIAR ====================
+    else if (accion === 'LIMPIAR') {
+      // Elimina registros de bitácora con más de 90 días
+      const [result] = await pool.query(`
+        DELETE FROM tbl_ms_bitacora 
+        WHERE FECHA_HORA < DATE_SUB(NOW(), INTERVAL 90 DAY)
+      `);
+
+      mensaje = `Bitácora limpiada. Se eliminaron ${result.affectedRows} registros antiguos.`;
+    }
+
+    // Registrar la acción en la propia bitácora
+    try {
+      await pool.query(`
+        INSERT INTO tbl_ms_bitacora (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
+        VALUES (NOW(), ?, ?, ?, ?)
+      `, [
+        req.user?.ID_USUARIO || 1,
+        `BITACORA_${accion}`,
+        `El usuario ${usuarioMod} ejecutó la acción: ${accion}`,
+        'CONFIGURACION'
+      ]);
+    } catch (bitacoraErr) {
+      console.error('No se pudo registrar en bitácora:', bitacoraErr.message);
+    }
+
+    return res.json({ ok: true, mensaje });
 
   } catch (error) {
     console.error('Error en la gestión de bitácora:', error);
-    return res.status(500).json({ ok: false, mensaje: 'Error interno del servidor: ' + error.message });
+    return res.status(500).json({ 
+      ok: false, 
+      mensaje: 'Error interno del servidor: ' + error.message 
+    });
   }
 });
-
 module.exports = router;
