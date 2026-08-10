@@ -147,9 +147,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         fileRestore.addEventListener('change', async function () {
 
-            const file = this.files && this.files[0];
+            const archivoSql = this.files && this.files[0];
 
-            if (!file) {
+            if (!archivoSql) {
                 return;
             }
 
@@ -157,18 +157,16 @@ document.addEventListener('DOMContentLoaded', function () {
             // VALIDAR EXTENSIÓN
             // ====================================================
 
-            const extension = file.name
+            const extension = archivoSql.name
                 .split('.')
                 .pop()
                 .toLowerCase();
 
             if (extension !== 'sql') {
-
                 alert(
                     '❌ Archivo no válido.\n\n' +
                     'Debes seleccionar un archivo con extensión .sql'
                 );
-
                 fileRestore.value = '';
                 return;
             }
@@ -179,13 +177,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
 
-            if (file.size > MAX_SIZE) {
-
+            if (archivoSql.size > MAX_SIZE) {
                 alert(
                     '❌ El archivo es demasiado grande.\n\n' +
                     'Tamaño máximo permitido: 50 MB.'
                 );
-
                 fileRestore.value = '';
                 return;
             }
@@ -194,12 +190,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // VALIDAR ARCHIVO VACÍO
             // ====================================================
 
-            if (file.size === 0) {
-
-                alert(
-                    '❌ El archivo seleccionado está vacío.'
-                );
-
+            if (archivoSql.size === 0) {
+                alert('❌ El archivo seleccionado está vacío.');
                 fileRestore.value = '';
                 return;
             }
@@ -217,101 +209,57 @@ document.addEventListener('DOMContentLoaded', function () {
 
             btnRestore.style.cursor = 'wait';
 
-            // Si es button, deshabilitarlo
             if ('disabled' in btnRestore) {
                 btnRestore.disabled = true;
             }
 
-            // Mostrar loading
             if (loading) {
                 loading.style.display = 'flex';
             }
 
-            // ====================================================
-            // CREAR FORMDATA
-            // ====================================================
-const formData = new FormData();
-formData.append('backup', archivoSql);
-
-const response = await fetch('/parametros/restore', {
-    method: 'POST',
-    body: formData
-});
             try {
-
                 console.log(
                     'Iniciando restauración:',
-                    file.name,
-                    file.size,
+                    archivoSql.name,
+                    archivoSql.size,
                     'bytes'
                 );
 
-                // =================================================
-                // PETICIÓN AL BACKEND
-                // =================================================
+                // ====================================================
+                // CREAR FORMDATA Y ENVIAR AL BACKEND
+                // ====================================================
 
-            router.post('/restore', upload.single('backup'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ ok: false, message: 'No se subió archivo' });
-        }
+                const formData = new FormData();
+                formData.append('backup', archivoSql);
 
-        // --- Aquí va la lógica de tu restauración ---
-        // ...
-        
-        // SI TODO SALIÓ BIEN:
-        return res.status(200).json({ ok: true, message: 'Restauración completada' });
+                const response = await fetch('/parametros/restore', {
+                    method: 'POST',
+                    body: formData
+                });
 
-    } catch (error) {
-        console.error(error);
-        // SI OCURRIÓ UN ERROR (MUY IMPORTANTE):
-        return res.status(500).json({ ok: false, message: 'Error interno: ' + error.message });
-    }
-});
-// =================================================
-// LEER RESPUESTA DE FORMA SEGURA
-// =================================================
+                const responseText = await response.text();
+                console.log("Respuesta cruda del servidor:", responseText);
 
-const responseText = await response.text();
+                let data;
 
-// 🔍 IMPRIMIR LO QUE EL SERVIDOR REALMENTE RESPONDIÓ
-console.log("Respuesta cruda del servidor:", responseText);
-
-let data;
-
-try {
-    data = JSON.parse(responseText);
-} catch (jsonError) {
-
-    console.error(
-        'El servidor no devolvió JSON:',
-        responseText
-    );
-
-    throw new Error(
-        'El servidor respondió esto:\n\n' + responseText.substring(0, 300)
-    );
-}
-                // =================================================
-                // HTTP ERROR
-                // =================================================
+                try {
+                    data = JSON.parse(responseText);
+                } catch (jsonError) {
+                    console.error('El servidor no devolvió JSON:', responseText);
+                    throw new Error(
+                        'El servidor respondió esto:\n\n' + responseText.substring(0, 300)
+                    );
+                }
 
                 if (!response.ok) {
-
                     const mensajeError =
                         data.mensaje ||
                         data.message ||
                         `Error HTTP ${response.status}`;
-
                     throw new Error(mensajeError);
                 }
 
-                // =================================================
-                // RESPUESTA EXITOSA
-                // =================================================
-
                 if (data.ok === true || data.success === true) {
-
                     alert(
                         '✅ ' +
                         (
@@ -321,13 +269,11 @@ try {
                         )
                     );
 
-                    // Recargar después de la restauración
                     setTimeout(function () {
                         window.location.reload();
                     }, 1500);
 
                 } else {
-
                     throw new Error(
                         data.mensaje ||
                         data.message ||
@@ -336,23 +282,12 @@ try {
                 }
 
             } catch (error) {
-
-                console.error(
-                    '❌ Error durante la restauración:',
-                    error
-                );
-
+                console.error('❌ Error durante la restauración:', error);
                 alert(
                     '❌ No se pudo restaurar la base de datos.\n\n' +
                     error.message
                 );
-
             } finally {
-
-                // =================================================
-                // RESTAURAR ESTADO DEL BOTÓN
-                // =================================================
-
                 if (loading) {
                     loading.style.display = 'none';
                 }
@@ -378,9 +313,7 @@ try {
     const logoutLink = document.querySelector('.logout-item');
 
     if (logoutLink) {
-
         logoutLink.addEventListener('click', function (e) {
-
             const confirmar = confirm(
                 '¿Estás seguro de que deseas cerrar sesión?'
             );
