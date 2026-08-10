@@ -247,33 +247,44 @@ document.addEventListener('DOMContentLoaded', function () {
                 // PETICIÓN AL BACKEND
                 // =================================================
 
-                const response = await fetch('/parametros/restore', {
-                    method: 'POST',
-                    body: formData,
-                    credentials: 'same-origin'
-                });
+            router.post('/restore', upload.single('backup'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ ok: false, message: 'No se subió archivo' });
+        }
 
-                // =================================================
-                // LEER RESPUESTA DE FORMA SEGURA
-                // =================================================
+        // --- Aquí va la lógica de tu restauración ---
+        // ...
+        
+        // SI TODO SALIÓ BIEN:
+        return res.status(200).json({ ok: true, message: 'Restauración completada' });
 
-                const responseText = await response.text();
+    } catch (error) {
+        console.error(error);
+        // SI OCURRIÓ UN ERROR (MUY IMPORTANTE):
+        return res.status(500).json({ ok: false, message: 'Error interno: ' + error.message });
+    }
+});
 
-                let data;
+// =================================================
+// LEER RESPUESTA DE FORMA SEGURA
+// =================================================
 
-                try {
-                    data = JSON.parse(responseText);
-                } catch (jsonError) {
+const responseText = await response.text();
 
-                    console.error(
-                        'El servidor no devolvió JSON:',
-                        responseText
-                    );
+// 🔍 IMPRIMIR LO QUE EL SERVIDOR REALMENTE RESPONDIó
+console.log("Respuesta cruda del servidor:", responseText);
 
-                    throw new Error(
-                        'El servidor devolvió una respuesta inesperada.'
-                    );
-                }
+let data;
+
+try {
+    data = JSON.parse(responseText);
+} catch (jsonError) {
+    console.error('El servidor no devolvió JSON. Respuesta recibida:', responseText);
+    
+    // Muestra el texto exacto en la alerta para verlo en pantalla
+    throw new Error('El servidor respondió esto:\n\n' + responseText.substring(0, 200));
+}
 
                 // =================================================
                 // HTTP ERROR
