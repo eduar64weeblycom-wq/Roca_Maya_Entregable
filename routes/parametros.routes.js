@@ -3,6 +3,8 @@ const router = express.Router();
 const pool = require('../database/db');
 const { registrarBitacora } = require('../utils/bitacora');
 const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
 
 // Declaración correcta del middleware Multer para la restauración
 const uploadRestore = multer({ 
@@ -10,18 +12,12 @@ const uploadRestore = multer({
     limits: { fileSize: 50 * 1024 * 1024 } 
 });
 
-const fs = require('fs');
-const path = require('path');
-
-const { exec } = require('child_process');
-const util = require('util');
-const execPromise = util.promisify(exec);
-
 // ==========================================
 // RUTA DE RESTAURACIÓN
 // ==========================================
 router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
     let tempPath = null;
+    const usuario = req.user || { id: 1 };
 
     try {
         if (!req.file) {
@@ -38,25 +34,41 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
 
         const connection = await pool.getConnection();
         try {
+            await connection.beginTransaction();
             await connection.query("SET FOREIGN_KEY_CHECKS = 0;");
             
-            // Dividir el archivo SQL en sentencias individuales para evitar errores de sintaxis
+            // Limpieza y división de sentencias SQL de forma más robusta
             const statements = sqlContent
-                .split(/;\s*[\r\n]+/)
+                .replace(/\r\n/g, '\n')
+                .split(/;\s*\n/)
                 .map(stmt => stmt.trim())
-                .filter(stmt => stmt.length > 0 && !stmt.startsWith('--') && !stmt.startsWith('/*'));
+                .filter(stmt => {
+                    if (stmt.length === 0) return false;
+                    // Ignorar comentarios
+                    if (stmt.startsWith('--') || stmt.startsWith('/*') || stmt.startsWith('#')) return false;
+                    return true;
+                });
 
             for (const statement of statements) {
                 if (statement) {
-                    try {
-                        await connection.query(statement);
-                    } catch (stmtError) {
-                        console.warn("Advertencia en sentencia SQL (continuando):", stmtError.message);
-                    }
+                    await connection.query(statement + (statement.endsWith(';') ? '' : ';'));
                 }
             }
             
             await connection.query("SET FOREIGN_KEY_CHECKS = 1;");
+            await connection.commit();
+
+            // Registrar en bitácora la acción crítica
+            await registrarBitacora(
+                'RESTAURACION_BASE_DATOS',
+                'SEGURIDAD',
+                `Base de datos restaurada exitosamente usando el archivo: ${req.file.originalname}`,
+                usuario.id
+            );
+
+        } catch (dbError) {
+            await connection.rollback();
+            throw dbError;
         } finally {
             connection.release();
         }
@@ -144,15 +156,18 @@ function validarParametrosBackend(req, res, next) {
 }
 
 // ==========================================
-// RUTA PARA GUARDAR PARÁMETROS
+// RUTA PARA GUARDAR PARÁMETROS (Con Transacción)
 // ==========================================
 router.post('/guardar', validarParametrosBackend, async (req, res) => {
+    const connection = await pool.getConnection();
     try {
         const { parametros } = req.body;
         const usuario = req.user || { id: 1 };
 
+        await connection.beginTransaction();
+
         for (const param of parametros) {
-            await pool.query(
+            await connection.query(
                 'UPDATE tbl_ms_parametros SET VALOR = ?, USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW() WHERE ID_PARAMETRO = ?',
                 [param.valor, usuario.id, param.id]
             );
@@ -165,17 +180,22 @@ router.post('/guardar', validarParametrosBackend, async (req, res) => {
             );
         }
         
-       return res.json({ 
+        await connection.commit();
+
+        return res.json({ 
             success: true, 
             message: 'Parametros actualizados exitosamente' 
         });
         
     } catch (error) {
-        console.error('Error:', error);
+        await connection.rollback();
+        console.error('Error al guardar parámetros:', error);
         return res.status(500).json({ 
             success: false, 
             message: 'Error interno del servidor' 
         });
+    } finally {
+        connection.release();
     }
 });
 
