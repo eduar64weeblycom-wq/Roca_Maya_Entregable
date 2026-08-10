@@ -11,7 +11,6 @@ const path = require('path');
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
-
 router.post("/restore", upload.single('backup'), async (req, res) => {
   let tempPath = null;
 
@@ -27,17 +26,24 @@ router.post("/restore", upload.single('backup'), async (req, res) => {
     tempPath = path.join(__dirname, '../temp_restore.sql');
     fs.writeFileSync(tempPath, req.file.buffer);
 
-    // Construir comando mysql
-    const host = process.env.DB_HOST;
-    const user = process.env.DB_USER;
-    const password = process.env.DB_PASSWORD;
-    const database = process.env.DB_NAME;
-    const port = process.env.DB_PORT || 3306;
+    // Leer el contenido del archivo SQL
+    const sqlContent = fs.readFileSync(tempPath, 'utf8');
 
-    // Nota: en Render a veces no está instalado el cliente mysql
-    const comando = `mysql -h ${host} -P ${port} -u ${user} -p${password} ${database} < "${tempPath}"`;
-
-    await execPromise(comando);
+    // Dividir las consultas por punto y coma (manejando scripts básicos)
+    // Nota: Si usas procedimientos almacenados con BEGIN...END, es mejor usar un importador dedicado, 
+    // pero para evitar dependencias de consola, ejecutamos por bloques o usamos multiStatements.
+    const connection = await pool.getConnection();
+    try {
+        await connection.query("SET FOREIGN_KEY_CHECKS = 0;");
+        
+        // Dividir por sentencias básicas o ejecutar con multipleStatements habilitado en el pool
+        // Como tu pool ya tiene multipleStatements: true, puedes intentar ejecutar el script completo si no es gigante:
+        await connection.query(sqlContent);
+        
+        await connection.query("SET FOREIGN_KEY_CHECKS = 1;");
+    } finally {
+        connection.release();
+    }
 
     return res.json({ ok: true, mensaje: "Restauración exitosa" });
 
