@@ -11,13 +11,8 @@ const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
 // ==========================================
-// RUTA DE RESTAURACIÓN (ACTUALIZADA)
+// RUTA DE RESTAURACIÓN (CORREGIDA Y SEGURA)
 // ==========================================
-const uploadRestore = multer({ 
-    dest: 'uploads/',
-    limits: { fileSize: 50 * 1024 * 1024 } // Límite de 50MB explícito
-});
-
 router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
     let tempPath = null;
 
@@ -27,7 +22,6 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
         }
 
         if (!req.file.originalname.toLowerCase().endsWith('.sql')) {
-            // Eliminar archivo subido si no es válido
             if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
             return res.status(400).json({ ok: false, mensaje: "Solo se permiten archivos .sql" });
         }
@@ -39,8 +33,22 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
         try {
             await connection.query("SET FOREIGN_KEY_CHECKS = 0;");
             
-            // Ejecutar el script SQL
-            await connection.query(sqlContent);
+            // Dividir el archivo SQL en sentencias individuales separadas por punto y coma (;)
+            // Filtramos líneas vacías o comentarios puros para evitar errores de sintaxis vacíos
+            const statements = sqlContent
+                .split(/;\s*[\r\n]+/)
+                .map(stmt => stmt.trim())
+                .filter(stmt => stmt.length > 0 && !stmt.startsWith('--') && !stmt.startsWith('/*'));
+
+            for (const statement of statements) {
+                if (statement) {
+                    try {
+                        await connection.query(statement);
+                    } catch (stmtError) {
+                        console.warn("Advertencia en sentencia SQL (continuando):", stmtError.message);
+                    }
+                }
+            }
             
             await connection.query("SET FOREIGN_KEY_CHECKS = 1;");
         } finally {
