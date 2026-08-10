@@ -27,13 +27,13 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // ============================================================
 // MIDDLEWARES GENERALES
 // ============================================================
-
 // ========== SEGURIDAD HELMET CON CSP ==========
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
+        connectSrc: ["'self'", "https://clinica-roca-maya-f.onrender.com"], // <-- Agregar tu dominio de Render aquí
         scriptSrc: [
           "'self'",
           "'unsafe-inline'",
