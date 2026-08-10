@@ -4,7 +4,6 @@ const pool = require('../database/db');
 const { registrarBitacora } = require('../utils/bitacora');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
-const Importer = require('mysql-import');
 const fs = require('fs');
 const path = require('path');
 
