@@ -14,7 +14,7 @@ async function registrarBitacora({
   try {
     // 1. Verificar si la bitácora está activa en los parámetros del sistema
     const [param] = await pool.query(
-      "SELECT VALOR FROM tbl_ms_PARAMETROS WHERE PARAMETRO = 'BITACORA_ACTIVA'"
+      "SELECT VALOR FROM tbl_ms_parametros WHERE PARAMETRO = 'BITACORA_ACTIVA'"
     );
 
     // Si el parámetro existe y su valor es '0', está pausada: salimos inmediatamente sin hacer nada

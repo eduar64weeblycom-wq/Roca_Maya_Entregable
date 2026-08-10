@@ -207,3 +207,52 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = '/dashboard';
   });
 });
+  // =====================================================
+  // BOTONES DE GESTIÓN DE BITÁCORA (Activar / Pausar / Vaciar)
+  // =====================================================
+  const btnReanudar = document.querySelector('button.btn-success, #btnReanudar, [data-accion="ACTIVAR"]');
+  const btnPausar = document.querySelector('button.btn-warning, #btnPausar, [data-accion="PAUSAR"]');
+  const btnVaciar = document.querySelector('button.btn-danger, #btnVaciar, [data-accion="LIMPIAR"]');
+
+  // Función genérica para llamar al backend
+  async function gestionarBitacora(accion) {
+    if (accion === 'LIMPIAR') {
+      const confirmar = confirm('¿Está seguro que desea VACÍAR toda la bitácora?\nEsta acción no se puede deshacer.');
+      if (!confirmar) return;
+    }
+
+    try {
+      const response = await fetch('/bitacora/gestion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ accion })
+      });
+
+      const data = await response.json();
+
+      if (data.ok) {
+        alert(data.mensaje || 'Acción realizada correctamente');
+        location.reload(); // Recargar para ver los cambios
+      } else {
+        alert(data.mensaje || 'Error al realizar la acción');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error de conexión al servidor');
+    }
+  }
+
+  // Asignar eventos
+  if (btnReanudar) {
+    btnReanudar.addEventListener('click', () => gestionarBitacora('ACTIVAR'));
+  }
+
+  if (btnPausar) {
+    btnPausar.addEventListener('click', () => gestionarBitacora('PAUSAR'));
+  }
+
+  if (btnVaciar) {
+    btnVaciar.addEventListener('click', () => gestionarBitacora('LIMPIAR'));
+  }

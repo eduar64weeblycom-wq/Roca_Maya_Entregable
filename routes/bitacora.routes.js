@@ -217,7 +217,6 @@ router.get("/parametros/backup", async (req, res) => {
     res.status(500).send("Error al generar el respaldo: " + error.message);
   }
 });
-
 // ============================================================
 // POST /bitacora/gestion (Activar, Pausar, Limpiar)
 // ============================================================
@@ -242,7 +241,6 @@ router.post('/gestion', async (req, res) => {
         WHERE PARAMETRO = 'BITACORA_ACTIVA'
       `, [usuarioMod]);
 
-      // Si no existe el parámetro, lo creamos
       if (update.affectedRows === 0) {
         await pool.query(`
           INSERT INTO tbl_ms_parametros 
@@ -275,30 +273,28 @@ router.post('/gestion', async (req, res) => {
       mensaje = 'Bitácora pausada correctamente.';
     }
 
-    // ==================== LIMPIAR ====================
+    // ==================== LIMPIAR / VACIAR ====================
     else if (accion === 'LIMPIAR') {
-      // Elimina registros de bitácora con más de 90 días
-      const [result] = await pool.query(`
-        DELETE FROM tbl_ms_bitacora 
-        WHERE FECHA_HORA < DATE_SUB(NOW(), INTERVAL 90 DAY)
-      `);
-
-      mensaje = `Bitácora limpiada. Se eliminaron ${result.affectedRows} registros antiguos.`;
+      // Borra TODOS los registros de la bitácora
+      const [result] = await pool.query(`DELETE FROM tbl_ms_bitacora`);
+      mensaje = `Bitácora vaciada. Se eliminaron ${result.affectedRows} registros.`;
     }
 
-    // Registrar la acción en la propia bitácora
-    try {
-      await pool.query(`
-        INSERT INTO tbl_ms_bitacora (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
-        VALUES (NOW(), ?, ?, ?, ?)
-      `, [
-        req.user?.ID_USUARIO || 1,
-        `BITACORA_${accion}`,
-        `El usuario ${usuarioMod} ejecutó la acción: ${accion}`,
-        'CONFIGURACION'
-      ]);
-    } catch (bitacoraErr) {
-      console.error('No se pudo registrar en bitácora:', bitacoraErr.message);
+    // Registrar la acción en la bitácora (solo si no estamos vaciando)
+    if (accion !== 'LIMPIAR') {
+      try {
+        await pool.query(`
+          INSERT INTO tbl_ms_bitacora (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
+          VALUES (NOW(), ?, ?, ?, ?)
+        `, [
+          req.user?.ID_USUARIO || 1,
+          `BITACORA_${accion}`,
+          `El usuario ${usuarioMod} ejecutó la acción: ${accion}`,
+          'CONFIGURACION'
+        ]);
+      } catch (e) {
+        console.error('No se pudo registrar en bitácora:', e.message);
+      }
     }
 
     return res.json({ ok: true, mensaje });
@@ -311,4 +307,5 @@ router.post('/gestion', async (req, res) => {
     });
   }
 });
+
 module.exports = router;
