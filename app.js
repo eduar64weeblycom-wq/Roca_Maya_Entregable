@@ -14,7 +14,15 @@ const { registrarBitacora } = require("./services/bitacora.service");
 const { enviarCorreo } = require("./services/email.service");
 const { verificarSesion } = require("./middleware/auth.middleware");
 const app = express();
+const express = require('express');
+const app = express();
 
+// ... el resto de la configuración de tus middlewares, puerto y rutas
+app.use("/bitacora", require("./routes/bitacora.routes"));
+
+app.listen(3000, () => {
+    console.log("Servidor corriendo en el puerto 3000");
+});
 // ============================================================
 // MIDDLEWARES
 // ============================================================
