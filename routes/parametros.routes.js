@@ -10,11 +10,15 @@ const path = require('path');
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
+// ==========================================
+// RUTA DE RESTAURACIÓN (ACTUALIZADA)
+// ==========================================
+const uploadRestore = multer({ 
+    dest: 'uploads/',
+    limits: { fileSize: 50 * 1024 * 1024 } // Límite de 50MB explícito
+});
 
-// ==========================================
-// RUTA DE RESTAURACIÓN (ÚNICA)
-// ==========================================
-router.post("/restore", upload.single('backup'), async (req, res) => {
+router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
     let tempPath = null;
 
     try {
@@ -23,20 +27,19 @@ router.post("/restore", upload.single('backup'), async (req, res) => {
         }
 
         if (!req.file.originalname.toLowerCase().endsWith('.sql')) {
+            // Eliminar archivo subido si no es válido
+            if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
             return res.status(400).json({ ok: false, mensaje: "Solo se permiten archivos .sql" });
         }
 
-        tempPath = path.join(__dirname, '../temp_restore.sql');
-        fs.writeFileSync(tempPath, req.file.buffer);
-
-        // Leer el contenido del archivo SQL
+        tempPath = req.file.path;
         const sqlContent = fs.readFileSync(tempPath, 'utf8');
 
         const connection = await pool.getConnection();
         try {
             await connection.query("SET FOREIGN_KEY_CHECKS = 0;");
             
-            // Ejecutar el script SQL completo
+            // Ejecutar el script SQL
             await connection.query(sqlContent);
             
             await connection.query("SET FOREIGN_KEY_CHECKS = 1;");
@@ -58,7 +61,6 @@ router.post("/restore", upload.single('backup'), async (req, res) => {
         }
     }
 });
-
 // ==========================================
 // VALIDACIÓN DE PARÁMETROS
 // ==========================================

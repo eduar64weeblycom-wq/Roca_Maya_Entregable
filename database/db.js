@@ -23,8 +23,7 @@ const pool = mysql.createPool({
     enableKeepAlive: true,
     keepAliveInitialDelay: 0,
 
-    // Permitir múltiples sentencias SQL
-    // IMPORTANTE para algunas operaciones de restauración.
+    // Permitir múltiples sentencias SQL (Indispensable para respaldos)
     multipleStatements: true,
 
     // Zona horaria
@@ -39,16 +38,12 @@ const pool = mysql.createPool({
 // ============================================================
 
 async function testConnection() {
-
     let conn = null;
 
     try {
-
         console.log("🔄 Probando conexión con MySQL...");
-
         conn = await pool.getConnection();
 
-        // Hacer una consulta real
         await conn.query("SELECT 1 AS conexion");
 
         console.log("✅ Conexión exitosa a la base de datos");
@@ -57,22 +52,15 @@ async function testConnection() {
         console.log(`🔌 Puerto: ${process.env.DB_PORT || 3306}`);
 
     } catch (err) {
-
-        console.error(
-            "❌ Error al conectar a la base de datos:"
-        );
-
+        console.error("❌ Error al conectar a la base de datos:");
         console.error(err.message);
-
     } finally {
-
         if (conn) {
             conn.release();
         }
     }
 }
 
-// Ejecutar prueba
 testConnection();
 
 // ============================================================
