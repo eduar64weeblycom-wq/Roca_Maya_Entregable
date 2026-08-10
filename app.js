@@ -17,13 +17,15 @@ const { registrarBitacora } = require("./services/bitacora.service");
 const { enviarCorreo } = require("./services/email.service");
 const { verificarSesion } = require("./middleware/auth.middleware");
 const app = express();
+
 // ==========================================
-// CONFIGURACIÓN DE LÍMITES PARA ARCHIVOS GRANDES
+// CONFIGURACIÓN DE LÍMITES PARA ARCHIVOS GRANDES (50MB ÚNICO)
 // ==========================================
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
 // ============================================================
-// MIDDLEWARES
+// MIDDLEWARES GENERALES
 // ============================================================
 
 // ========== SEGURIDAD HELMET CON CSP ==========
@@ -76,10 +78,6 @@ app.use(
     message: "Demasiadas solicitudes. Intenta más tarde.",
   })
 );
-
-// ========== JSON Y URL ENCODED ==========
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ========== VIEW ENGINE ==========
 app.set("view engine", "ejs");
@@ -146,7 +144,6 @@ app.use(async (req, res, next) => {
 
 const autoCloseService = require('./services/autoClose.service');
 
-// Iniciar scheduler con setInterval
 let schedulerRunning = false;
 let hourlyInterval = null;
 let dailyTimeout = null;
@@ -159,7 +156,6 @@ function iniciarScheduler() {
 
   console.log('📅 Iniciando scheduler de auto-cierre de consultas (setInterval)...');
 
-  // Job 1: Cada hora (inactividad 1h)
   hourlyInterval = setInterval(async () => {
     console.log(`⏰ [${new Date().toISOString()}] Ejecutando auto-cierre (cada hora)`);
     try {
@@ -175,11 +171,9 @@ function iniciarScheduler() {
     } catch (error) {
       console.error(`❌ [${new Date().toISOString()}] Error en auto-cierre:`, error.message);
     }
-  }, 60 * 60 * 1000); // 1 hora
+  }, 60 * 60 * 1000);
 
-  // Job 2: Cierre al final del día (23:59)
   programarCierreDiario();
-
   schedulerRunning = true;
   console.log('✅ Scheduler iniciado correctamente');
 }
@@ -209,7 +203,6 @@ function programarCierreDiario() {
     } catch (error) {
       console.error(`❌ [${new Date().toISOString()}] Error en auto-cierre de fin de día:`, error.message);
     }
-    // Reprogramar para el siguiente día
     programarCierreDiario();
   }, diffMs);
 
@@ -235,7 +228,6 @@ function detenerScheduler() {
   console.log('✅ Scheduler detenido');
 }
 
-// Iniciar scheduler al arrancar
 try {
   iniciarScheduler();
 } catch (error) {
@@ -246,25 +238,15 @@ try {
 // RUTAS - Montaje de routers
 // ============================================================
 
-// ========== RUTA PRINCIPAL ==========
 app.get("/", (req, res) => res.redirect("/dashboard"));
 
-// ========== RUTAS DE AUTENTICACIÓN ==========
 app.use("/auth", require("./routes/auth.routes"));
 app.use("/2fa", require("./routes/twofa.routes"));
-
-// ========== RUTAS DE DASHBOARD ==========
 app.use("/dashboard", verificarSesion, require("./routes/dashboard.routes"));
-
-// ========== RUTAS DE USUARIOS Y ROLES ==========
 app.use("/users", require("./routes/users.routes"));
 app.use("/roles", require("./routes/roles.routes"));
-
-// ========== RUTAS DE BITÁCORA ==========
 app.use("/bitacora", require("./routes/bitacora.routes"));
 app.use("/bitacora/parametros", require("./routes/parametros.routes"));
-
-// ========== RUTAS DE MÓDULOS MÉDICOS ==========
 app.use("/especialidades", require("./routes/especialidades.routes"));
 app.use("/historial", require("./routes/historial-medico.routes"));
 app.use("/citas", require("./routes/citas.routes"));
@@ -273,12 +255,10 @@ app.use("/preclinica", require("./routes/preclinica.routes"));
 app.use("/inventario", require("./routes/inventarioMedicamentos.routes"));
 app.use("/excel", require("./routes/excel.routes"));
 
-// ========== RUTAS DE CONSULTA MÉDICA ==========
 const consultaRouter = require("./routes/consultaMedica.routes");
 app.use("/consultaMedica", consultaRouter);
 app.use("/consulta", consultaRouter);
 
-// ========== RUTAS DE PARÁMETROS ==========
 app.use("/parametros", require("./routes/parametros.routes"));
 
 // ============================================================
@@ -343,7 +323,7 @@ app.use((req, res, next) => {
 });
 
 // ============================================================
-// INICIALIZAR CRON DE RECORDATORIOS (OPCIONAL)
+// INICIALIZAR CRON DE RECORDATORIOS
 // ============================================================
 try {
   const { iniciarCronRecordatorios } = require("./services/reminder.service");
@@ -595,16 +575,15 @@ emitter.on("email:recordatorio", async (payload) => {
     console.error(" Error enviando email recordatorio:", error);
   }
 });
+
 // ============================================================
 // MIDDLEWARE DE MANEJO DE ERRORES
 // ============================================================
-
 app.use(errorHandler);
 
 // ============================================================
 // MANEJO DE CIERRE DEL SERVIDOR
 // ============================================================
-
 process.on('SIGINT', () => {
     console.log('📴 Recibida señal SIGINT. Cerrando servidor...');
     detenerScheduler();
@@ -620,5 +599,4 @@ process.on('SIGTERM', () => {
 // ============================================================
 // EXPORTAR APP
 // ============================================================
-
 module.exports = app;
