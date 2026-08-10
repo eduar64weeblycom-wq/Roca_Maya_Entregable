@@ -3,15 +3,22 @@ const router = express.Router();
 const pool = require('../database/db');
 const { registrarBitacora } = require('../utils/bitacora');
 const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage() });
+
+// 1. Declarar la variable uploadRestore antes de las rutas
+const uploadRestore = multer({ 
+    dest: 'uploads/',
+    limits: { fileSize: 50 * 1024 * 1024 } 
+});
+
 const fs = require('fs');
 const path = require('path');
 
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
+
 // ==========================================
-// RUTA DE RESTAURACIÓN (CORREGIDA Y SEGURA)
+// RUTA DE RESTAURACIÓN
 // ==========================================
 router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
     let tempPath = null;
@@ -33,8 +40,7 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
         try {
             await connection.query("SET FOREIGN_KEY_CHECKS = 0;");
             
-            // Dividir el archivo SQL en sentencias individuales separadas por punto y coma (;)
-            // Filtramos líneas vacías o comentarios puros para evitar errores de sintaxis vacíos
+            // Dividir el archivo SQL en sentencias individuales para evitar fallos de sintaxis masivos
             const statements = sqlContent
                 .split(/;\s*[\r\n]+/)
                 .map(stmt => stmt.trim())
@@ -69,6 +75,8 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
         }
     }
 });
+
+// (Resto de tus funciones de parámetros se mantienen igual...)
 // ==========================================
 // VALIDACIÓN DE PARÁMETROS
 // ==========================================
