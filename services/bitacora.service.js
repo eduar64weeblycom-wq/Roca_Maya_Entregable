@@ -54,13 +54,19 @@ async function registrarBitacora({
       ? req.get("User-Agent") || "Desconocido"
       : "Sistema";
 
-    // 2. Insertar directamente en la tabla de bitácora (evitando procedimientos almacenados)
+    // Calcular la fecha y hora exacta de Honduras restando 6 horas al tiempo UTC actual del servidor
+    const fechaHoraHonduras = new Date(new Date().getTime() - (6 * 60 * 60 * 1000))
+      .toISOString()
+      .slice(0, 19)
+      .replace('T', ' ');
+
+    // 2. Insertar incluyendo explícitamente la fecha y hora corregida
     const query = `
       INSERT INTO tbl_ms_bitacora (
         ID_USUARIO, ACCION, DESCRIPCION, MODULO,
         ID_REGISTRO_AFECTADO, TABLA_AFECTADA, IP_CLIENTE, USER_AGENT,
-        ESTADO_OPERACION, DETALLE_ERROR, USUARIO_CREACION
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ESTADO_OPERACION, DETALLE_ERROR, USUARIO_CREACION, FECHA_HORA
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
     await pool.query(query, [
@@ -74,7 +80,8 @@ async function registrarBitacora({
       userAgent || null,
       estado || 'EXITO',
       detalleError || null,
-      'SISTEMA_WEB'
+      'SISTEMA_WEB',
+      fechaHoraHonduras
     ]);
 
   } catch (error) {
