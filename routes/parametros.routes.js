@@ -7,38 +7,48 @@ const upload = multer({ storage: multer.memoryStorage() });
 const Importer = require('mysql-import');
 const fs = require('fs');
 const path = require('path');
+
 router.post("/restore", upload.single('backup'), async (req, res) => {
-    let tempPath = null;
-    try {
-        if (!req.file) {
-            return res.status(400).json({ ok: false, mensaje: "Archivo no recibido" });
-        }
+  let tempPath = null;
 
-        tempPath = path.join(__dirname, '../temp_restore.sql');
-        fs.writeFileSync(tempPath, req.file.buffer);
-
-        const importer = new Importer({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-            port: Number(process.env.DB_PORT) || 3306
-        });
-
-        await importer.import(tempPath);
-
-        return res.json({ ok: true, mensaje: "Restauración exitosa" });
-        
-    } catch (error) {
-        console.error("Error crítico en restauración:", error);
-        return res.status(500).json({ ok: false, mensaje: "Error al aplicar SQL: " + error.message });
-    } finally {
-        // Asegurar que el archivo temporal siempre se borre, pase lo que pase
-        if (tempPath && fs.existsSync(tempPath)) {
-            try { fs.unlinkSync(tempPath); } catch (e) {}
-        }
+  try {
+    if (!req.file) {
+      return res.status(400).json({ ok: false, mensaje: "Archivo no recibido" });
     }
+
+    if (!req.file.originalname.toLowerCase().endsWith('.sql')) {
+      return res.status(400).json({ ok: false, mensaje: "Solo se permiten archivos .sql" });
+    }
+
+    tempPath = path.join(__dirname, '../temp_restore.sql');
+    fs.writeFileSync(tempPath, req.file.buffer);
+
+    const importer = new Importer({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      port: Number(process.env.DB_PORT) || 3306
+    });
+
+    await importer.import(tempPath);
+
+    return res.json({ ok: true, mensaje: "Restauración exitosa" });
+
+  } catch (error) {
+    console.error("Error crítico en restauración:", error);
+    // Siempre devolver JSON
+    return res.status(500).json({ 
+      ok: false, 
+      mensaje: "Error al aplicar SQL: " + (error.message || "Error desconocido")
+    });
+  } finally {
+    if (tempPath && fs.existsSync(tempPath)) {
+      try { fs.unlinkSync(tempPath); } catch (e) {}
+    }
+  }
 });
+
 // Función de validación estricta
 function validarParametrosBackend(req, res, next) {
     const { parametros } = req.body;
