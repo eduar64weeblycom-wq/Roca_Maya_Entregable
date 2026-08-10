@@ -588,65 +588,30 @@ emitter.on("email:recordatorio", async (payload) => {
     console.error(" Error enviando email recordatorio:", error);
   }
 });
-
 // ============================================================
 // MIDDLEWARE DE MANEJO DE ERRORES
 // ============================================================
+
 app.use(errorHandler);
 
 // ============================================================
 // MANEJO DE CIERRE DEL SERVIDOR
 // ============================================================
+
 process.on('SIGINT', () => {
-  console.log(' Recibida señal SIGINT. Cerrando servidor...');
-  detenerScheduler();
-  process.exit(0);
+    console.log('📴 Recibida señal SIGINT. Cerrando servidor...');
+    detenerScheduler();
+    process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  console.log(' Recibida señal SIGTERM. Cerrando servidor...');
-  detenerScheduler();
-  process.exit(0);
+    console.log('📴 Recibida señal SIGTERM. Cerrando servidor...');
+    detenerScheduler();
+    process.exit(0);
 });
 
 // ============================================================
 // EXPORTAR APP
 // ============================================================
 
-try {
-  // RUTA CORRECTA
-  const response = await fetch('/parametros/restore', {
-    method: 'POST',
-    body: formData
-  });
-
-  // Verificar si la respuesta es JSON
-  const contentType = response.headers.get('content-type') || '';
-  
-  if (!contentType.includes('application/json')) {
-    const text = await response.text();
-    console.error('El servidor devolvió HTML:', text.substring(0, 400));
-    throw new Error(`El servidor respondió con HTML (status ${response.status}). Posible error de autenticación o fallo interno.`);
-  }
-
-  const data = await response.json();
-  
-  if (data.ok || data.success) {
-    alert('✅ ' + (data.mensaje || data.message || 'Base de datos restaurada exitosamente.'));
-    setTimeout(() => {
-      window.location.reload();
-    }, 1500);
-  } else {
-    alert('❌ ' + (data.mensaje || data.message || 'Error al restaurar la base de datos.'));
-  }
-} catch (err) {
-  console.error('Error al restaurar:', err);
-  alert('Error al restaurar: ' + err.message);
-} finally {
-  if (loading) loading.style.display = 'none';
-  fileRestore.value = '';
-  btnRestore.innerHTML = originalHTML;
-  btnRestore.style.cursor = 'pointer';
-  btnRestore.disabled = false;
-}
 module.exports = app;
