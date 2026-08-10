@@ -17,7 +17,11 @@ const { registrarBitacora } = require("./services/bitacora.service");
 const { enviarCorreo } = require("./services/email.service");
 const { verificarSesion } = require("./middleware/auth.middleware");
 const app = express();
-
+// ==========================================
+// CONFIGURACIÓN DE LÍMITES PARA ARCHIVOS GRANDES
+// ==========================================
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // ============================================================
 // MIDDLEWARES
 // ============================================================
