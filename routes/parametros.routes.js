@@ -10,56 +10,58 @@ const path = require('path');
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
+
+// ==========================================
+// RUTA DE RESTAURACIÓN (ÚNICA)
+// ==========================================
 router.post("/restore", upload.single('backup'), async (req, res) => {
-  let tempPath = null;
+    let tempPath = null;
 
-  try {
-    if (!req.file) {
-      return res.status(400).json({ ok: false, mensaje: "Archivo no recibido" });
-    }
-
-    if (!req.file.originalname.toLowerCase().endsWith('.sql')) {
-      return res.status(400).json({ ok: false, mensaje: "Solo se permiten archivos .sql" });
-    }
-
-    tempPath = path.join(__dirname, '../temp_restore.sql');
-    fs.writeFileSync(tempPath, req.file.buffer);
-
-    // Leer el contenido del archivo SQL
-    const sqlContent = fs.readFileSync(tempPath, 'utf8');
-
-    // Dividir las consultas por punto y coma (manejando scripts básicos)
-    // Nota: Si usas procedimientos almacenados con BEGIN...END, es mejor usar un importador dedicado, 
-    // pero para evitar dependencias de consola, ejecutamos por bloques o usamos multiStatements.
-    const connection = await pool.getConnection();
     try {
-        await connection.query("SET FOREIGN_KEY_CHECKS = 0;");
-        
-        // Dividir por sentencias básicas o ejecutar con multipleStatements habilitado en el pool
-        // Como tu pool ya tiene multipleStatements: true, puedes intentar ejecutar el script completo si no es gigante:
-        await connection.query(sqlContent);
-        
-        await connection.query("SET FOREIGN_KEY_CHECKS = 1;");
+        if (!req.file) {
+            return res.status(400).json({ ok: false, mensaje: "Archivo no recibido" });
+        }
+
+        if (!req.file.originalname.toLowerCase().endsWith('.sql')) {
+            return res.status(400).json({ ok: false, mensaje: "Solo se permiten archivos .sql" });
+        }
+
+        tempPath = path.join(__dirname, '../temp_restore.sql');
+        fs.writeFileSync(tempPath, req.file.buffer);
+
+        // Leer el contenido del archivo SQL
+        const sqlContent = fs.readFileSync(tempPath, 'utf8');
+
+        const connection = await pool.getConnection();
+        try {
+            await connection.query("SET FOREIGN_KEY_CHECKS = 0;");
+            
+            // Ejecutar el script SQL completo
+            await connection.query(sqlContent);
+            
+            await connection.query("SET FOREIGN_KEY_CHECKS = 1;");
+        } finally {
+            connection.release();
+        }
+
+        return res.json({ ok: true, mensaje: "Base de datos restaurada exitosamente." });
+
+    } catch (error) {
+        console.error("Error crítico en restauración:", error);
+        return res.status(500).json({ 
+            ok: false, 
+            mensaje: "Error al restaurar: " + (error.message || "Error desconocido")
+        });
     } finally {
-        connection.release();
+        if (tempPath && fs.existsSync(tempPath)) {
+            try { fs.unlinkSync(tempPath); } catch (e) {}
+        }
     }
-
-    return res.json({ ok: true, mensaje: "Restauración exitosa" });
-
-  } catch (error) {
-    console.error("Error crítico en restauración:", error);
-    return res.status(500).json({ 
-      ok: false, 
-      mensaje: "Error al restaurar: " + (error.message || "Error desconocido")
-    });
-  } finally {
-    if (tempPath && fs.existsSync(tempPath)) {
-      try { fs.unlinkSync(tempPath); } catch (e) {}
-    }
-  }
 });
 
-// Función de validación estricta
+// ==========================================
+// VALIDACIÓN DE PARÁMETROS
+// ==========================================
 function validarParametrosBackend(req, res, next) {
     const { parametros } = req.body;
     
@@ -124,7 +126,9 @@ function validarParametrosBackend(req, res, next) {
     next();
 }
 
-// Ruta para guardar parámetros
+// ==========================================
+// RUTA PARA GUARDAR PARÁMETROS
+// ==========================================
 router.post('/guardar', validarParametrosBackend, async (req, res) => {
     try {
         const { parametros } = req.body;
@@ -158,7 +162,9 @@ router.post('/guardar', validarParametrosBackend, async (req, res) => {
     }
 });
 
-// Ruta para obtener parámetros
+// ==========================================
+// RUTA PARA OBTENER PARÁMETROS
+// ==========================================
 router.get('/', async (req, res) => {
     try {
         const [parametros] = await pool.query(`
@@ -177,7 +183,9 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Funciones auxiliares
+// ==========================================
+// FUNCIONES AUXILIARES
+// ==========================================
 function esParametroNumerico(clave) {
     const parametrosNumericos = [
         'ADMIN_INTENTOS_INVALIDOS', 'ADMIN_TIEMPO_SESION', 'ADMIN_PREGUNTAS',
@@ -192,13 +200,5 @@ function esParametroTexto(clave) {
     ];
     return parametrosTexto.includes(clave);
 }
-router.post('/restore', upload.single('backup'), async (req, res) => {
-    try {
-        // Tu lógica de restauración aquí...
-        return res.json({ ok: true, mensaje: 'Base de datos restaurada exitosamente.' });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ ok: false, mensaje: error.message });
-    }
-});
+
 module.exports = router;
