@@ -618,7 +618,7 @@ router.post("/nueva", async (req, res) => {
     // ============================================================
     // GUARDAR MEDICAMENTOS (borrar y recrear)
     // ============================================================
-    await connection.query("DELETE FROM TBL_PRESCRIPCION WHERE ID_CONSULTA = ?", [idConsulta]);
+    await connection.query("DELETE FROM tbl_prescripcion WHERE ID_CONSULTA = ?", [idConsulta]);
 
     if (body.medicamentos && Array.isArray(body.medicamentos) && body.medicamentos.length > 0) {
       console.log(`💊 Insertando ${body.medicamentos.length} medicamentos...`);
@@ -862,7 +862,7 @@ router.post("/actualizar", async (req, res) => {
     ]);
 
     // Medicamentos: borrar y recrear
-    await connection.query("DELETE FROM TBL_PRESCRIPCION WHERE ID_CONSULTA = ?", [idConsulta]);
+    await connection.query("DELETE FROM tbl_prescripcion WHERE ID_CONSULTA = ?", [idConsulta]);
 
     if (body.medicamentos && Array.isArray(body.medicamentos) && body.medicamentos.length > 0) {
       for (const med of body.medicamentos) {

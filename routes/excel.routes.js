@@ -1131,7 +1131,7 @@ router.get("/historial/:idPaciente", async (req, res) => {
                 pr.FRECUENCIA,
                 pr.DURACION,
                 pr.ESTADO
-            FROM TBL_PRESCRIPCION pr
+            FROM tbl_prescripcionpr
             LEFT JOIN tbl_inventario_medicamentos m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
             LEFT JOIN tbl_consulta_medica cm ON pr.ID_CONSULTA = cm.ID_CONSULTA
             WHERE cm.ID_PACIENTE = ?
