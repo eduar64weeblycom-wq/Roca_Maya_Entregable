@@ -223,51 +223,62 @@ router.get("/api/cita-detalle/:idCita", async (req, res) => {
 });
 
 router.get("/api/historial-rapido/:idPaciente", async (req, res) => {
-  const { idPaciente } = req.params;
-
   try {
-    const [consultas] = await pool.query(`
-      SELECT 
-        cm.ID_CONSULTA,
-        cm.FECHA_CONSULTA,
-        cm.DIAGNOSTICO_PRINCIPAL,
-        cm.TRATAMIENTO,
-        cm.OBSERVACIONES,
-        cm.TIPO_CONSULTA,
-        cm.ID_PACIENTE,
-        u.NOMBRE_USUARIO AS DOCTOR
-      FROM tbl_consulta_medica cm
-      INNER JOIN tbl_ms_usuario u ON cm.ID_DOCTOR = u.ID_USUARIO
-      WHERE cm.ID_PACIENTE = ?
-      ORDER BY cm.FECHA_CONSULTA DESC
-      LIMIT 5
-    `, [idPaciente]);
+    const idPaciente = Number(req.params.idPaciente);
 
-    const [historial] = await pool.query(`
+    if (!Number.isInteger(idPaciente) || idPaciente <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de paciente inválido"
+      });
+    }
+
+    const [rows] = await pool.query(`
       SELECT 
         ALERGIAS,
-        MEDICAMENTOS_ACTUALES,
         ENFERMEDADES_CRONICAS,
+        CIRUGIAS_PREVIAS,
+        MEDICAMENTOS_ACTUALES,
+        ANTECEDENTES_FAMILIARES,
+        HABITOS,
+        VACUNAS,
         NOTAS_IMPORTANTES
-      FROM tbl_especialidades
+      FROM tbl_historial_medico
       WHERE ID_PACIENTE = ?
+      ORDER BY ID_HISTORIAL DESC
+      LIMIT 1
     `, [idPaciente]);
+
+    // Si el paciente no tiene historial, devolver campos vacíos
+    if (rows.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          ALERGIAS: "",
+          ENFERMEDADES_CRONICAS: "",
+          CIRUGIAS_PREVIAS: "",
+          MEDICAMENTOS_ACTUALES: "",
+          ANTECEDENTES_FAMILIARES: "",
+          HABITOS: "",
+          VACUNAS: "",
+          NOTAS_IMPORTANTES: ""
+        }
+      });
+    }
 
     res.json({
       success: true,
-      consultas: consultas || [],
-      historial: historial.length > 0 ? historial[0] : null
+      data: rows[0]
     });
 
-  } catch (err) {
-    console.error(" Error en GET /consultaMedica/api/historial-rapido/:idPaciente:", err);
+  } catch (error) {
+    console.error("Error en GET /consultaMedica/api/historial-rapido/:idPaciente:", error);
     res.status(500).json({
       success: false,
-      error: "Error al obtener historial rápido: " + err.message
+      message: "Error al obtener el historial rápido del paciente"
     });
   }
 });
-
 router.get("/api/imprimir-consulta/:idConsulta", async (req, res) => {
   const { idConsulta } = req.params;
 
