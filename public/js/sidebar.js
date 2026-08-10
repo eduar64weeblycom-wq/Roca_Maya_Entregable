@@ -232,10 +232,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // ====================================================
 
             const formData = new FormData();
-
-            // IMPORTANTE:
-            // Este nombre debe coincidir con multer.single(...)
-            // del backend.
             formData.append('backup', file);
 
             try {
