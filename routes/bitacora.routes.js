@@ -5,6 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
+
 // ============================================================
 // GET /bitacora - Página principal de bitácora
 // ============================================================
@@ -113,58 +114,95 @@ router.post("/parametros/update", async (req, res) => {
 });
 
 // ============================================================
-// POST /bitacora/parametros/restore - Restaurar base de datos desde un archivo SQL
+// GET /bitacora/parametros/backup - Generar respaldo nativo de la BD
 // ============================================================
-router.post("/parametros/restore", upload.single("backup"), async (req, res) => {
-  let connection;
+router.get("/parametros/backup", async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ ok: false, mensaje: "No se ha proporcionado ningún archivo de respaldo." });
-    }
+    const idUsuario = req.user?.ID_USUARIO || 1;
+    const nombreUsuario = req.user?.USUARIO || "ADMIN_SYSTEM";
 
-    const archivoRuta = req.file.path;
-    const contenidoSql = fs.readFileSync(archivoRuta, "utf8");
+    const dbConfig = {
+      database: process.env.DB_NAME || "Roca_Maya"
+    };
 
-    // Eliminar archivo temporal inmediatamente
-    fs.unlinkSync(archivoRuta);
+    const timestampRespaldo = new Date().toISOString()
+      .replace(/T/, '_')
+      .replace(/\..+/, '')
+      .replace(/:/g, '-');
+      
+    const archivoRespaldoSql = `backup_rocamaya_${timestampRespaldo}.sql`;
+    const rutaTemporalBackup = path.join(__dirname, "../", archivoRespaldoSql);
 
-    connection = await pool.getConnection();
-    await connection.beginTransaction();
+    let contenidoSql = `-- Respaldo de base de datos generado por Sistema Roca Maya\n`;
+    contenidoSql += `-- Fecha: ${new Date().toISOString()}\n`;
+    contenidoSql += `-- Base de datos: ${dbConfig.database}\n\n`;
+    contenidoSql += `SET FOREIGN_KEY_CHECKS = 0;\n\n`;
 
-    await connection.query("SET FOREIGN_KEY_CHECKS = 0;");
+    const [tablas] = await pool.query(`SHOW TABLES`);
+    const keyName = Object.keys(tablas[0])[0];
 
-    const sentencias = contenidoSql
-      .split(/;\s*$/m)
-      .map(s => s.trim())
-      .filter(s => s.length > 0 && !s.startsWith("--"));
+    for (const row of tablas) {
+      const nombreTabla = row[keyName];
 
-    for (const sentencia of sentencias) {
-      if (sentencia) {
-        await connection.query(sentencia);
+      const [createTableResult] = await pool.query(`SHOW CREATE TABLE \`${nombreTabla}\``);
+      const createSql = createTableResult[0]['Create Table'];
+
+      contenidoSql += `DROP TABLE IF EXISTS \`${nombreTabla}\`;\n`;
+      contenidoSql += `${createSql};\n\n`;
+
+      const [registrosTabla] = await pool.query(`SELECT * FROM \`${nombreTabla}\``);
+      
+      if (registrosTabla.length > 0) {
+        for (const reg of registrosTabla) {
+          const columnas = Object.keys(reg).map(c => `\`${c}\``).join(', ');
+          const valores = Object.values(reg).map(val => {
+            if (val === null) return 'NULL';
+            if (typeof val === 'number') return val;
+            if (val instanceof Date) return `'${val.toISOString().slice(0, 19).replace('T', ' ')}'`;
+            return `'${String(val).replace(/'/g, "''").replace(/\\/g, "\\\\")}'`;
+          }).join(', ');
+
+          contenidoSql += `INSERT INTO \`${nombreTabla}\` (${columnas}) VALUES (${valores});\n`;
+        }
+        contenidoSql += `\n`;
       }
     }
 
-    await connection.query("SET FOREIGN_KEY_CHECKS = 1;");
-    await connection.commit();
+    contenidoSql += `SET FOREIGN_KEY_CHECKS = 1;\n`;
 
-    const idUsuario = req.user?.ID_USUARIO || 1;
-    const nombreUsuario = req.user?.USUARIO || "ADMIN";
-    await pool.query(
-      `INSERT INTO tbl_ms_bitacora (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
-       VALUES (NOW(), ?, ?, ?, ?)`,
-      [idUsuario, "RESTAURACION_BD", `El usuario ${nombreUsuario} restauró la base de datos exitosamente.`, "CONFIGURACION"]
-    );
+    fs.writeFileSync(rutaTemporalBackup, contenidoSql, 'utf8');
 
-    return res.json({ ok: true, mensaje: "Base de datos restaurada exitosamente." });
+    res.download(rutaTemporalBackup, archivoRespaldoSql, async (downloadError) => {
+      try {
+        if (fs.existsSync(rutaTemporalBackup)) {
+          fs.unlinkSync(rutaTemporalBackup);
+        }
+      } catch (fsErr) {
+        console.error("Error al limpiar archivo temporal:", fsErr);
+      }
+
+      if (!downloadError) {
+        try {
+          await pool.query(
+            `INSERT INTO tbl_ms_bitacora 
+               (FECHA_HORA, ID_USUARIO, ACCION, DESCRIPCION, MODULO)
+             VALUES (NOW(), ?, ?, ?, ?)`,
+            [
+              idUsuario,
+              "BACKUP_BD",
+              `El usuario ${nombreUsuario} generó el respaldo nativo: ${archivoRespaldoSql}`,
+              "CONFIGURACION"
+            ]
+          );
+        } catch (bitacoraError) {
+          console.error("Error al registrar respaldo en bitácora:", bitacoraError);
+        }
+      }
+    });
 
   } catch (error) {
-    if (connection) {
-      try { await connection.rollback(); } catch (e) {}
-    }
-    console.error("❌ Error en la restauración de la base de datos:", error);
-    return res.status(500).json({ ok: false, mensaje: "Error al restaurar la base de datos: " + error.message });
-  } finally {
-    if (connection) connection.release();
+    console.error("❌ Error en backup nativo:", error);
+    res.status(500).send("Error al generar el respaldo: " + error.message);
   }
 });
 // ============================================================
