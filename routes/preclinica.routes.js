@@ -1126,10 +1126,7 @@ router.delete(
     }
   }
 );
-const pool = require("../database/db");
-const {
-  registrarBitacora,
-} = require("../services/bitacora.service");
+
 
 router.use(express.json());
 
