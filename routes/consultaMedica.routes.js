@@ -630,7 +630,7 @@ router.post("/nueva", async (req, res) => {
         const idMed = await getOrCreateMedicamento(med.nombre, usuarioCreacion);
         if (idMed) {
           await connection.query(
-            `INSERT INTO TBL_PRESCRIPCION (
+            `INSERT INTO tbl_prescripcion (
               ID_CONSULTA, ID_MEDICAMENTO, DOSIS, FRECUENCIA, DURACION,
               INSTRUCCIONES_ADICIONALES, ESTADO, USUARIO_CREACION
             ) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVA', ?)`,
@@ -870,7 +870,7 @@ router.post("/actualizar", async (req, res) => {
         const idMed = await getOrCreateMedicamento(med.nombre, usuarioModificacion);
         if (idMed) {
           await connection.query(`
-            INSERT INTO TBL_PRESCRIPCION (
+            INSERT INTO tbl_prescripcion (
               ID_CONSULTA, ID_MEDICAMENTO, DOSIS, FRECUENCIA, DURACION,
               INSTRUCCIONES_ADICIONALES, ESTADO, USUARIO_CREACION
             ) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVA', ?)
@@ -1367,7 +1367,7 @@ router.get("/api/medicamentos/:idConsulta", async (req, res) => {
         const { idConsulta } = req.params;
         const [rows] = await pool.query(`
             SELECT pr.*, m.NOMBRE_MEDICAMENTO, m.NOMBRE_GENERICO, m.PRESENTACION
-            FROM TBL_PRESCRIPCION pr
+            FROM tbl_prescripcion pr
             INNER JOIN tbl_inventario_medicamentos m ON pr.ID_MEDICAMENTO = m.ID_MEDICAMENTO
             WHERE pr.ID_CONSULTA = ? AND pr.ESTADO = 'ACTIVA'
             ORDER BY pr.FECHA_PRESCRIPCION DESC
