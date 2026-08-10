@@ -1,3 +1,6 @@
+// 1. Forzar la zona horaria de Honduras antes de cualquier otra cosa
+process.env.TZ = 'America/Tegucigalpa';
+
 const express = require("express");
 const path = require("path");
 const helmet = require("helmet");
@@ -14,15 +17,7 @@ const { registrarBitacora } = require("./services/bitacora.service");
 const { enviarCorreo } = require("./services/email.service");
 const { verificarSesion } = require("./middleware/auth.middleware");
 const app = express();
-const express = require('express');
-const app = express();
 
-// ... el resto de la configuración de tus middlewares, puerto y rutas
-app.use("/bitacora", require("./routes/bitacora.routes"));
-
-app.listen(3000, () => {
-    console.log("Servidor corriendo en el puerto 3000");
-});
 // ============================================================
 // MIDDLEWARES
 // ============================================================
@@ -101,7 +96,7 @@ app.use(async (req, res, next) => {
   if (usuario) {
     try {
       const [userData] = await pool.query(`
-  SELECT 
+        SELECT 
           u.ID_USUARIO,
           u.USUARIO,
           u.NOMBRE_USUARIO,
