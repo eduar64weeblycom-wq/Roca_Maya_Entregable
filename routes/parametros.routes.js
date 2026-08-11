@@ -1,93 +1,88 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../database/db');
-const { registrarBitacora } = require('../utils/bitacora');
+const { registrarBitacora } = require('../utils/bitacora'); // ajusta la ruta si es necesario
 const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
 
-// Declaración correcta del middleware Multer para la restauración
-const uploadRestore = multer({ 
-    dest: 'uploads/',
-    limits: { fileSize: 50 * 1024 * 1024 } 
+// ============================================================
+// MULTER EN MEMORIA (ideal para Render)
+// ============================================================
+const uploadRestore = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+    fileFilter: (req, file, cb) => {
+        if (file.originalname.toLowerCase().endsWith('.sql')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Solo se permiten archivos .sql'), false);
+        }
+    }
 });
 
-// ==========================================
+// ============================================================
 // RUTA DE RESTAURACIÓN
-// ==========================================
+// ============================================================
 router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
-    let tempPath = null;
-    const usuario = req.user || { id: 1 };
+    const usuario = req.user || { id: 1, ID_USUARIO: 1 };
 
     try {
         if (!req.file) {
             return res.status(400).json({ ok: false, mensaje: "Archivo no recibido" });
         }
 
-        if (!req.file.originalname.toLowerCase().endsWith('.sql')) {
-            if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-            return res.status(400).json({ ok: false, mensaje: "Solo se permiten archivos .sql" });
+        console.log(`📦 Restaurando: ${req.file.originalname} (${req.file.size} bytes)`);
+
+        // El archivo está en memoria (Buffer)
+        const sqlContent = req.file.buffer.toString('utf8');
+
+        if (!sqlContent || sqlContent.trim().length < 20) {
+            return res.status(400).json({ ok: false, mensaje: "El archivo SQL está vacío o es inválido" });
         }
 
-        tempPath = req.file.path;
-        const sqlContent = fs.readFileSync(tempPath, 'utf8');
-
         const connection = await pool.getConnection();
+
         try {
-            await connection.beginTransaction();
-            await connection.query("SET FOREIGN_KEY_CHECKS = 0;");
-            
-            // Limpieza y división de sentencias SQL de forma más robusta
-            const statements = sqlContent
-                .replace(/\r\n/g, '\n')
-                .split(/;\s*\n/)
-                .map(stmt => stmt.trim())
-                .filter(stmt => {
-                    if (stmt.length === 0) return false;
-                    // Ignorar comentarios
-                    if (stmt.startsWith('--') || stmt.startsWith('/*') || stmt.startsWith('#')) return false;
-                    return true;
-                });
+            await connection.query("SET FOREIGN_KEY_CHECKS = 0");
+            await connection.query("SET UNIQUE_CHECKS = 0");
+            await connection.query("SET AUTOCOMMIT = 0");
 
-            for (const statement of statements) {
-                if (statement) {
-                    await connection.query(statement + (statement.endsWith(';') ? '' : ';'));
-                }
-            }
-            
-            await connection.query("SET FOREIGN_KEY_CHECKS = 1;");
-            await connection.commit();
+            // Ejecutar todo el dump de una sola vez
+            await connection.query(sqlContent);
 
-            // Registrar en bitácora la acción crítica
+            await connection.query("COMMIT");
+            await connection.query("SET FOREIGN_KEY_CHECKS = 1");
+            await connection.query("SET UNIQUE_CHECKS = 1");
+            await connection.query("SET AUTOCOMMIT = 1");
+
+            // Registrar en bitácora
             await registrarBitacora(
                 'RESTAURACION_BASE_DATOS',
                 'SEGURIDAD',
-                `Base de datos restaurada exitosamente usando el archivo: ${req.file.originalname}`,
-                usuario.id
+                `Base de datos restaurada exitosamente con el archivo: ${req.file.originalname}`,
+                usuario.id || usuario.ID_USUARIO
             );
 
+            return res.json({
+                ok: true,
+                mensaje: "Base de datos restaurada exitosamente."
+            });
+
         } catch (dbError) {
-            await connection.rollback();
+            try { await connection.query("ROLLBACK"); } catch (_) {}
+            console.error("❌ Error de BD durante restauración:", dbError.message);
             throw dbError;
         } finally {
             connection.release();
         }
 
-        return res.json({ ok: true, mensaje: "Base de datos restaurada exitosamente." });
-
     } catch (error) {
-        console.error("Error crítico en restauración:", error);
-        return res.status(500).json({ 
-            ok: false, 
+        console.error("❌ Error crítico en restauración:", error.message);
+        return res.status(500).json({
+            ok: false,
             mensaje: "Error al restaurar: " + (error.message || "Error desconocido")
         });
-    } finally {
-        if (tempPath && fs.existsSync(tempPath)) {
-            try { fs.unlinkSync(tempPath); } catch (e) {}
-        }
     }
 });
-
 // ==========================================
 // VALIDACIÓN DE PARÁMETROS
 // ==========================================

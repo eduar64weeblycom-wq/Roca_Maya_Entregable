@@ -1,17 +1,23 @@
-module.exports = function errorHandler(err, req, res, next) {
-  console.error('Unhandled error:', err);
-  if (res.headersSent) return next(err);
-  
-  const status = err.status || 500;
-  
-  // Forzar respuesta JSON si es una petición de tipo API o AJAX
-  if (req.xhr || req.headers['content-type'] === 'application/json' || !req.accepts('html')) {
-    return res.status(status).json({ 
-      success: false, 
-      error: err.message || 'Internal Server Error' 
-    });
-  }
+module.exports = (err, req, res, next) => {
+    console.error("ErrorHandler:", err.message || err);
 
-  // Renderizar HTML solo para páginas web normales
-  res.status(status).render('error', { error: err });
+    // Detectar si es una petición de API
+    const isApiRequest =
+        req.originalUrl.startsWith('/parametros') ||
+        req.originalUrl.startsWith('/api') ||
+        req.xhr ||
+        (req.headers.accept && req.headers.accept.includes('application/json')) ||
+        (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data'));
+
+    if (isApiRequest) {
+        return res.status(err.status || 500).json({
+            ok: false,
+            mensaje: err.message || 'Error interno del servidor'
+        });
+    }
+
+    // Para páginas normales (vistas EJS)
+    res.status(err.status || 500).render('error', {
+        message: err.message || 'Error interno del servidor'
+    });
 };
