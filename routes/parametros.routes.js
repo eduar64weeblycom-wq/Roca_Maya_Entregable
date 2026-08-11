@@ -1,11 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../database/db');
-const { registrarBitacora } = require('../utils/bitacora'); // ajusta la ruta si es necesario
+const { registrarBitacora } = require('../services/bitacora.service'); // ajusta la ruta
 const multer = require('multer');
+const { exec } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const util = require('util');
+
+const execPromise = util.promisify(exec);
 
 // ============================================================
-// MULTER EN MEMORIA (ideal para Render)
+// MULTER EN MEMORIA
 // ============================================================
 const uploadRestore = multer({
     storage: multer.memoryStorage(),
@@ -20,9 +27,10 @@ const uploadRestore = multer({
 });
 
 // ============================================================
-// RUTA DE RESTAURACIÓN
+// RUTA DE RESTAURACIÓN CON child_process
 // ============================================================
 router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
+    let tempFilePath = null;
     const usuario = req.user || { id: 1, ID_USUARIO: 1 };
 
     try {
@@ -30,50 +38,46 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
             return res.status(400).json({ ok: false, mensaje: "Archivo no recibido" });
         }
 
-        console.log(`📦 Restaurando: ${req.file.originalname} (${req.file.size} bytes)`);
+        console.log(`📦 Restaurando con mysql CLI: ${req.file.originalname} (${req.file.size} bytes)`);
 
-        // El archivo está en memoria (Buffer)
-        const sqlContent = req.file.buffer.toString('utf8');
+        // 1. Guardar el archivo temporalmente
+        tempFilePath = path.join(os.tmpdir(), `restore_${Date.now()}.sql`);
+        fs.writeFileSync(tempFilePath, req.file.buffer);
 
-        if (!sqlContent || sqlContent.trim().length < 20) {
-            return res.status(400).json({ ok: false, mensaje: "El archivo SQL está vacío o es inválido" });
+        // 2. Credenciales desde variables de entorno
+        const host = process.env.DB_HOST;
+        const user = process.env.DB_USER;
+        const password = process.env.DB_PASSWORD;
+        const database = process.env.DB_NAME;
+        const port = process.env.DB_PORT || 3306;
+
+        // 3. Comando mysql
+        // Nota: usamos --force para que continúe aunque haya algunos errores no críticos
+        const command = `mysql -h ${host} -P ${port} -u ${user} -p'${password}' ${database} --force < "${tempFilePath}"`;
+
+        console.log("Ejecutando restauración con mysql CLI...");
+
+        const { stdout, stderr } = await execPromise(command, {
+            maxBuffer: 50 * 1024 * 1024, // 50 MB
+            timeout: 5 * 60 * 1000 // 5 minutos máximo
+        });
+
+        if (stderr && !stderr.includes('Warning')) {
+            console.warn("Advertencias de mysql:", stderr);
         }
 
-        const connection = await pool.getConnection();
+        // 4. Registrar en bitácora
+        await registrarBitacora(
+            'RESTAURACION_BASE_DATOS',
+            'SEGURIDAD',
+            `Base de datos restaurada exitosamente con el archivo: ${req.file.originalname}`,
+            usuario.id || usuario.ID_USUARIO
+        );
 
-        try {
-            await connection.query("SET FOREIGN_KEY_CHECKS = 0");
-            await connection.query("SET UNIQUE_CHECKS = 0");
-            await connection.query("SET AUTOCOMMIT = 0");
-
-            // Ejecutar todo el dump de una sola vez
-            await connection.query(sqlContent);
-
-            await connection.query("COMMIT");
-            await connection.query("SET FOREIGN_KEY_CHECKS = 1");
-            await connection.query("SET UNIQUE_CHECKS = 1");
-            await connection.query("SET AUTOCOMMIT = 1");
-
-            // Registrar en bitácora
-            await registrarBitacora(
-                'RESTAURACION_BASE_DATOS',
-                'SEGURIDAD',
-                `Base de datos restaurada exitosamente con el archivo: ${req.file.originalname}`,
-                usuario.id || usuario.ID_USUARIO
-            );
-
-            return res.json({
-                ok: true,
-                mensaje: "Base de datos restaurada exitosamente."
-            });
-
-        } catch (dbError) {
-            try { await connection.query("ROLLBACK"); } catch (_) {}
-            console.error("❌ Error de BD durante restauración:", dbError.message);
-            throw dbError;
-        } finally {
-            connection.release();
-        }
+        return res.json({
+            ok: true,
+            mensaje: "Base de datos restaurada exitosamente."
+        });
 
     } catch (error) {
         console.error("❌ Error crítico en restauración:", error.message);
@@ -81,6 +85,11 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
             ok: false,
             mensaje: "Error al restaurar: " + (error.message || "Error desconocido")
         });
+    } finally {
+        // Limpiar archivo temporal
+        if (tempFilePath && fs.existsSync(tempFilePath)) {
+            try { fs.unlinkSync(tempFilePath); } catch (e) {}
+        }
     }
 });
 // ==========================================
