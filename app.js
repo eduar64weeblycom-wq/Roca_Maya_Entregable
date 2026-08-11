@@ -19,6 +19,11 @@ const { verificarSesion } = require("./middleware/auth.middleware");
 const app = express();
 
 // ==========================================
+// CONFIGURACIÓN DE TRUST PROXY (NECESARIO PARA RENDER)
+// ==========================================
+app.set('trust proxy', 1);
+
+// ==========================================
 // CONFIGURACIÓN DE LÍMITES PARA ARCHIVOS GRANDES (50MB ÚNICO)
 // ==========================================
 app.use(express.json({ limit: '50mb' }));
