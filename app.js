@@ -251,7 +251,6 @@ app.use("/dashboard", verificarSesion, require("./routes/dashboard.routes"));
 app.use("/users", require("./routes/users.routes"));
 app.use("/roles", require("./routes/roles.routes"));
 app.use("/bitacora", require("./routes/bitacora.routes"));
-app.use("/bitacora/parametros", require("./routes/parametros.routes"));
 app.use("/especialidades", require("./routes/especialidades.routes"));
 app.use("/historial", require("./routes/historial-medico.routes"));
 app.use("/citas", require("./routes/citas.routes"));
@@ -263,7 +262,21 @@ app.use("/excel", require("./routes/excel.routes"));
 const consultaRouter = require("./routes/consultaMedica.routes");
 app.use("/consultaMedica", consultaRouter);
 app.use("/consulta", consultaRouter);
+app.use((req, res, next) => {
 
+    if (req.originalUrl === "/parametros/restore") {
+        console.log("==========================================");
+        console.log("🚨 APP RECIBIÓ RESTORE");
+        console.log("Método:", req.method);
+        console.log("URL:", req.originalUrl);
+        console.log("IP:", req.ip);
+        console.log("User:", req.user || "SIN USUARIO");
+        console.log("Content-Type:", req.headers["content-type"]);
+        console.log("==========================================");
+    }
+
+    next();
+});
 app.use("/parametros", require("./routes/parametros.routes"));
 
 // ============================================================

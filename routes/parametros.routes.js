@@ -29,6 +29,16 @@ const uploadRestore = multer({
 // ============================================================
 // RUTA DE RESTAURACIÓN SEGURA CON execFile
 // ============================================================
+router.use((req, res, next) => {
+    console.log("==========================================");
+    console.log("🔥 ROUTER PARAMETROS RECIBIÓ PETICIÓN");
+    console.log("Método:", req.method);
+    console.log("URL:", req.originalUrl);
+    console.log("IP:", req.ip);
+    console.log("==========================================");
+
+    next();
+});
 router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
     let tempFilePath = null;
     const usuario = req.user || { id: 1, ID_USUARIO: 1 };
