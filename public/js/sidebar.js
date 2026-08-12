@@ -233,9 +233,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 formData.append('backup', archivoSql);
 
                 const response = await fetch('/parametros/restore', {
-                    method: 'POST',
-                    body: formData
-                });
+    method: 'POST',
+    body: formData,
+    credentials: 'include' // <--- Aquí ya tiene la coma arriba
+});
 
                 const responseText = await response.text();
                 console.log("Respuesta cruda del servidor:", responseText);
