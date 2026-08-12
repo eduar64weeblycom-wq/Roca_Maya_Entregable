@@ -958,9 +958,10 @@ router.get("/por-cita/:idCita", async (req, res) => {
     `, [idCita]);
 
     if (consultaRows.length === 0) {
-  // Retorna 200 indicando que el recurso no existe, pero la petición fue exitosa
-  return res.json({ success: true, consulta: null, message: "No hay consulta previa para esta cita" });
-}
+      // Cambio clave: Retornar 200 con consulta null para que el frontend no marque error
+      return res.json({ success: true, consulta: null, message: "No se encontró consulta previa para esta cita" });
+    }
+
     const consulta = consultaRows[0];
     if (consulta.SINTOMAS && typeof consulta.SINTOMAS === 'string') {
       try { consulta.SINTOMAS = JSON.parse(consulta.SINTOMAS); } catch (e) { consulta.SINTOMAS = []; }
@@ -976,7 +977,6 @@ router.get("/por-cita/:idCita", async (req, res) => {
     res.status(500).json({ success: false, error: "Error al obtener consulta por cita: " + err.message });
   }
 });
-
 // ============================================================
 // GET /preclinica/por-cita/:idCita - Obtener preclínica
 // ============================================================
