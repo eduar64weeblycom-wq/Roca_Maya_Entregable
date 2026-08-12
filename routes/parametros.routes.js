@@ -41,7 +41,7 @@ router.use((req, res, next) => {
 });
 router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
     let tempFilePath = null;
-    const usuario = req.user || { id: 1, ID_USUARIO: 1 };
+    const usuario = req.user || { id: 1, ID_USUARIO: 1, USUARIO: 'ADMIN' };
 
     try {
         if (!req.file) {
@@ -62,7 +62,6 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
         const port = process.env.DB_PORT || '3306';
 
         // 3. Construcción de argumentos seguros para execFile (evita inyección de comandos)
-        // Nota: Redirigimos el archivo SQL usando stdin mediante opciones de configuración de fs
         const args = [
             `-h${host}`,
             `-P${port}`,
@@ -97,14 +96,18 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
                 console.warn("Advertencias de mysql:", stderr);
             }
 
-            // 4. Registrar en bitácora
+            // 4. Registrar en bitácora (CORREGIDO: Usando objeto)
             try {
-                await registrarBitacora(
-                    'RESTAURACION_BASE_DATOS',
-                    'SEGURIDAD',
-                    `Base de datos restaurada exitosamente con el archivo: ${req.file.originalname}`,
-                    usuario.id || usuario.ID_USUARIO
-                );
+                await registrarBitacora({
+                    usuario: usuario.USUARIO || usuario.usuarioActual || 'ADMIN',
+                    accion: 'RESTAURACION_BASE_DATOS',
+                    modulo: 'SEGURIDAD',
+                    descripcion: `Base de datos restaurada exitosamente con el archivo: ${req.file.originalname}`,
+                    idRegistro: null,
+                    tabla: null,
+                    estado: 'EXITO',
+                    req: req
+                });
             } catch (bitacoraError) {
                 console.error("Error al registrar en bitácora:", bitacoraError);
             }
@@ -204,22 +207,27 @@ router.post('/guardar', validarParametrosBackend, async (req, res) => {
     const connection = await pool.getConnection();
     try {
         const { parametros } = req.body;
-        const usuario = req.user || { id: 1 };
+        const usuario = req.user || { id: 1, USUARIO: 'ADMIN' };
 
         await connection.beginTransaction();
 
         for (const param of parametros) {
             await connection.query(
                 'UPDATE tbl_ms_parametros SET VALOR = ?, USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW() WHERE ID_PARAMETRO = ?',
-                [param.valor, usuario.id, param.id]
+                [param.valor, usuario.id || usuario.ID_USUARIO, param.id]
             );
             
-            await registrarBitacora(
-                'ACTUALIZACION_PARAMETRO',
-                'CONFIGURACION',
-                `Parametro actualizado: ${param.clave} - Valor: ${param.valorOriginal} -> ${param.valor}`,
-                usuario.id
-            );
+            // CORREGIDO: Usando objeto para registrarBitacora en la actualización de parámetros también
+            await registrarBitacora({
+                usuario: usuario.USUARIO || usuario.usuarioActual || 'ADMIN',
+                accion: 'ACTUALIZACION_PARAMETRO',
+                modulo: 'CONFIGURACION',
+                descripcion: `Parametro actualizado: ${param.clave} - Valor: ${param.valorOriginal} -> ${param.valor}`,
+                idRegistro: param.id,
+                tabla: 'tbl_ms_parametros',
+                estado: 'EXITO',
+                req: req
+            });
         }
         
         await connection.commit();

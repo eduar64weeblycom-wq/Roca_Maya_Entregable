@@ -38,7 +38,11 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        connectSrc: ["'self'", "https://clinica-roca-maya-f.onrender.com"], // <-- Agregar tu dominio de Render aquí
+        connectSrc: [
+          "'self'", 
+          "https://clinica-roca-maya-f.onrender.com", 
+          "https://cdn.jsdelivr.net" // CORRECCIÓN: Permite cargar mapas de recursos
+        ],
         scriptSrc: [
           "'self'",
           "'unsafe-inline'",
