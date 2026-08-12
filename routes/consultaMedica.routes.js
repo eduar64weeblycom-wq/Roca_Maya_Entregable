@@ -958,9 +958,9 @@ router.get("/por-cita/:idCita", async (req, res) => {
     `, [idCita]);
 
     if (consultaRows.length === 0) {
-      return res.status(404).json({ success: false, message: "No se encontró consulta para esta cita" });
-    }
-
+  // Retorna 200 indicando que el recurso no existe, pero la petición fue exitosa
+  return res.json({ success: true, consulta: null, message: "No hay consulta previa para esta cita" });
+}
     const consulta = consultaRows[0];
     if (consulta.SINTOMAS && typeof consulta.SINTOMAS === 'string') {
       try { consulta.SINTOMAS = JSON.parse(consulta.SINTOMAS); } catch (e) { consulta.SINTOMAS = []; }
