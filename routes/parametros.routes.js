@@ -27,7 +27,7 @@ const uploadRestore = multer({
 });
 
 // ============================================================
-// RUTA DE RESTAURACIÓN CON MANEJO DE ERRORES DE MULTER
+// RUTA DE RESTAURACIÓN OPTIMIZADA Y SEGURA
 // ============================================================
 router.post("/restore", (req, res, next) => {
     uploadRestore.single('backup')(req, res, (err) => {
@@ -46,6 +46,7 @@ router.post("/restore", (req, res, next) => {
     });
 }, async (req, res) => {
     const usuario = req.user || { id: 1, ID_USUARIO: 1, USUARIO: 'ADMIN' };
+    const connection = await pool.getConnection();
 
     try {
         if (!req.file) {
@@ -57,7 +58,6 @@ router.post("/restore", (req, res, next) => {
 
         console.log(`📦 Iniciando restauración: ${req.file.originalname} (${(req.file.size / 1024 / 1024).toFixed(2)} MB)`);
 
-        // 1. Convertir el buffer a texto
         const sqlContent = req.file.buffer.toString('utf8');
 
         if (!sqlContent || sqlContent.trim().length < 10) {
@@ -67,70 +67,72 @@ router.post("/restore", (req, res, next) => {
             });
         }
 
-        // 2. Obtener una conexión del pool
-        const connection = await pool.getConnection();
-
-        try {
-            // 3. Dividir el SQL en statements
-            const statements = sqlContent
-                .split(/;\s*\n/) 
-                .map(stmt => stmt.trim())
-                .filter(stmt => {
-                    return stmt.length > 0 &&
-                           !stmt.startsWith('--') &&
-                           !stmt.startsWith('/*') &&
-                           !stmt.startsWith('//');
-                });
-
-            console.log(`📄 Se encontraron ${statements.length} statements para ejecutar`);
-
-            // 4. Ejecutar cada statement
-            let ejecutados = 0;
-            for (const statement of statements) {
-                try {
-                    await connection.query(statement);
-                    ejecutados++;
-                } catch (stmtError) {
-                    console.warn(`⚠️ Statement falló (se continúa): ${stmtError.message.substring(0, 120)}`);
-                }
-            }
-
-            console.log(`✅ Restauración completada. Statements ejecutados: ${ejecutados}`);
-
-            // 5. Registrar en bitácora
-            try {
-                await registrarBitacora({
-                    usuario: usuario.USUARIO || usuario.usuarioActual || 'ADMIN',
-                    accion: 'RESTAURACION_BASE_DATOS',
-                    modulo: 'SEGURIDAD',
-                    descripcion: `Base de datos restaurada con el archivo: ${req.file.originalname} (${ejecutados} statements)`,
-                    idRegistro: null,
-                    tabla: null,
-                    estado: 'EXITO',
-                    req: req
-                });
-            } catch (bitacoraError) {
-                console.error("Error al registrar en bitácora:", bitacoraError);
-            }
-
-            return res.json({
-                ok: true,
-                mensaje: `Base de datos restaurada exitosamente (${ejecutados} statements ejecutados).`
+        // Limpiar y separar sentencias de forma robusta
+        const statements = sqlContent
+            .split(/;\s*[\r\n]+/)
+            .map(stmt => stmt.trim())
+            .filter(stmt => {
+                return stmt.length > 0 &&
+                       !stmt.startsWith('--') &&
+                       !stmt.startsWith('/*') &&
+                       !stmt.startsWith('//');
             });
 
-        } finally {
-            connection.release();
+        console.log(`📄 Se procesarán ${statements.length} sentencias SQL`);
+
+        // Desactivar temporalmente las restricciones de claves foráneas para evitar conflictos de orden al restaurar
+        await connection.query('SET FOREIGN_KEY_CHECKS = 0;');
+        await connection.beginTransaction();
+
+        let ejecutados = 0;
+        for (const statement of statements) {
+            if (statement) {
+                await connection.query(statement);
+                ejecutados++;
+            }
         }
 
+        await connection.commit();
+        await connection.query('SET FOREIGN_KEY_CHECKS = 1;');
+
+        console.log(`✅ Restauración completada con éxito. Sentencias ejecutadas: ${ejecutados}`);
+
+        // Registrar en bitácora de manera segura
+        try {
+            await registrarBitacora({
+                usuario: usuario.USUARIO || usuario.usuarioActual || 'ADMIN',
+                accion: 'RESTAURACION_BASE_DATOS',
+                modulo: 'SEGURIDAD',
+                descripcion: `Base de datos restaurada con el archivo: ${req.file.originalname} (${ejecutados} sentencias)`,
+                idRegistro: null,
+                tabla: null,
+                estado: 'EXITO',
+                req: req
+            });
+        } catch (bitacoraError) {
+            console.error("Error al registrar en bitácora:", bitacoraError);
+        }
+
+        return res.json({
+            ok: true,
+            mensaje: `Base de datos restaurada exitosamente (${ejecutados} sentencias ejecutadas).`
+        });
+
     } catch (error) {
+        await connection.rollback();
+        try {
+            await connection.query('SET FOREIGN_KEY_CHECKS = 1;');
+        } catch (e) { /* ignorar si falla la reactivación en el catch */ }
+
         console.error("❌ Error crítico en restauración:", error);
         return res.status(500).json({
             ok: false,
             mensaje: "Error al restaurar la base de datos: " + (error.message || "Error desconocido")
         });
+    } finally {
+        connection.release();
     }
 });
-
 // ==========================================
 // VALIDACIÓN DE PARÁMETROS
 // ==========================================
