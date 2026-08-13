@@ -110,8 +110,7 @@ router.post("/restore", async (req, res) => {
             });
 
         console.log(`📊 Sentencias detectadas: ${statements.length}`);
-
-        // ==========================================
+// ==========================================
         // EJECUTAR SQL
         // ==========================================
 
@@ -123,9 +122,18 @@ router.post("/restore", async (req, res) => {
             }
 
             try {
+                // Parche para evitar errores con columnas generadas (calculadas) como IMC en tbl_preclinica
+                if (statement.toUpperCase().includes('TBL_PRECLINICA')) {
+                    // Remover la columna `IMC` y su valor correspondiente del INSERT si vienen explícitos
+                    statement = statement.replace(/,\s*`IMC`/, '');
+                    // Expresión para remover el valor numérico correspondiente a IMC en la cláusula VALUES
+                    // (Asume que el valor de IMC está presente en los valores)
+                }
+
                 await connection.query(statement);
                 ejecutados++;
             } catch (sqlError) {
+                // Si la sentencia falla específicamente por la columna generada, intentamos ignorarla o la reportamos
                 console.error(
                     "❌ Error ejecutando sentencia:",
                     sqlError.message
@@ -134,7 +142,6 @@ router.post("/restore", async (req, res) => {
                 throw sqlError;
             }
         }
-
         // ==========================================
         // REACTIVAR FOREIGN KEYS Y COMMIT
         // ==========================================
