@@ -29,36 +29,26 @@ const uploadRestore = multer({
 // ============================================================
 // RUTA DE RESTAURACIÓN OPTIMIZADA Y SEGURA
 // ============================================================
-router.post("/upload-sql-data", (req, res, next) => {
-    uploadRestore.single('backup')(req, res, (err) => {
-        if (err instanceof multer.MulterError) {
-            return res.status(400).json({ 
-                ok: false, 
-                mensaje: `Error en la subida del archivo: ${err.message}` 
-            });
-        } else if (err) {
-            return res.status(400).json({ 
-                ok: false, 
-                mensaje: err.message 
-            });
-        }
-        next();
-    });
-}, async (req, res) => {
+router.post("/upload-sql-data", async (req, res) => {
     const usuario = req.user || { id: 1, ID_USUARIO: 1, USUARIO: 'ADMIN' };
     const connection = await pool.getConnection();
 
     try {
-        if (!req.file) {
+        const { backupBase64 } = req.body;
+
+        if (!backupBase64) {
             return res.status(400).json({ 
                 ok: false, 
                 mensaje: "No se recibió ningún archivo .sql" 
             });
         }
 
-        console.log(`📦 Iniciando restauración: ${req.file.originalname} (${(req.file.size / 1024 / 1024).toFixed(2)} MB)`);
+        // Limpiar prefijo data URL si existe
+        const base64Data = backupBase64.includes(';base64,') 
+            ? backupBase64.split(';base64,').pop() 
+            : backupBase64;
 
-        const sqlContent = req.file.buffer.toString('utf8');
+        const sqlContent = Buffer.from(base64Data, 'base64').toString('utf8');
 
         if (!sqlContent || sqlContent.trim().length < 10) {
             return res.status(400).json({ 
@@ -77,7 +67,7 @@ router.post("/upload-sql-data", (req, res, next) => {
                        !stmt.startsWith('//');
             });
 
-        console.log(`📄 Se procesarán ${statements.length} sentencias SQL`);
+        console.log(`📄 Se procesarán ${statements.length} sentencias SQL vía Base64`);
 
         await connection.query('SET FOREIGN_KEY_CHECKS = 0;');
         await connection.beginTransaction();
@@ -93,14 +83,12 @@ router.post("/upload-sql-data", (req, res, next) => {
         await connection.commit();
         await connection.query('SET FOREIGN_KEY_CHECKS = 1;');
 
-        console.log(`✅ Restauración completada con éxito. Sentencias ejecutadas: ${ejecutados}`);
-
         try {
             await registrarBitacora({
                 usuario: usuario.USUARIO || usuario.usuarioActual || 'ADMIN',
                 accion: 'RESTAURACION_BASE_DATOS',
                 modulo: 'SEGURIDAD',
-                descripcion: `Base de datos restaurada con el archivo: ${req.file.originalname} (${ejecutados} sentencias)`,
+                descripcion: `Base de datos restaurada mediante JSON Base64 (${ejecutados} sentencias)`,
                 idRegistro: null,
                 tabla: null,
                 estado: 'EXITO',

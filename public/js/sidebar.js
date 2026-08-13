@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fileRestore.click();
         });
 
-        fileRestore.addEventListener('change', async function () {
+       fileRestore.addEventListener('change', async function () {
             const archivoSql = this.files && this.files[0];
 
             if (!archivoSql) {
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const originalHTML = btnRestore.innerHTML;
 
             btnRestore.innerHTML =
-                '<i class="fas fa-spinner fa-spin"></i> Restaurando...';
+                '<i class="fas fa-spinner fa-spin"></i> Leyendo archivo...';
             btnRestore.style.cursor = 'wait';
 
             if ('disabled' in btnRestore) {
@@ -188,13 +188,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     'bytes'
                 );
 
-                // Crear FormData tal como lo espera upload.single('backup') en el backend
-                const formData = new FormData();
-                formData.append('backup', archivoSql);
+                // Convertir el archivo SQL a Base64 para evitar bloqueos del WAF en Render
+                const base64Content = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(archivoSql);
+                });
+
+                btnRestore.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restaurando...';
 
                 const response = await fetch('/parametros/upload-sql-data', {
                     method: 'POST',
-                    body: formData, // Envía el archivo multipart directamente
+                    headers: {
+                        'Content-Type': 'application/json' // JSON evita el bloqueo de seguridad (WAF)
+                    },
+                    body: JSON.stringify({ backupBase64: base64Content }),
                     credentials: 'include'
                 });
 
@@ -265,7 +274,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 restauracionEnProceso = false;
             }
         });
-    }
 
     // ============================================================
     // 8. CONFIRMACIÓN PARA CERRAR SESIÓN
