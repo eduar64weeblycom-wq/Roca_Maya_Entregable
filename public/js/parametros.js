@@ -183,34 +183,36 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
+       // BOTÓN RESTORE
+    if (btnRestore && fileRestore) {
+        btnRestore.addEventListener('click', () => {
+            if(confirm('⚠️ ADVERTENCIA: La restauración reemplazará todos los datos actuales. ¿Deseas continuar?')) {
+                fileRestore.click();
+            }
+        });
+
         fileRestore.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
+            const formData = new FormData();
+            formData.append('backup', file);
+
             if (loading) loading.style.display = 'flex';
 
             try {
-                // Leer archivo y pasarlo a Base64
-                const base64Content = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(file);
-                });
-
-                const response = await fetch('/parametros/restore', {
+                // Apunta a la ruta exacta configurada en tu backend
+                const response = await fetch('/parametros/upload-sql-data', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        backupBase64: base64Content,
-                        fileName: file.name
-                    })
+                    body: formData // Envía multipart/form-data directamente
                 });
 
                 const data = await response.json();
                 
                 alert(data.message || data.mensaje);
-                if(data.success || data.ok) window.location.reload();
+                if(data.success || data.ok) {
+                    window.location.reload();
+                }
             } catch (err) {
                 console.error('Error al restaurar:', err);
                 alert('Error al restaurar: ' + err.message);
