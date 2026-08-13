@@ -281,7 +281,8 @@ app.use((req, res, next) => {
 
     next();
 });
-app.use("/parametros", require("./routes/parametros.routes"));
+// En app.js
+app.use("/parametros", verificarSesion, require("./routes/parametros.routes"));
 
 // ============================================================
 // RUTA DE LOGOUT

@@ -25,84 +25,74 @@ const uploadRestore = multer({
         }
     }
 });
-
 // ============================================================
-// RUTA DE RESTAURACIÓN SEGURA CON execFile
+// RUTA DE RESTAURACIÓN USANDO mysql2 (sin CLI)
 // ============================================================
-router.use((req, res, next) => {
-    console.log("==========================================");
-    console.log("🔥 ROUTER PARAMETROS RECIBIÓ PETICIÓN");
-    console.log("Método:", req.method);
-    console.log("URL:", req.originalUrl);
-    console.log("IP:", req.ip);
-    console.log("==========================================");
-
-    next();
-});
 router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
-    let tempFilePath = null;
     const usuario = req.user || { id: 1, ID_USUARIO: 1, USUARIO: 'ADMIN' };
 
     try {
         if (!req.file) {
-            return res.status(400).json({ ok: false, mensaje: "Archivo no recibido" });
+            return res.status(400).json({ 
+                ok: false, 
+                mensaje: "No se recibió ningún archivo .sql" 
+            });
         }
 
-        console.log(`📦 Restaurando base de datos: ${req.file.originalname} (${req.file.size} bytes)`);
+        console.log(`📦 Iniciando restauración: ${req.file.originalname} (${(req.file.size / 1024 / 1024).toFixed(2)} MB)`);
 
-        // 1. Guardar el archivo temporalmente
-        tempFilePath = path.join(os.tmpdir(), `restore_${Date.now()}.sql`);
-        fs.writeFileSync(tempFilePath, req.file.buffer);
+        // 1. Convertir el buffer a texto
+        const sqlContent = req.file.buffer.toString('utf8');
 
-        // 2. Credenciales desde variables de entorno
-        const host = process.env.DB_HOST || 'localhost';
-        const user = process.env.DB_USER;
-        const password = process.env.DB_PASSWORD;
-        const database = process.env.DB_NAME;
-        const port = process.env.DB_PORT || '3306';
+        if (!sqlContent || sqlContent.trim().length < 10) {
+            return res.status(400).json({ 
+                ok: false, 
+                mensaje: "El archivo SQL está vacío o es inválido" 
+            });
+        }
 
-        // 3. Construcción de argumentos seguros para execFile (evita inyección de comandos)
-        const args = [
-            `-h${host}`,
-            `-P${port}`,
-            `-u${user}`,
-            `-p${password}`,
-            `--force`,
-            database
-        ];
+        // 2. Obtener una conexión del pool
+        const connection = await pool.getConnection();
 
-        console.log("Ejecutando restauración con mysql CLI...");
-
-        const sqlStream = fs.createReadStream(tempFilePath);
-
-        const child = execFile('mysql', args, {
-            maxBuffer: 50 * 1024 * 1024,
-            timeout: 5 * 60 * 1000
-        }, async (error, stdout, stderr) => {
-            // Limpiar archivo temporal de forma segura
-            if (tempFilePath && fs.existsSync(tempFilePath)) {
-                try { fs.unlinkSync(tempFilePath); } catch (e) {}
-            }
-
-            if (error) {
-                console.error("❌ Error crítico en restauración:", error.message);
-                return res.status(500).json({
-                    ok: false,
-                    mensaje: "Error al restaurar: " + error.message
+        try {
+            // 3. Dividir el SQL en statements (método práctico para dumps normales)
+            // Nota: funciona bien con dumps de tablas + datos. 
+            // Puede fallar con procedimientos almacenados complejos que usen DELIMITER.
+            const statements = sqlContent
+                .split(/;\s*\n/)                     // divide por ; seguido de salto de línea
+                .map(stmt => stmt.trim())
+                .filter(stmt => {
+                    // Eliminar comentarios y líneas vacías
+                    return stmt.length > 0 &&
+                           !stmt.startsWith('--') &&
+                           !stmt.startsWith('/*') &&
+                           !stmt.startsWith('//');
                 });
+
+            console.log(`📄 Se encontraron ${statements.length} statements para ejecutar`);
+
+            // 4. Ejecutar cada statement
+            let ejecutados = 0;
+            for (const statement of statements) {
+                try {
+                    await connection.query(statement);
+                    ejecutados++;
+                } catch (stmtError) {
+                    // Algunos errores se pueden ignorar (ej: DROP TABLE IF EXISTS, etc.)
+                    // Si quieres ser más estricto, quita este continue
+                    console.warn(`⚠️ Statement falló (se continúa): ${stmtError.message.substring(0, 120)}`);
+                }
             }
 
-            if (stderr && !stderr.includes('Warning') && !stderr.includes('Using a password')) {
-                console.warn("Advertencias de mysql:", stderr);
-            }
+            console.log(`✅ Restauración completada. Statements ejecutados: ${ejecutados}`);
 
-            // 4. Registrar en bitácora (CORREGIDO: Usando objeto)
+            // 5. Registrar en bitácora
             try {
                 await registrarBitacora({
                     usuario: usuario.USUARIO || usuario.usuarioActual || 'ADMIN',
                     accion: 'RESTAURACION_BASE_DATOS',
                     modulo: 'SEGURIDAD',
-                    descripcion: `Base de datos restaurada exitosamente con el archivo: ${req.file.originalname}`,
+                    descripcion: `Base de datos restaurada con el archivo: ${req.file.originalname} (${ejecutados} statements)`,
                     idRegistro: null,
                     tabla: null,
                     estado: 'EXITO',
@@ -114,25 +104,21 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
 
             return res.json({
                 ok: true,
-                mensaje: "Base de datos restaurada exitosamente."
+                mensaje: `Base de datos restaurada exitosamente (${ejecutados} statements ejecutados).`
             });
-        });
 
-        // Conectar el flujo del archivo SQL al flujo de entrada estándar (stdin) del proceso mysql
-        sqlStream.pipe(child.stdin);
+        } finally {
+            connection.release();
+        }
 
     } catch (error) {
-        if (tempFilePath && fs.existsSync(tempFilePath)) {
-            try { fs.unlinkSync(tempFilePath); } catch (e) {}
-        }
-        console.error("❌ Error crítico en restauración:", error.message);
+        console.error("❌ Error crítico en restauración:", error);
         return res.status(500).json({
             ok: false,
-            mensaje: "Error al restaurar: " + (error.message || "Error desconocido")
+            mensaje: "Error al restaurar la base de datos: " + (error.message || "Error desconocido")
         });
     }
 });
-
 // ==========================================
 // VALIDACIÓN DE PARÁMETROS
 // ==========================================
