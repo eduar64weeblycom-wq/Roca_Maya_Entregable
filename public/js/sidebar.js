@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeSidebar = document.getElementById('closeSidebar');
 
     if (!sidebarModal || !modalOverlay || !menuToggle || !closeSidebar) {
-        console.error('Error: Elementos del menú no encontrados.');
+        console.error('❌ Elementos del menú no encontrados.');
         return;
     }
 
@@ -63,9 +63,14 @@ document.addEventListener('DOMContentLoaded', function () {
     // ============================================================
 
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && sidebarModal.classList.contains('open')) {
+
+        if (
+            e.key === 'Escape' &&
+            sidebarModal.classList.contains('open')
+        ) {
             closeMenu();
         }
+
     });
 
     // ============================================================
@@ -77,23 +82,32 @@ document.addEventListener('DOMContentLoaded', function () {
     );
 
     sidebarLinks.forEach(function (link) {
+
         link.addEventListener('click', function () {
+
+            // El botón de restauración se maneja aparte
             if (this.id === 'btnRestore') {
                 return;
             }
 
             if (this.tagName === 'A') {
+
                 setTimeout(function () {
+
                     if (sidebarModal.classList.contains('open')) {
                         closeMenu();
                     }
+
                 }, 100);
+
             }
+
         });
+
     });
 
     // ============================================================
-    // 7. RESTAURACIÓN DE BASE DE DATOS (CON FORMDATA PARA MULTER)
+    // 7. RESTAURACIÓN DE BASE DE DATOS
     // ============================================================
 
     const btnRestore = document.getElementById('btnRestore');
@@ -104,7 +118,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (btnRestore && fileRestore) {
 
+        // ========================================================
+        // 7.1 BOTÓN RESTAURAR
+        // ========================================================
+
         btnRestore.addEventListener('click', function (e) {
+
             e.preventDefault();
             e.stopPropagation();
 
@@ -124,14 +143,24 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             fileRestore.click();
+
         });
 
-       fileRestore.addEventListener('change', async function () {
+        // ========================================================
+        // 7.2 ARCHIVO SELECCIONADO
+        // ========================================================
+
+        fileRestore.addEventListener('change', async function () {
+
             const archivoSql = this.files && this.files[0];
 
             if (!archivoSql) {
                 return;
             }
+
+            // ====================================================
+            // VALIDAR EXTENSIÓN
+            // ====================================================
 
             const extension = archivoSql.name
                 .split('.')
@@ -139,30 +168,48 @@ document.addEventListener('DOMContentLoaded', function () {
                 .toLowerCase();
 
             if (extension !== 'sql') {
+
                 alert(
                     '❌ Archivo no válido.\n\n' +
                     'Debes seleccionar un archivo con extensión .sql'
                 );
+
                 fileRestore.value = '';
                 return;
             }
 
-            const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
+            // ====================================================
+            // VALIDAR TAMAÑO
+            // ====================================================
+
+            const MAX_SIZE = 50 * 1024 * 1024;
 
             if (archivoSql.size > MAX_SIZE) {
+
                 alert(
                     '❌ El archivo es demasiado grande.\n\n' +
                     'Tamaño máximo permitido: 50 MB.'
                 );
+
                 fileRestore.value = '';
                 return;
             }
 
+            // ====================================================
+            // VALIDAR VACÍO
+            // ====================================================
+
             if (archivoSql.size === 0) {
+
                 alert('❌ El archivo seleccionado está vacío.');
+
                 fileRestore.value = '';
                 return;
             }
+
+            // ====================================================
+            // INICIAR RESTAURACIÓN
+            // ====================================================
 
             restauracionEnProceso = true;
 
@@ -170,72 +217,150 @@ document.addEventListener('DOMContentLoaded', function () {
 
             btnRestore.innerHTML =
                 '<i class="fas fa-spinner fa-spin"></i> Leyendo archivo...';
-            btnRestore.style.cursor = 'wait';
 
-            if ('disabled' in btnRestore) {
-                btnRestore.disabled = true;
-            }
+            btnRestore.style.cursor = 'wait';
+            btnRestore.disabled = true;
 
             if (loading) {
                 loading.style.display = 'flex';
             }
 
             try {
+
                 console.log(
-                    'Iniciando restauración:',
-                    archivoSql.name,
+                    '=========================================='
+                );
+
+                console.log(
+                    '📦 Iniciando restauración'
+                );
+
+                console.log(
+                    'Archivo:',
+                    archivoSql.name
+                );
+
+                console.log(
+                    'Tamaño:',
                     archivoSql.size,
                     'bytes'
                 );
 
-                // Convertir el archivo SQL a Base64 para evitar bloqueos del WAF en Render
-                const base64Content = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(archivoSql);
-                });
+                console.log(
+                    '=========================================='
+                );
 
-                btnRestore.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restaurando...';
+                // =================================================
+                // LEER ARCHIVO COMO BASE64
+                // =================================================
 
-                const response = await fetch('/parametros/upload-sql-data', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json' // JSON evita el bloqueo de seguridad (WAF)
-                    },
-                    body: JSON.stringify({ backupBase64: base64Content }),
-                    credentials: 'include'
-                });
+                const base64Content = await new Promise(
+                    function (resolve, reject) {
+
+                        const reader = new FileReader();
+
+                        reader.onload = function () {
+                            resolve(reader.result);
+                        };
+
+                        reader.onerror = function (error) {
+                            reject(error);
+                        };
+
+                        reader.readAsDataURL(archivoSql);
+
+                    }
+                );
+
+                console.log(
+                    '✅ Archivo convertido a Base64'
+                );
+
+                btnRestore.innerHTML =
+                    '<i class="fas fa-spinner fa-spin"></i> Restaurando...';
+
+                // =================================================
+                // ENVIAR AL SERVIDOR
+                // =================================================
+
+                const response = await fetch(
+                    '/parametros/restore',
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+
+                        credentials: 'include',
+
+                        body: JSON.stringify({
+                            backupBase64: base64Content,
+                            nombreArchivo: archivoSql.name
+                        })
+                    }
+                );
+
+                console.log(
+                    'HTTP:',
+                    response.status
+                );
 
                 const responseText = await response.text();
-                console.log("Respuesta cruda del servidor:", responseText);
+
+                console.log(
+                    'Respuesta del servidor:',
+                    responseText
+                );
+
+                // =================================================
+                // CONVERTIR RESPUESTA A JSON
+                // =================================================
 
                 let data;
 
                 try {
+
                     data = JSON.parse(responseText);
-                } catch (jsonError) {
-                    console.error('El servidor no devolvió JSON:', responseText);
+
+                } catch (errorJson) {
+
                     throw new Error(
-                        'El servidor respondió esto:\n\n' + responseText.substring(0, 300)
+                        'El servidor no devolvió JSON.\n\n' +
+                        responseText.substring(0, 500)
                     );
+
                 }
+
+                // =================================================
+                // ERROR HTTP
+                // =================================================
 
                 if (!response.ok) {
-                    const mensajeError =
+
+                    throw new Error(
                         data.mensaje ||
                         data.message ||
-                        `Error HTTP ${response.status}`;
-                    throw new Error(mensajeError);
+                        `Error HTTP ${response.status}`
+                    );
+
                 }
 
-                if (data.ok === true || data.success === true) {
+                // =================================================
+                // RESTAURACIÓN EXITOSA
+                // =================================================
+
+                if (
+                    data.ok === true ||
+                    data.success === true
+                ) {
+
                     alert(
                         '✅ ' +
                         (
                             data.mensaje ||
                             data.message ||
-                            'Base de datos restaurada exitosamente.'
+                            'Base de datos restaurada correctamente.'
                         )
                     );
 
@@ -243,21 +368,33 @@ document.addEventListener('DOMContentLoaded', function () {
                         window.location.reload();
                     }, 1500);
 
-                } else {
-                    throw new Error(
-                        data.mensaje ||
-                        data.message ||
-                        'El servidor rechazó la restauración.'
-                    );
+                    return;
                 }
 
+                // =================================================
+                // SERVIDOR RECHAZÓ LA RESTAURACIÓN
+                // =================================================
+
+                throw new Error(
+                    data.mensaje ||
+                    data.message ||
+                    'El servidor rechazó la restauración.'
+                );
+
             } catch (error) {
-                console.error('❌ Error durante la restauración:', error);
+
+                console.error(
+                    '❌ Error durante la restauración:',
+                    error
+                );
+
                 alert(
                     '❌ No se pudo restaurar la base de datos.\n\n' +
                     error.message
                 );
+
             } finally {
+
                 if (loading) {
                     loading.style.display = 'none';
                 }
@@ -265,15 +402,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 fileRestore.value = '';
 
                 btnRestore.innerHTML = originalHTML;
+
                 btnRestore.style.cursor = 'pointer';
 
-                if ('disabled' in btnRestore) {
-                    btnRestore.disabled = false;
-                }
+                btnRestore.disabled = false;
 
                 restauracionEnProceso = false;
+
             }
+
         });
+
+    }
 
     // ============================================================
     // 8. CONFIRMACIÓN PARA CERRAR SESIÓN
@@ -282,7 +422,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const logoutLink = document.querySelector('.logout-item');
 
     if (logoutLink) {
+
         logoutLink.addEventListener('click', function (e) {
+
             const confirmar = confirm(
                 '¿Estás seguro de que deseas cerrar sesión?'
             );
@@ -290,12 +432,17 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!confirmar) {
                 e.preventDefault();
             }
+
         });
+
     }
 
     // ============================================================
     // 9. FINALIZACIÓN
     // ============================================================
 
-    console.log('✅ Sidebar inicializado correctamente');
+    console.log(
+        '✅ Sidebar inicializado correctamente'
+    );
+
 });
