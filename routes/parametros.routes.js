@@ -25,10 +25,26 @@ const uploadRestore = multer({
         }
     }
 });
+
 // ============================================================
-// RUTA DE RESTAURACIÓN USANDO mysql2 (sin CLI)
+// RUTA DE RESTAURACIÓN CON MANEJO DE ERRORES DE MULTER
 // ============================================================
-router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
+router.post("/restore", (req, res, next) => {
+    uploadRestore.single('backup')(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            return res.status(400).json({ 
+                ok: false, 
+                mensaje: `Error en la subida del archivo: ${err.message}` 
+            });
+        } else if (err) {
+            return res.status(400).json({ 
+                ok: false, 
+                mensaje: err.message 
+            });
+        }
+        next();
+    });
+}, async (req, res) => {
     const usuario = req.user || { id: 1, ID_USUARIO: 1, USUARIO: 'ADMIN' };
 
     try {
@@ -55,14 +71,11 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
         const connection = await pool.getConnection();
 
         try {
-            // 3. Dividir el SQL en statements (método práctico para dumps normales)
-            // Nota: funciona bien con dumps de tablas + datos. 
-            // Puede fallar con procedimientos almacenados complejos que usen DELIMITER.
+            // 3. Dividir el SQL en statements
             const statements = sqlContent
-                .split(/;\s*\n/)                     // divide por ; seguido de salto de línea
+                .split(/;\s*\n/) 
                 .map(stmt => stmt.trim())
                 .filter(stmt => {
-                    // Eliminar comentarios y líneas vacías
                     return stmt.length > 0 &&
                            !stmt.startsWith('--') &&
                            !stmt.startsWith('/*') &&
@@ -78,8 +91,6 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
                     await connection.query(statement);
                     ejecutados++;
                 } catch (stmtError) {
-                    // Algunos errores se pueden ignorar (ej: DROP TABLE IF EXISTS, etc.)
-                    // Si quieres ser más estricto, quita este continue
                     console.warn(`⚠️ Statement falló (se continúa): ${stmtError.message.substring(0, 120)}`);
                 }
             }
@@ -119,6 +130,7 @@ router.post("/restore", uploadRestore.single('backup'), async (req, res) => {
         });
     }
 });
+
 // ==========================================
 // VALIDACIÓN DE PARÁMETROS
 // ==========================================
@@ -203,7 +215,6 @@ router.post('/guardar', validarParametrosBackend, async (req, res) => {
                 [param.valor, usuario.id || usuario.ID_USUARIO, param.id]
             );
             
-            // CORREGIDO: Usando objeto para registrarBitacora en la actualización de parámetros también
             await registrarBitacora({
                 usuario: usuario.USUARIO || usuario.usuarioActual || 'ADMIN',
                 accion: 'ACTUALIZACION_PARAMETRO',
