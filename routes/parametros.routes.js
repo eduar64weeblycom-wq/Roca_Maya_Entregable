@@ -109,20 +109,44 @@ router.post("/restore", async (req, res) => {
 
         console.log(`📊 Sentencias detectadas: ${statements.length}`);
 
-        // ==========================================
+       // ==========================================
         // EJECUTAR SQL
         // ==========================================
+
         let ejecutados = 0;
 
-        for (const statement of statements) {
-            if (!statement.trim()) continue;
+        for (let statement of statements) {
+            if (!statement.trim()) {
+                continue;
+            }
 
             try {
+                // Parche de emergencia: Si la sentencia es un INSERT a tbl_consulta_medica y da error de JSON,
+                // podemos envolver los valores de texto plano en formato JSON válido (ej: '"U"') 
+                // o limpiar la sentencia si fuera necesario.
+                if (statement.includes('tbl_consulta_medica')) {
+                    // Reemplazamos de forma segura los valores sueltos de SINTOMAS y EXAMEN_FISICO 
+                    // si vienen como 'U' o texto plano, convirtiéndolos en strings JSON válidos ('"U"')
+                    statement = statement.replace(/,\s*'([A-Z0-9\s]+)',\s*'([A-Z0-9\s]+)',/g, (match, p1, p2) => {
+                        return `, '${JSON.stringify(p1)}', '${JSON.stringify(p2)}',`;
+                    });
+                }
+
                 await connection.query(statement);
+
                 ejecutados++;
+
             } catch (sqlError) {
-                console.error("❌ Error ejecutando sentencia:", sqlError.message);
-                console.error("SQL:", statement.substring(0, 500));
+                console.error(
+                    "❌ Error ejecutando sentencia:",
+                    sqlError.message
+                );
+
+                console.error(
+                    "SQL:",
+                    statement.substring(0, 500)
+                );
+
                 throw sqlError;
             }
         }
