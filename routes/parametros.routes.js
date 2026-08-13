@@ -74,25 +74,27 @@ router.post("/restore", async (req, res) => {
 
         console.log(`📄 Archivo SQL recibido: ${sqlContent.length} caracteres`);
 
-      // ==========================================
-        // OBTENER CONEXIÓN Y CORREGIR TIPOS SI ES NECESARIO
+        // ==========================================
+        // OBTENER CONEXIÓN Y PREPARAR SESIÓN DE MYSQL
         // ==========================================
 
         connection = await pool.getConnection();
 
         await connection.beginTransaction();
 
-        // Forzar temporalmente las columnas JSON a TEXT para evitar errores de sintaxis en respaldos antiguos
-       try {
+        // 1. Desactivar modo estricto y chequeo de llaves foráneas para la sesión actual
+        await connection.query("SET SESSION sql_mode = ''");
+        await connection.query("SET FOREIGN_KEY_CHECKS = 0");
+
+        // 2. Modificar columnas problemáticas para evitar errores por tipo JSON
+        try {
             await connection.query("ALTER TABLE tbl_consulta_medica MODIFY COLUMN SINTOMAS TEXT, MODIFY COLUMN EXAMEN_FISICO TEXT");
             await connection.query("ALTER TABLE tbl_historial_medico MODIFY COLUMN ALERGIAS TEXT, MODIFY COLUMN ENFERMEDADES_CRONICAS TEXT, MODIFY COLUMN CIRUGIAS_PREVIAS TEXT, MODIFY COLUMN MEDICAMENTOS_ACTUALES TEXT, MODIFY COLUMN ANTECEDENTES_FAMILIARES TEXT, MODIFY COLUMN HABITOS TEXT, MODIFY COLUMN VACUNAS TEXT, MODIFY COLUMN NOTAS_IMPORTANTES TEXT");
+            await connection.query("ALTER TABLE tbl_citas MODIFY COLUMN ESTADO VARCHAR(100)");
         } catch (alterErr) {
-            console.log("Nota: No se pudieron alterar algunas tablas automáticamente, continuando con el script...", alterErr.message);
+            console.log("Nota en modificación de esquemas:", alterErr.message);
         }
 
-        await connection.query(
-            'SET FOREIGN_KEY_CHECKS = 0'
-        );
         // ==========================================
         // SEPARAR SENTENCIAS
         // ==========================================
@@ -108,7 +110,8 @@ router.post("/restore", async (req, res) => {
             });
 
         console.log(`📊 Sentencias detectadas: ${statements.length}`);
-// ==========================================
+
+        // ==========================================
         // EJECUTAR SQL
         // ==========================================
 
@@ -120,43 +123,20 @@ router.post("/restore", async (req, res) => {
             }
 
             try {
-                // Parche global: Si la sentencia es un INSERT, limpia y envuelve cadenas de texto plano 
-                // en formato JSON válido ('"VALOR"') para evitar errores en columnas definidas como JSON.
-                if (statement.toUpperCase().startsWith('INSERT INTO')) {
-                    statement = statement.replace(/VALUES\s*\((.*)\)/is, (match, valuesGroup) => {
-                        const fixedValues = valuesGroup.split(',').map(val => {
-                            val = val.trim();
-                            // Si es un texto entre comillas simples que no es NULL, número o fecha
-                            if (val.startsWith("'") && val.endsWith("'") && !val.match(/^\'\d{4}-\d{2}-\d{2}/)) {
-                                const inner = val.slice(1, -1);
-                                // Si el texto interno no tiene pinta de JSON válido, lo convertimos en string JSON
-                                try {
-                                    JSON.parse(inner);
-                                    return val; // Ya es JSON válido
-                                } catch {
-                                    return `'${JSON.stringify(inner)}'`;
-                                }
-                            }
-                            return val;
-                        }).join(', ');
-                        return `VALUES (${fixedValues})`;
-                    });
-                }
-
                 await connection.query(statement);
-
                 ejecutados++;
-
             } catch (sqlError) {
                 console.error(
                     "❌ Error ejecutando sentencia:",
                     sqlError.message
                 );
+                console.error("SQL con error:", statement.substring(0, 300));
                 throw sqlError;
             }
         }
+
         // ==========================================
-        // REACTIVAR FOREIGN KEYS
+        // REACTIVAR FOREIGN KEYS Y COMMIT
         // ==========================================
         await connection.query('SET FOREIGN_KEY_CHECKS = 1');
         await connection.commit();
