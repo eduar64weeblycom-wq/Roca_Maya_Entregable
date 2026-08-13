@@ -29,7 +29,7 @@ const uploadRestore = multer({
 // ============================================================
 // RUTA DE RESTAURACIÓN OPTIMIZADA Y SEGURA
 // ============================================================
-router.post("/restore", (req, res, next) => {
+router.post("/upload-sql-data", (req, res, next) => {
     uploadRestore.single('backup')(req, res, (err) => {
         if (err instanceof multer.MulterError) {
             return res.status(400).json({ 
@@ -67,7 +67,6 @@ router.post("/restore", (req, res, next) => {
             });
         }
 
-        // Limpiar y separar sentencias de forma robusta
         const statements = sqlContent
             .split(/;\s*[\r\n]+/)
             .map(stmt => stmt.trim())
@@ -80,7 +79,6 @@ router.post("/restore", (req, res, next) => {
 
         console.log(`📄 Se procesarán ${statements.length} sentencias SQL`);
 
-        // Desactivar temporalmente las restricciones de claves foráneas para evitar conflictos de orden al restaurar
         await connection.query('SET FOREIGN_KEY_CHECKS = 0;');
         await connection.beginTransaction();
 
@@ -97,7 +95,6 @@ router.post("/restore", (req, res, next) => {
 
         console.log(`✅ Restauración completada con éxito. Sentencias ejecutadas: ${ejecutados}`);
 
-        // Registrar en bitácora de manera segura
         try {
             await registrarBitacora({
                 usuario: usuario.USUARIO || usuario.usuarioActual || 'ADMIN',
@@ -122,7 +119,7 @@ router.post("/restore", (req, res, next) => {
         await connection.rollback();
         try {
             await connection.query('SET FOREIGN_KEY_CHECKS = 1;');
-        } catch (e) { /* ignorar si falla la reactivación en el catch */ }
+        } catch (e) { /* ignorar */ }
 
         console.error("❌ Error crítico en restauración:", error);
         return res.status(500).json({
