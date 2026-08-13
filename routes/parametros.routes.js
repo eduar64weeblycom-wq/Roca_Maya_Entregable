@@ -23,7 +23,49 @@ router.get("/", async (req, res) => {
         res.status(500).send("Error interno al cargar la página de parámetros");
     }
 });
+// ============================================================
+// GUARDAR CAMBIOS DE PARÁMETROS (POST)
+// ============================================================
+router.post("/guardar", async (req, res) => {
+    const { parametros } = req.body;
+    
+    if (!parametros || !Array.isArray(parametros)) {
+        return res.status(400).json({
+            success: false,
+            message: "No se recibieron datos válidos para guardar."
+        });
+    }
 
+    const connection = await pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        for (let param of parametros) {
+            await connection.query(
+                "UPDATE tbl_parametros SET VALOR = ? WHERE ID_PARAMETRO = ?",
+                [param.valor, param.id]
+            );
+        }
+
+        await connection.commit();
+
+        return res.status(200).json({
+            success: true,
+            message: "Parámetros actualizados correctamente."
+        });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error("❌ Error al guardar parámetros:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Error interno al actualizar los parámetros."
+        });
+    } finally {
+        connection.release();
+    }
+});
 // ============================================================
 // RESTAURACIÓN DE BASE DE DATOS (POST)
 // Soportando tanto /restore como /upload-sql-data
