@@ -7,15 +7,28 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const util = require('util');
-const { execFile } = require('child_process');
-
-const execFilePromise = util.promisify(execFile);
 
 // ============================================================
-// RESTAURACIÓN DE BASE DE DATOS
+// VISTA DE PARÁMETROS (GET)
 // ============================================================
+router.get("/", async (req, res) => {
+    try {
+        const [parametros] = await pool.query("SELECT * FROM tbl_parametros");
+        res.render("parametros", {
+            usuario: req.user || { USUARIO: 'ADMIN', ROL: 'ADMINISTRADOR' },
+            parametros: parametros
+        });
+    } catch (err) {
+        console.error("❌ Error al cargar parámetros:", err.message);
+        res.status(500).send("Error interno al cargar la página de parámetros");
+    }
+});
 
-router.post("/restore", async (req, res) => {
+// ============================================================
+// RESTAURACIÓN DE BASE DE DATOS (POST)
+// Soportando tanto /restore como /upload-sql-data
+// ============================================================
+const procesarRestauracion = async (req, res) => {
     const usuario = req.user || {
         ID_USUARIO: 1,
         USUARIO: 'ADMIN'
@@ -24,69 +37,36 @@ router.post("/restore", async (req, res) => {
     let connection;
 
     try {
-        console.log("==========================================");
-        console.log("🔥 ROUTER PARAMETROS - RESTAURACIÓN");
-        console.log("Método:", req.method);
-        console.log("URL:", req.originalUrl);
-        console.log("Usuario:", usuario.USUARIO);
-        console.log("Content-Type:", req.headers["content-type"]);
-        console.log("==========================================");
+        let sqlContent = '';
 
-        const { backupBase64 } = req.body;
-
-        if (!backupBase64) {
-            return res.status(400).json({
-                ok: false,
-                mensaje: "No se recibió ningún archivo SQL."
-            });
-        }
-
-        // ==========================================
-        // LIMPIAR DATA URL
-        // ==========================================
-        const base64Data = backupBase64.includes(';base64,')
-            ? backupBase64.split(';base64,').pop()
-            : backupBase64;
-
-        // ==========================================
-        // DECODIFICAR ARCHIVO
-        // ==========================================
-        let sqlContent;
-
-        try {
-            sqlContent = Buffer
-                .from(base64Data, 'base64')
-                .toString('utf8');
-        } catch (decodeError) {
-            console.error("❌ Error decodificando Base64:", decodeError);
-            return res.status(400).json({
-                ok: false,
-                mensaje: "El archivo SQL no pudo ser procesado."
-            });
+        // Soportar tanto archivo adjunto (FormData) como Base64 (JSON)
+        if (req.file) {
+            sqlContent = fs.readFileSync(req.file.path, 'utf8');
+            // Limpiar archivo temporal si se usó multer
+            try { fs.unlinkSync(req.file.path); } catch(e) {}
+        } else if (req.body && req.body.backupBase64) {
+            const base64Data = req.body.backupBase64.includes(';base64,')
+                ? req.body.backupBase64.split(';base64,').pop()
+                : req.body.backupBase64;
+            sqlContent = Buffer.from(base64Data, 'base64').toString('utf8');
         }
 
         if (!sqlContent || sqlContent.trim().length < 10) {
             return res.status(400).json({
                 ok: false,
+                success: false,
                 mensaje: "El archivo SQL está vacío o es inválido."
             });
         }
 
-        console.log(`📄 Archivo SQL recibido: ${sqlContent.length} caracteres`);
-
-        // ==========================================
-        // OBTENER CONEXIÓN Y PREPARAR SESIÓN DE MYSQL
-        // ==========================================
-
         connection = await pool.getConnection();
-
         await connection.beginTransaction();
 
-        // 1. Desactivar modo estricto y chequeo de llaves foráneas para la sesión actual
+        // Desactivar modo estricto y llaves foráneas temporalmente
         await connection.query("SET SESSION sql_mode = ''");
         await connection.query("SET FOREIGN_KEY_CHECKS = 0");
 
-        // 2. Modificar columnas problemáticas para evitar errores por tipo JSON
+        // Modificar columnas problemáticas o JSON si existen
         try {
             await connection.query("ALTER TABLE tbl_consulta_medica MODIFY COLUMN SINTOMAS TEXT, MODIFY COLUMN EXAMEN_FISICO TEXT");
             await connection.query("ALTER TABLE tbl_historial_medico MODIFY COLUMN ALERGIAS TEXT, MODIFY COLUMN ENFERMEDADES_CRONICAS TEXT, MODIFY COLUMN CIRUGIAS_PREVIAS TEXT, MODIFY COLUMN MEDICAMENTOS_ACTUALES TEXT, MODIFY COLUMN ANTECEDENTES_FAMILIARES TEXT, MODIFY COLUMN HABITOS TEXT, MODIFY COLUMN VACUNAS TEXT, MODIFY COLUMN NOTAS_IMPORTANTES TEXT");
@@ -95,9 +75,6 @@ router.post("/restore", async (req, res) => {
             console.log("Nota en modificación de esquemas:", alterErr.message);
         }
 
-        // ==========================================
-        // SEPARAR SENTENCIAS
-        // ==========================================
         const statements = sqlContent
             .split(/;\s*(?:\r?\n|$)/)
             .map(statement => statement.trim())
@@ -109,50 +86,28 @@ router.post("/restore", async (req, res) => {
                 return true;
             });
 
-        console.log(`📊 Sentencias detectadas: ${statements.length}`);
-// ==========================================
-        // EJECUTAR SQL
-        // ==========================================
-
         let ejecutados = 0;
 
         for (let statement of statements) {
-            if (!statement.trim()) {
-                continue;
-            }
+            if (!statement.trim()) continue;
 
             try {
-                // Parche para evitar errores con columnas generadas (calculadas) como IMC en tbl_preclinica
+                // Omitir columna generada IMC si aparece explícitamente en tbl_preclinica
                 if (statement.toUpperCase().includes('TBL_PRECLINICA')) {
-                    // Remover la columna `IMC` y su valor correspondiente del INSERT si vienen explícitos
                     statement = statement.replace(/,\s*`IMC`/, '');
-                    // Expresión para remover el valor numérico correspondiente a IMC en la cláusula VALUES
-                    // (Asume que el valor de IMC está presente en los valores)
                 }
 
                 await connection.query(statement);
                 ejecutados++;
             } catch (sqlError) {
-                // Si la sentencia falla específicamente por la columna generada, intentamos ignorarla o la reportamos
-                console.error(
-                    "❌ Error ejecutando sentencia:",
-                    sqlError.message
-                );
-                console.error("SQL con error:", statement.substring(0, 300));
+                console.error("❌ Error ejecutando sentencia:", sqlError.message);
                 throw sqlError;
             }
         }
-        // ==========================================
-        // REACTIVAR FOREIGN KEYS Y COMMIT
-        // ==========================================
+
         await connection.query('SET FOREIGN_KEY_CHECKS = 1');
         await connection.commit();
 
-        console.log(`✅ Restauración completada: ${ejecutados} sentencias`);
-
-        // ==========================================
-        // BITÁCORA
-        // ==========================================
         try {
             await registrarBitacora({
                 usuario: usuario.USUARIO || 'ADMIN',
@@ -178,17 +133,8 @@ router.post("/restore", async (req, res) => {
         console.error("❌ ERROR CRÍTICO EN RESTAURACIÓN:", error);
 
         if (connection) {
-            try {
-                await connection.rollback();
-            } catch (rollbackError) {
-                console.error("Error en rollback:", rollbackError.message);
-            }
-
-            try {
-                await connection.query('SET FOREIGN_KEY_CHECKS = 1');
-            } catch (fkError) {
-                console.error("Error restaurando FOREIGN_KEY_CHECKS:", fkError.message);
-            }
+            try { await connection.rollback(); } catch (e) {}
+            try { await connection.query('SET FOREIGN_KEY_CHECKS = 1'); } catch (e) {}
         }
 
         return res.status(500).json({
@@ -198,10 +144,12 @@ router.post("/restore", async (req, res) => {
         });
 
     } finally {
-        if (connection) {
-            connection.release();
-        }
+        if (connection) connection.release();
     }
-});
+};
+
+// Registrar ambas rutas para evitar conflictos con el frontend
+router.post("/restore", procesarRestauracion);
+router.post("/upload-sql-data", procesarRestauracion);
 
 module.exports = router;
