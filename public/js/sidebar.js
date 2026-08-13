@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ============================================================
-    // 7. RESTAURACIÓN DE BASE DE DATOS (CON BASE64 PARA EVITAR WAF)
+    // 7. RESTAURACIÓN DE BASE DE DATOS (CON FORMDATA PARA MULTER)
     // ============================================================
 
     const btnRestore = document.getElementById('btnRestore');
@@ -188,23 +188,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     'bytes'
                 );
 
-                // Leer el archivo y pasarlo a Base64
-                const base64Content = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(archivoSql);
-                });
+                // Crear FormData tal como lo espera upload.single('backup') en el backend
+                const formData = new FormData();
+                formData.append('backup', archivoSql);
 
                 const response = await fetch('/parametros/upload-sql-data', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        backupBase64: base64Content,
-                        fileName: archivoSql.name
-                    }),
+                    body: formData, // Envía el archivo multipart directamente
                     credentials: 'include'
                 });
 

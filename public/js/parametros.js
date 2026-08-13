@@ -68,97 +68,99 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // BOTÓN GUARDAR - VALIDACIÓN FINAL
-    btnGuardar.addEventListener('click', async function() {
-        if (loading) loading.style.display = 'flex';
-        
-        const modificados = [];
-        let tieneErrores = false;
+    if (btnGuardar) {
+        btnGuardar.addEventListener('click', async function() {
+            if (loading) loading.style.display = 'flex';
+            
+            const modificados = [];
+            let tieneErrores = false;
 
-        document.querySelectorAll('.valor-parametro.input-modified').forEach(input => {
-            const clave = input.getAttribute('data-clave');
-            const valor = input.value.trim();
-            
-            if (valor === '') {
-                alert('ERROR: El parametro ' + clave + ' no puede estar vacio');
-                input.focus();
-                tieneErrores = true;
-                return;
-            }
-            
-            if (esParametroNumerico(clave)) {
-                if (!/^\d+$/.test(valor)) {
-                    alert('ERROR: ' + clave + ' debe contener solo numeros');
+            document.querySelectorAll('.valor-parametro.input-modified').forEach(input => {
+                const clave = input.getAttribute('data-clave');
+                const valor = input.value.trim();
+                
+                if (valor === '') {
+                    alert('ERROR: El parametro ' + clave + ' no puede estar vacio');
                     input.focus();
                     tieneErrores = true;
                     return;
                 }
                 
-                const valorNum = parseInt(valor);
-                if (valorNum < 1) {
-                    alert('ERROR: ' + clave + ' debe ser al menos 1');
+                if (esParametroNumerico(clave)) {
+                    if (!/^\d+$/.test(valor)) {
+                        alert('ERROR: ' + clave + ' debe contener solo numeros');
+                        input.focus();
+                        tieneErrores = true;
+                        return;
+                    }
+                    
+                    const valorNum = parseInt(valor);
+                    if (valorNum < 1) {
+                        alert('ERROR: ' + clave + ' debe ser al menos 1');
+                        input.focus();
+                        tieneErrores = true;
+                        return;
+                    }
+                }
+                
+                if (esParametroEmail(clave) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor)) {
+                    alert('ERROR: ' + clave + ' debe ser un email valido');
                     input.focus();
                     tieneErrores = true;
                     return;
                 }
-            }
-            
-            if (esParametroEmail(clave) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor)) {
-                alert('ERROR: ' + clave + ' debe ser un email valido');
-                input.focus();
-                tieneErrores = true;
+
+                modificados.push({
+                    id: input.getAttribute('data-id'),
+                    clave: clave,
+                    valor: valor,
+                    valorOriginal: input.getAttribute('data-original-value')
+                });
+            });
+
+            if (tieneErrores) {
+                if (loading) loading.style.display = 'none';
                 return;
             }
 
-            modificados.push({
-                id: input.getAttribute('data-id'),
-                clave: clave,
-                valor: valor,
-                valorOriginal: input.getAttribute('data-original-value')
-            });
-        });
+            if (modificados.length === 0) {
+                if (loading) loading.style.display = 'none';
+                alert('No hay cambios para guardar');
+                return;
+            }
 
-        if (tieneErrores) {
-            if (loading) loading.style.display = 'none';
-            return;
-        }
-
-        if (modificados.length === 0) {
-            if (loading) loading.style.display = 'none';
-            alert('No hay cambios para guardar');
-            return;
-        }
-
-        try {
-            const response = await fetch('/parametros/guardar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ parametros: modificados })
-            });
-            
-            const data = await response.json();
-            
-            if (data && (data.success === true || data.ok === true)) {
-                modificados.forEach(param => {
-                    const input = document.querySelector(`[data-id="${param.id}"]`);
-                    if (input) {
-                        input.setAttribute('data-original-value', param.valor);
-                        input.classList.remove('input-modified');
-                    }
+            try {
+                const response = await fetch('/parametros/guardar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parametros: modificados })
                 });
                 
-                alert(data.message || data.mensaje || 'Cambios guardados correctamente');
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                alert(data.message || data.mensaje || 'Error al guardar los parámetros');
+                const data = await response.json();
+                
+                if (data && (data.success === true || data.ok === true)) {
+                    modificados.forEach(param => {
+                        const input = document.querySelector(`[data-id="${param.id}"]`);
+                        if (input) {
+                            input.setAttribute('data-original-value', param.valor);
+                            input.classList.remove('input-modified');
+                        }
+                    });
+                    
+                    alert(data.message || data.mensaje || 'Cambios guardados correctamente');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    alert(data.message || data.mensaje || 'Error al guardar los parámetros');
+                }
+                
+            } catch (error) {
+                console.error('Error de conexion:', error);
+                alert('Error de conexion con el servidor');
+            } finally {
+                if (loading) loading.style.display = 'none';
             }
-            
-        } catch (error) {
-            console.error('Error de conexion:', error);
-            alert('Error de conexion con el servidor');
-        } finally {
-            if (loading) loading.style.display = 'none';
-        }
-    });
+        });
+    }
 
     // BOTÓN BACKUP
     if (btnBackup) {
@@ -175,15 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // BOTÓN RESTORE (MODIFICADO A BASE64 PARA EVITAR WAF 403)
-    if (btnRestore && fileRestore) {
-        btnRestore.addEventListener('click', () => {
-            if(confirm('⚠️ ADVERTENCIA: La restauración reemplazará todos los datos actuales. ¿Deseas continuar?')) {
-                fileRestore.click();
-            }
-        });
-
-       // BOTÓN RESTORE
+    // BOTÓN RESTORE
     if (btnRestore && fileRestore) {
         btnRestore.addEventListener('click', () => {
             if(confirm('⚠️ ADVERTENCIA: La restauración reemplazará todos los datos actuales. ¿Deseas continuar?')) {
@@ -201,18 +195,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (loading) loading.style.display = 'flex';
 
             try {
-                // Apunta a la ruta exacta configurada en tu backend
                 const response = await fetch('/parametros/upload-sql-data', {
                     method: 'POST',
-                    body: formData // Envía multipart/form-data directamente
+                    body: formData
                 });
 
                 const data = await response.json();
                 
                 alert(data.message || data.mensaje);
-                if(data.success || data.ok) {
-                    window.location.reload();
-                }
+                if(data.success || data.ok) window.location.reload();
             } catch (err) {
                 console.error('Error al restaurar:', err);
                 alert('Error al restaurar: ' + err.message);
