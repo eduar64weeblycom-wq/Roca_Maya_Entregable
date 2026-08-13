@@ -1,72 +1,66 @@
+const express = require('express');
+const router = express.Router();
+
+const pool = require('../database/db');
+const { registrarBitacora } = require('../services/bitacora.service');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const util = require('util');
+const { execFile } = require('child_process');
+
+const execFilePromise = util.promisify(execFile);
+
 // ============================================================
 // RESTAURACIÓN DE BASE DE DATOS
-// POST /parametros/restore
 // ============================================================
 
-router.post("/restore", async (req, res) => {
+router.post("/upload-sql-data", async (req, res) => {
 
-    let connection = null;
+    const usuario = req.user || {
+        ID_USUARIO: 1,
+        USUARIO: 'ADMIN'
+    };
+
+    let connection;
 
     try {
 
         console.log("==========================================");
-        console.log("🔥 RESTAURACIÓN DE BASE DE DATOS");
+        console.log("🔥 ROUTER PARAMETROS - RESTAURACIÓN");
         console.log("Método:", req.method);
         console.log("URL:", req.originalUrl);
-        console.log("Usuario:", req.user?.USUARIO || "NO IDENTIFICADO");
+        console.log("Usuario:", usuario.USUARIO);
+        console.log("Content-Type:", req.headers["content-type"]);
         console.log("==========================================");
 
-        const { backupBase64, nombreArchivo } = req.body;
-
-        // ========================================================
-        // VALIDAR ARCHIVO
-        // ========================================================
+        const { backupBase64 } = req.body;
 
         if (!backupBase64) {
-
             return res.status(400).json({
                 ok: false,
                 mensaje: "No se recibió ningún archivo SQL."
             });
-
         }
 
-        // ========================================================
-        // VALIDAR NOMBRE
-        // ========================================================
+        // ==========================================
+        // LIMPIAR DATA URL
+        // ==========================================
 
-        if (
-            nombreArchivo &&
-            !nombreArchivo.toLowerCase().endsWith(".sql")
-        ) {
-
-            return res.status(400).json({
-                ok: false,
-                mensaje: "El archivo debe tener extensión .sql."
-            });
-
-        }
-
-        // ========================================================
-        // OBTENER BASE64
-        // ========================================================
-
-        const base64Data = backupBase64.includes(";base64,")
-            ? backupBase64.split(";base64,")[1]
+        const base64Data = backupBase64.includes(';base64,')
+            ? backupBase64.split(';base64,').pop()
             : backupBase64;
 
-        // ========================================================
-        // DECODIFICAR
-        // ========================================================
+        // ==========================================
+        // DECODIFICAR ARCHIVO
+        // ==========================================
 
         let sqlContent;
 
         try {
-
             sqlContent = Buffer
-                .from(base64Data, "base64")
-                .toString("utf8");
-
+                .from(base64Data, 'base64')
+                .toString('utf8');
         } catch (decodeError) {
 
             console.error(
@@ -76,95 +70,72 @@ router.post("/restore", async (req, res) => {
 
             return res.status(400).json({
                 ok: false,
-                mensaje: "El archivo SQL no pudo ser decodificado."
+                mensaje: "El archivo SQL no pudo ser procesado."
             });
-
         }
 
-        // ========================================================
-        // VALIDAR CONTENIDO
-        // ========================================================
-
-        if (
-            !sqlContent ||
-            sqlContent.trim().length < 10
-        ) {
-
+        if (!sqlContent || sqlContent.trim().length < 10) {
             return res.status(400).json({
                 ok: false,
                 mensaje: "El archivo SQL está vacío o es inválido."
             });
-
         }
 
         console.log(
-            "📄 SQL recibido:",
-            sqlContent.length,
-            "caracteres"
+            `📄 Archivo SQL recibido: ${sqlContent.length} caracteres`
         );
 
-        // ========================================================
-        // CONEXIÓN
-        // ========================================================
+        // ==========================================
+        // OBTENER CONEXIÓN
+        // ==========================================
 
         connection = await pool.getConnection();
 
-        // ========================================================
-        // DESACTIVAR FOREIGN KEYS
-        // ========================================================
-
-        await connection.query(
-            "SET FOREIGN_KEY_CHECKS = 0"
-        );
-
-        // ========================================================
-        // TRANSACCIÓN
-        // ========================================================
-
         await connection.beginTransaction();
 
-        // ========================================================
+        await connection.query(
+            'SET FOREIGN_KEY_CHECKS = 0'
+        );
+
+        // ==========================================
         // SEPARAR SENTENCIAS
-        // ========================================================
+        // ==========================================
 
         const statements = sqlContent
             .split(/;\s*(?:\r?\n|$)/)
-            .map(stmt => stmt.trim())
-            .filter(stmt => {
+            .map(statement => statement.trim())
+            .filter(statement => {
 
-                if (!stmt) {
+                if (!statement) return false;
+
+                if (statement.startsWith('--')) {
                     return false;
                 }
 
-                if (stmt.startsWith("--")) {
+                if (statement.startsWith('/*')) {
                     return false;
                 }
 
-                if (stmt.startsWith("/*")) {
-                    return false;
-                }
-
-                if (stmt.startsWith("//")) {
+                if (statement.startsWith('//')) {
                     return false;
                 }
 
                 return true;
-
             });
 
         console.log(
             `📊 Sentencias detectadas: ${statements.length}`
         );
 
-        // ========================================================
+        // ==========================================
         // EJECUTAR SQL
-        // ========================================================
+        // ==========================================
 
         let ejecutados = 0;
 
         for (const statement of statements) {
 
-            if (!statement) {
+            if (!statement.trim()) {
                 continue;
             }
 
@@ -188,46 +159,41 @@ router.post("/restore", async (req, res) => {
 
                 throw sqlError;
             }
-
         }
 
-        // ========================================================
-        // COMMIT
-        // ========================================================
+        // ==========================================
+        // REACTIVAR FOREIGN KEYS
+        // ==========================================
+
+        await connection.query(
+            'SET FOREIGN_KEY_CHECKS = 1'
+        );
 
         await connection.commit();
 
-        // ========================================================
-        // REACTIVAR FOREIGN KEYS
-        // ========================================================
-
-        await connection.query(
-            "SET FOREIGN_KEY_CHECKS = 1"
+        console.log(
+            `✅ Restauración completada: ${ejecutados} sentencias`
         );
 
-        // ========================================================
+        // ==========================================
         // BITÁCORA
-        // ========================================================
+        // ==========================================
 
         try {
 
-            const usuario =
-                req.user?.USUARIO ||
-                req.usuarioActual ||
-                "ADMIN";
-
             await registrarBitacora({
-
-                usuario,
+                usuario:
+                    usuario.USUARIO ||
+                    'ADMIN',
 
                 accion:
-                    "RESTAURACION_BASE_DATOS",
+                    'RESTAURACION_BASE_DATOS',
 
                 modulo:
-                    "SEGURIDAD",
+                    'SEGURIDAD',
 
                 descripcion:
-                    `Base de datos restaurada correctamente. Archivo: ${nombreArchivo || "backup.sql"}. Sentencias ejecutadas: ${ejecutados}`,
+                    `Base de datos restaurada mediante archivo SQL (${ejecutados} sentencias ejecutadas)`,
 
                 idRegistro:
                     null,
@@ -236,28 +202,19 @@ router.post("/restore", async (req, res) => {
                     null,
 
                 estado:
-                    "EXITO",
+                    'EXITO',
 
-                req
-
+                req:
+                    req
             });
 
         } catch (bitacoraError) {
 
             console.error(
                 "⚠️ Error registrando bitácora:",
-                bitacoraError
+                bitacoraError.message
             );
-
         }
-
-        // ========================================================
-        // RESPUESTA
-        // ========================================================
-
-        console.log(
-            `✅ Restauración completada: ${ejecutados} sentencias`
-        );
 
         return res.status(200).json({
 
@@ -277,40 +234,27 @@ router.post("/restore", async (req, res) => {
             error
         );
 
-        // ========================================================
-        // ROLLBACK
-        // ========================================================
-
         if (connection) {
 
             try {
-
                 await connection.rollback();
-
             } catch (rollbackError) {
-
                 console.error(
                     "Error en rollback:",
-                    rollbackError
+                    rollbackError.message
                 );
-
             }
 
             try {
-
                 await connection.query(
-                    "SET FOREIGN_KEY_CHECKS = 1"
+                    'SET FOREIGN_KEY_CHECKS = 1'
                 );
-
             } catch (fkError) {
-
                 console.error(
                     "Error restaurando FOREIGN_KEY_CHECKS:",
-                    fkError
+                    fkError.message
                 );
-
             }
-
         }
 
         return res.status(500).json({
@@ -332,5 +276,8 @@ router.post("/restore", async (req, res) => {
         }
 
     }
-
 });
+
+function validarParametrosBackend(req, res, next) {
+
+module.exports = router;
