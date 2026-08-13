@@ -128,7 +128,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // ENVIAR AL SERVIDOR (Ajusta la ruta según tu app.js, ej. /parametros/guardar o /bitacora/parametros/guardar)
         try {
             const response = await fetch('/parametros/guardar', {
                 method: 'POST',
@@ -176,10 +175,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // BOTÓN RESTORE
+    // BOTÓN RESTORE (MODIFICADO A BASE64 PARA EVITAR WAF 403)
     if (btnRestore && fileRestore) {
         btnRestore.addEventListener('click', () => {
-            if(confirm('ADVERTENCIA: La restauración reemplazará todos los datos actuales. ¿Deseas continuar?')) {
+            if(confirm('⚠️ ADVERTENCIA: La restauración reemplazará todos los datos actuales. ¿Deseas continuar?')) {
                 fileRestore.click();
             }
         });
@@ -188,17 +187,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const file = e.target.files[0];
             if (!file) return;
 
-            const formData = new FormData();
-            formData.append('backup', file);
-
             if (loading) loading.style.display = 'flex';
 
             try {
-                // Apunta a la ruta exacta definida en tu router de backend (/restore)
+                // Leer archivo y pasarlo a Base64
+                const base64Content = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+
                 const response = await fetch('/parametros/restore', {
                     method: 'POST',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        backupBase64: base64Content,
+                        fileName: file.name
+                    })
                 });
+
                 const data = await response.json();
                 
                 alert(data.message || data.mensaje);
@@ -228,27 +236,5 @@ document.addEventListener('DOMContentLoaded', function() {
     function esParametroEmail(clave) {
         const emails = ['CORREO_USUARIO', 'CORREO_DESTINATARIO', 'ADMIN_CORREO'];
         return emails.includes(clave);
-    }
-});
-
-router.post('/parametros/restore', upload.single('backup'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'No se ha seleccionado ningún archivo de respaldo.' });
-        }
-
-        // Procesa tu archivo .sql aquí...
-
-        return res.status(200).json({
-            success: true,
-            message: 'Base de datos restaurada correctamente.'
-        });
-
-    } catch (error) {
-        console.error('Error al restaurar base de datos:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Error en el servidor al restaurar: ' + error.message
-        });
     }
 });

@@ -27,8 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function openMenu() {
         sidebarModal.classList.add('open');
         modalOverlay.classList.add('active');
-
-        // Evitar scroll del contenido de fondo
         document.body.style.overflow = 'hidden';
     }
 
@@ -39,8 +37,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function closeMenu() {
         sidebarModal.classList.remove('open');
         modalOverlay.classList.remove('active');
-
-        // Restaurar scroll
         document.body.style.overflow = '';
     }
 
@@ -81,15 +77,11 @@ document.addEventListener('DOMContentLoaded', function () {
     );
 
     sidebarLinks.forEach(function (link) {
-
         link.addEventListener('click', function () {
-
-            // No cerrar automáticamente si es el botón de restauración
             if (this.id === 'btnRestore') {
                 return;
             }
 
-            // Si es un enlace, cerrar sidebar
             if (this.tagName === 'A') {
                 setTimeout(function () {
                     if (sidebarModal.classList.contains('open')) {
@@ -101,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ============================================================
-    // 7. RESTAURACIÓN DE BASE DE DATOS
+    // 7. RESTAURACIÓN DE BASE DE DATOS (CON BASE64 PARA EVITAR WAF)
     // ============================================================
 
     const btnRestore = document.getElementById('btnRestore');
@@ -112,16 +104,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (btnRestore && fileRestore) {
 
-        // ========================================================
-        // 7.1 ABRIR SELECTOR DE ARCHIVO
-        // ========================================================
-
         btnRestore.addEventListener('click', function (e) {
-
             e.preventDefault();
             e.stopPropagation();
 
-            // Evitar doble ejecución
             if (restauracionEnProceso) {
                 return;
             }
@@ -137,25 +123,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Abrir selector de archivos
             fileRestore.click();
         });
 
-        // ========================================================
-        // 7.2 ARCHIVO SELECCIONADO
-        // ========================================================
-
         fileRestore.addEventListener('change', async function () {
-
             const archivoSql = this.files && this.files[0];
 
             if (!archivoSql) {
                 return;
             }
-
-            // ====================================================
-            // VALIDAR EXTENSIÓN
-            // ====================================================
 
             const extension = archivoSql.name
                 .split('.')
@@ -171,10 +147,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // ====================================================
-            // VALIDAR TAMAÑO
-            // ====================================================
-
             const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
 
             if (archivoSql.size > MAX_SIZE) {
@@ -186,19 +158,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // ====================================================
-            // VALIDAR ARCHIVO VACÍO
-            // ====================================================
-
             if (archivoSql.size === 0) {
                 alert('❌ El archivo seleccionado está vacío.');
                 fileRestore.value = '';
                 return;
             }
-
-            // ====================================================
-            // ACTIVAR ESTADO DE RESTAURACIÓN
-            // ====================================================
 
             restauracionEnProceso = true;
 
@@ -206,7 +170,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             btnRestore.innerHTML =
                 '<i class="fas fa-spinner fa-spin"></i> Restaurando...';
-
             btnRestore.style.cursor = 'wait';
 
             if ('disabled' in btnRestore) {
@@ -225,16 +188,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     'bytes'
                 );
 
-                // ====================================================
-                // CREAR FORMDATA Y ENVIAR AL BACKEND
-                // ====================================================
+                // Leer el archivo y pasarlo a Base64
+                const base64Content = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(archivoSql);
+                });
 
-                const formData = new FormData();
-                formData.append('backup', archivoSql);
-
-const response = await fetch('/parametros/upload-sql-data', {
+                const response = await fetch('/parametros/upload-sql-data', {
                     method: 'POST',
-                    body: formData,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        backupBase64: base64Content,
+                        fileName: archivoSql.name
+                    }),
                     credentials: 'include'
                 });
 
