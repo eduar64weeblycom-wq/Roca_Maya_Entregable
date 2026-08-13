@@ -83,11 +83,11 @@ router.post("/restore", async (req, res) => {
         await connection.beginTransaction();
 
         // Forzar temporalmente las columnas JSON a TEXT para evitar errores de sintaxis en respaldos antiguos
-        try {
-            await connection.query('ALTER TABLE tbl_consulta_medica MODIFY COLUMN SINTOMAS TEXT');
-            await connection.query('ALTER TABLE tbl_consulta_medica MODIFY COLUMN EXAMEN_FISICO TEXT');
-        } catch (alterError) {
-            console.log("Nota: No se pudo alterar la tabla automáticamente (quizás ya es TEXT), continuando...");
+       try {
+            await connection.query("ALTER TABLE tbl_consulta_medica MODIFY COLUMN SINTOMAS TEXT, MODIFY COLUMN EXAMEN_FISICO TEXT");
+            await connection.query("ALTER TABLE tbl_historial_medico MODIFY COLUMN ALERGIAS TEXT, MODIFY COLUMN ENFERMEDADES_CRONICAS TEXT, MODIFY COLUMN CIRUGIAS_PREVIAS TEXT, MODIFY COLUMN MEDICAMENTOS_ACTUALES TEXT, MODIFY COLUMN ANTECEDENTES_FAMILIARES TEXT, MODIFY COLUMN HABITOS TEXT, MODIFY COLUMN VACUNAS TEXT, MODIFY COLUMN NOTAS_IMPORTANTES TEXT");
+        } catch (alterErr) {
+            console.log("Nota: No se pudieron alterar algunas tablas automáticamente, continuando con el script...", alterErr.message);
         }
 
         await connection.query(
