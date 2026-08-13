@@ -74,13 +74,25 @@ router.post("/restore", async (req, res) => {
 
         console.log(`📄 Archivo SQL recibido: ${sqlContent.length} caracteres`);
 
+      // ==========================================
+        // OBTENER CONEXIÓN Y CORREGIR TIPOS SI ES NECESARIO
         // ==========================================
-        // OBTENER CONEXIÓN
-        // ==========================================
-        connection = await pool.getConnection();
-        await connection.beginTransaction();
-        await connection.query('SET FOREIGN_KEY_CHECKS = 0');
 
+        connection = await pool.getConnection();
+
+        await connection.beginTransaction();
+
+        // Forzar temporalmente las columnas JSON a TEXT para evitar errores de sintaxis en respaldos antiguos
+        try {
+            await connection.query('ALTER TABLE tbl_consulta_medica MODIFY COLUMN SINTOMAS TEXT');
+            await connection.query('ALTER TABLE tbl_consulta_medica MODIFY COLUMN EXAMEN_FISICO TEXT');
+        } catch (alterError) {
+            console.log("Nota: No se pudo alterar la tabla automáticamente (quizás ya es TEXT), continuando...");
+        }
+
+        await connection.query(
+            'SET FOREIGN_KEY_CHECKS = 0'
+        );
         // ==========================================
         // SEPARAR SENTENCIAS
         // ==========================================
