@@ -282,7 +282,25 @@ app.use((req, res, next) => {
     next();
 });
 // En app.js
-app.use("/parametros", verificarSesion, require("./routes/parametros.routes"));
+// ============================================================
+// RUTAS DE PARÁMETROS
+// ============================================================
+
+const parametrosRouter = require("./routes/parametros.routes");
+
+app.use("/parametros", (req, res, next) => {
+    console.log("==========================================");
+    console.log("🔥 PETICIÓN PARAMETROS");
+    console.log("Método:", req.method);
+    console.log("URL:", req.originalUrl);
+    console.log("Usuario req.user:", req.user || "SIN req.user");
+    console.log("Usuario actual:", req.usuarioActual || "SIN usuarioActual");
+    console.log("Cookies:", Object.keys(req.cookies || {}));
+    console.log("Content-Type:", req.headers["content-type"]);
+    console.log("==========================================");
+
+    next();
+}, verificarSesion, parametrosRouter);
 
 // ============================================================
 // RUTA DE LOGOUT
