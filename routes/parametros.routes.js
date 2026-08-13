@@ -257,7 +257,7 @@ router.post("/restore", async (req, res) => {
             }
         }
 
-        return res.status(500).json({
+       return res.status(500).json({
             ok: false,
             success: false,
             mensaje: "Error al restaurar la base de datos: " + (error.message || "Error desconocido")
@@ -269,4 +269,3 @@ router.post("/restore", async (req, res) => {
         }
     }
 });
-
