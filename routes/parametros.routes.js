@@ -108,8 +108,7 @@ router.post("/restore", async (req, res) => {
             });
 
         console.log(`📊 Sentencias detectadas: ${statements.length}`);
-
-       // ==========================================
+// ==========================================
         // EJECUTAR SQL
         // ==========================================
 
@@ -121,17 +120,22 @@ router.post("/restore", async (req, res) => {
             }
 
             try {
-                // Parche robusto: Si es un INSERT a tbl_consulta_medica, limpiamos las comillas simples sueltas 
-                // envolviéndolas como texto JSON válido para evitar el error ER_INVALID_JSON_TEXT
-                if (statement.includes('tbl_consulta_medica')) {
+                // Parche global: Si la sentencia es un INSERT, limpia y envuelve cadenas de texto plano 
+                // en formato JSON válido ('"VALOR"') para evitar errores en columnas definidas como JSON.
+                if (statement.toUpperCase().startsWith('INSERT INTO')) {
                     statement = statement.replace(/VALUES\s*\((.*)\)/is, (match, valuesGroup) => {
-                        // Reemplaza valores de texto plano estándar por formato JSON string de manera segura
                         const fixedValues = valuesGroup.split(',').map(val => {
                             val = val.trim();
-                            // Si es una cadena entre comillas simples que no es NULL ni número ni fecha
+                            // Si es un texto entre comillas simples que no es NULL, número o fecha
                             if (val.startsWith("'") && val.endsWith("'") && !val.match(/^\'\d{4}-\d{2}-\d{2}/)) {
                                 const inner = val.slice(1, -1);
-                                return `'${JSON.stringify(inner)}'`;
+                                // Si el texto interno no tiene pinta de JSON válido, lo convertimos en string JSON
+                                try {
+                                    JSON.parse(inner);
+                                    return val; // Ya es JSON válido
+                                } catch {
+                                    return `'${JSON.stringify(inner)}'`;
+                                }
                             }
                             return val;
                         }).join(', ');
