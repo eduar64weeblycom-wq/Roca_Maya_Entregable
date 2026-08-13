@@ -15,7 +15,7 @@ const execFilePromise = util.promisify(execFile);
 // RESTAURACIÓN DE BASE DE DATOS
 // ============================================================
 
-router.post("/upload-sql-data", async (req, res) => {
+router.post("/restore", async (req, res) => {
 
     const usuario = req.user || {
         ID_USUARIO: 1,
@@ -258,26 +258,15 @@ router.post("/upload-sql-data", async (req, res) => {
         }
 
         return res.status(500).json({
-
             ok: false,
-
             success: false,
-
-            mensaje:
-                "Error al restaurar la base de datos: " +
-                (error.message || "Error desconocido")
-
+            mensaje: "Error al restaurar la base de datos: " + (error.message || "Error desconocido")
         });
 
     } finally {
-
         if (connection) {
             connection.release();
         }
-
     }
 });
 
-function validarParametrosBackend(req, res, next) {
-
-module.exports = router;
