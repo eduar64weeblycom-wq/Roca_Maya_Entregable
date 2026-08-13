@@ -16,7 +16,6 @@ const execFilePromise = util.promisify(execFile);
 // ============================================================
 
 router.post("/restore", async (req, res) => {
-
     const usuario = req.user || {
         ID_USUARIO: 1,
         USUARIO: 'ADMIN'
@@ -25,7 +24,6 @@ router.post("/restore", async (req, res) => {
     let connection;
 
     try {
-
         console.log("==========================================");
         console.log("🔥 ROUTER PARAMETROS - RESTAURACIÓN");
         console.log("Método:", req.method);
@@ -46,7 +44,6 @@ router.post("/restore", async (req, res) => {
         // ==========================================
         // LIMPIAR DATA URL
         // ==========================================
-
         const base64Data = backupBase64.includes(';base64,')
             ? backupBase64.split(';base64,').pop()
             : backupBase64;
@@ -54,7 +51,6 @@ router.post("/restore", async (req, res) => {
         // ==========================================
         // DECODIFICAR ARCHIVO
         // ==========================================
-
         let sqlContent;
 
         try {
@@ -62,12 +58,7 @@ router.post("/restore", async (req, res) => {
                 .from(base64Data, 'base64')
                 .toString('utf8');
         } catch (decodeError) {
-
-            console.error(
-                "❌ Error decodificando Base64:",
-                decodeError
-            );
-
+            console.error("❌ Error decodificando Base64:", decodeError);
             return res.status(400).json({
                 ok: false,
                 mensaje: "El archivo SQL no pudo ser procesado."
@@ -81,82 +72,45 @@ router.post("/restore", async (req, res) => {
             });
         }
 
-        console.log(
-            `📄 Archivo SQL recibido: ${sqlContent.length} caracteres`
-        );
+        console.log(`📄 Archivo SQL recibido: ${sqlContent.length} caracteres`);
 
         // ==========================================
         // OBTENER CONEXIÓN
         // ==========================================
-
         connection = await pool.getConnection();
-
         await connection.beginTransaction();
-
-        await connection.query(
-            'SET FOREIGN_KEY_CHECKS = 0'
-        );
+        await connection.query('SET FOREIGN_KEY_CHECKS = 0');
 
         // ==========================================
         // SEPARAR SENTENCIAS
         // ==========================================
-
         const statements = sqlContent
             .split(/;\s*(?:\r?\n|$)/)
             .map(statement => statement.trim())
             .filter(statement => {
-
                 if (!statement) return false;
-
-                if (statement.startsWith('--')) {
-                    return false;
-                }
-
-                if (statement.startsWith('/*')) {
-                    return false;
-                }
-
-                if (statement.startsWith('//')) {
-                    return false;
-                }
-
+                if (statement.startsWith('--')) return false;
+                if (statement.startsWith('/*')) return false;
+                if (statement.startsWith('//')) return false;
                 return true;
             });
 
-        console.log(
-            `📊 Sentencias detectadas: ${statements.length}`
-        );
+        console.log(`📊 Sentencias detectadas: ${statements.length}`);
 
         // ==========================================
         // EJECUTAR SQL
         // ==========================================
-
         let ejecutados = 0;
 
         for (const statement of statements) {
-
-            if (!statement.trim()) {
-                continue;
-            }
+            if (!statement.trim()) continue;
 
             try {
-
                 await connection.query(statement);
-
                 ejecutados++;
-
             } catch (sqlError) {
-
-                console.error(
-                    "❌ Error ejecutando sentencia:",
-                    sqlError.message
-                );
-
-                console.error(
-                    "SQL:",
-                    statement.substring(0, 500)
-                );
-
+                console.error("❌ Error ejecutando sentencia:", sqlError.message);
+                console.error("SQL:", statement.substring(0, 500));
                 throw sqlError;
             }
         }
@@ -164,108 +118,63 @@ router.post("/restore", async (req, res) => {
         // ==========================================
         // REACTIVAR FOREIGN KEYS
         // ==========================================
-
-        await connection.query(
-            'SET FOREIGN_KEY_CHECKS = 1'
-        );
-
+        await connection.query('SET FOREIGN_KEY_CHECKS = 1');
         await connection.commit();
 
-        console.log(
-            `✅ Restauración completada: ${ejecutados} sentencias`
-        );
+        console.log(`✅ Restauración completada: ${ejecutados} sentencias`);
 
         // ==========================================
         // BITÁCORA
         // ==========================================
-
         try {
-
             await registrarBitacora({
-                usuario:
-                    usuario.USUARIO ||
-                    'ADMIN',
-
-                accion:
-                    'RESTAURACION_BASE_DATOS',
-
-                modulo:
-                    'SEGURIDAD',
-
-                descripcion:
-                    `Base de datos restaurada mediante archivo SQL (${ejecutados} sentencias ejecutadas)`,
-
-                idRegistro:
-                    null,
-
-                tabla:
-                    null,
-
-                estado:
-                    'EXITO',
-
-                req:
-                    req
+                usuario: usuario.USUARIO || 'ADMIN',
+                accion: 'RESTAURACION_BASE_DATOS',
+                modulo: 'SEGURIDAD',
+                descripcion: `Base de datos restaurada mediante archivo SQL (${ejecutados} sentencias ejecutadas)`,
+                idRegistro: null,
+                tabla: null,
+                estado: 'EXITO',
+                req: req
             });
-
         } catch (bitacoraError) {
-
-            console.error(
-                "⚠️ Error registrando bitácora:",
-                bitacoraError.message
-            );
+            console.error("⚠️ Error registrando bitácora:", bitacoraError.message);
         }
 
         return res.status(200).json({
-
             ok: true,
-
             success: true,
-
-            mensaje:
-                `Base de datos restaurada exitosamente (${ejecutados} sentencias ejecutadas).`
-
+            mensaje: `Base de datos restaurada exitosamente (${ejecutados} sentencias ejecutadas).`
         });
 
     } catch (error) {
-
-        console.error(
-            "❌ ERROR CRÍTICO EN RESTAURACIÓN:",
-            error
-        );
+        console.error("❌ ERROR CRÍTICO EN RESTAURACIÓN:", error);
 
         if (connection) {
-
             try {
                 await connection.rollback();
             } catch (rollbackError) {
-                console.error(
-                    "Error en rollback:",
-                    rollbackError.message
-                );
+                console.error("Error en rollback:", rollbackError.message);
             }
 
             try {
-                await connection.query(
-                    'SET FOREIGN_KEY_CHECKS = 1'
-                );
+                await connection.query('SET FOREIGN_KEY_CHECKS = 1');
             } catch (fkError) {
-                console.error(
-                    "Error restaurando FOREIGN_KEY_CHECKS:",
-                    fkError.message
-                );
+                console.error("Error restaurando FOREIGN_KEY_CHECKS:", fkError.message);
             }
         }
 
-       return res.status(500).json({
+        return res.status(500).json({
             ok: false,
             success: false,
             mensaje: "Error al restaurar la base de datos: " + (error.message || "Error desconocido")
         });
 
- } finally {
+    } finally {
         if (connection) {
             connection.release();
         }
     }
 });
+
+module.exports = router;
