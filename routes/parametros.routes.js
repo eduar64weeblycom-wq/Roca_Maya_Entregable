@@ -121,14 +121,21 @@ router.post("/restore", async (req, res) => {
             }
 
             try {
-                // Parche de emergencia: Si la sentencia es un INSERT a tbl_consulta_medica y da error de JSON,
-                // podemos envolver los valores de texto plano en formato JSON válido (ej: '"U"') 
-                // o limpiar la sentencia si fuera necesario.
+                // Parche robusto: Si es un INSERT a tbl_consulta_medica, limpiamos las comillas simples sueltas 
+                // envolviéndolas como texto JSON válido para evitar el error ER_INVALID_JSON_TEXT
                 if (statement.includes('tbl_consulta_medica')) {
-                    // Reemplazamos de forma segura los valores sueltos de SINTOMAS y EXAMEN_FISICO 
-                    // si vienen como 'U' o texto plano, convirtiéndolos en strings JSON válidos ('"U"')
-                    statement = statement.replace(/,\s*'([A-Z0-9\s]+)',\s*'([A-Z0-9\s]+)',/g, (match, p1, p2) => {
-                        return `, '${JSON.stringify(p1)}', '${JSON.stringify(p2)}',`;
+                    statement = statement.replace(/VALUES\s*\((.*)\)/is, (match, valuesGroup) => {
+                        // Reemplaza valores de texto plano estándar por formato JSON string de manera segura
+                        const fixedValues = valuesGroup.split(',').map(val => {
+                            val = val.trim();
+                            // Si es una cadena entre comillas simples que no es NULL ni número ni fecha
+                            if (val.startsWith("'") && val.endsWith("'") && !val.match(/^\'\d{4}-\d{2}-\d{2}/)) {
+                                const inner = val.slice(1, -1);
+                                return `'${JSON.stringify(inner)}'`;
+                            }
+                            return val;
+                        }).join(', ');
+                        return `VALUES (${fixedValues})`;
                     });
                 }
 
@@ -141,16 +148,9 @@ router.post("/restore", async (req, res) => {
                     "❌ Error ejecutando sentencia:",
                     sqlError.message
                 );
-
-                console.error(
-                    "SQL:",
-                    statement.substring(0, 500)
-                );
-
                 throw sqlError;
             }
         }
-
         // ==========================================
         // REACTIVAR FOREIGN KEYS
         // ==========================================
