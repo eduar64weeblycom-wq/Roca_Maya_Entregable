@@ -1,120 +1,172 @@
 // ============================================================
 // RESTAURACIÓN DE BASE DE DATOS
+// POST /parametros/restore
 // ============================================================
 
-router.post('/restaurar', async (req, res) => {
+router.post("/restore", async (req, res) => {
 
     let connection = null;
 
     try {
 
-        console.log('==========================================');
-        console.log('🔥 RESTAURACIÓN RECIBIDA');
-        console.log('Método:', req.method);
-        console.log('URL:', req.originalUrl);
-        console.log('Content-Type:', req.headers['content-type']);
-        console.log('==========================================');
+        console.log("==========================================");
+        console.log("🔥 RESTAURACIÓN DE BASE DE DATOS");
+        console.log("Método:", req.method);
+        console.log("URL:", req.originalUrl);
+        console.log("Usuario:", req.user?.USUARIO || "NO IDENTIFICADO");
+        console.log("==========================================");
 
-        const { backupBase64 } = req.body;
+        const { backupBase64, nombreArchivo } = req.body;
+
+        // ========================================================
+        // VALIDAR ARCHIVO
+        // ========================================================
 
         if (!backupBase64) {
+
             return res.status(400).json({
                 ok: false,
-                mensaje: 'No se recibió ningún archivo SQL.'
+                mensaje: "No se recibió ningún archivo SQL."
             });
+
         }
 
-        // ====================================================
-        // VALIDAR DATA URL
-        // ====================================================
+        // ========================================================
+        // VALIDAR NOMBRE
+        // ========================================================
 
-        let base64Data = backupBase64;
+        if (
+            nombreArchivo &&
+            !nombreArchivo.toLowerCase().endsWith(".sql")
+        ) {
 
-        if (base64Data.includes(';base64,')) {
-            base64Data = base64Data.split(';base64,')[1];
-        }
-
-        if (!base64Data || base64Data.trim().length === 0) {
             return res.status(400).json({
                 ok: false,
-                mensaje: 'El contenido del archivo SQL está vacío.'
+                mensaje: "El archivo debe tener extensión .sql."
             });
+
         }
 
-        // ====================================================
-        // DECODIFICAR BASE64
-        // ====================================================
+        // ========================================================
+        // OBTENER BASE64
+        // ========================================================
 
-        const sqlContent = Buffer
-            .from(base64Data, 'base64')
-            .toString('utf8');
+        const base64Data = backupBase64.includes(";base64,")
+            ? backupBase64.split(";base64,")[1]
+            : backupBase64;
 
-        if (!sqlContent || sqlContent.trim().length < 10) {
+        // ========================================================
+        // DECODIFICAR
+        // ========================================================
+
+        let sqlContent;
+
+        try {
+
+            sqlContent = Buffer
+                .from(base64Data, "base64")
+                .toString("utf8");
+
+        } catch (decodeError) {
+
+            console.error(
+                "❌ Error decodificando Base64:",
+                decodeError
+            );
+
             return res.status(400).json({
                 ok: false,
-                mensaje: 'El archivo SQL está vacío o es inválido.'
+                mensaje: "El archivo SQL no pudo ser decodificado."
             });
+
+        }
+
+        // ========================================================
+        // VALIDAR CONTENIDO
+        // ========================================================
+
+        if (
+            !sqlContent ||
+            sqlContent.trim().length < 10
+        ) {
+
+            return res.status(400).json({
+                ok: false,
+                mensaje: "El archivo SQL está vacío o es inválido."
+            });
+
         }
 
         console.log(
-            `📄 Archivo SQL recibido: ${sqlContent.length} caracteres`
+            "📄 SQL recibido:",
+            sqlContent.length,
+            "caracteres"
         );
 
-        // ====================================================
-        // OBTENER CONEXIÓN
-        // ====================================================
+        // ========================================================
+        // CONEXIÓN
+        // ========================================================
 
         connection = await pool.getConnection();
 
-        // ====================================================
-        // DESACTIVAR FOREIGN KEY
-        // ====================================================
+        // ========================================================
+        // DESACTIVAR FOREIGN KEYS
+        // ========================================================
 
         await connection.query(
-            'SET FOREIGN_KEY_CHECKS = 0'
+            "SET FOREIGN_KEY_CHECKS = 0"
         );
+
+        // ========================================================
+        // TRANSACCIÓN
+        // ========================================================
 
         await connection.beginTransaction();
 
-        // ====================================================
+        // ========================================================
         // SEPARAR SENTENCIAS
-        // ====================================================
+        // ========================================================
 
         const statements = sqlContent
             .split(/;\s*(?:\r?\n|$)/)
-            .map(statement => statement.trim())
-            .filter(statement => {
+            .map(stmt => stmt.trim())
+            .filter(stmt => {
 
-                if (!statement) {
+                if (!stmt) {
                     return false;
                 }
 
-                if (statement.startsWith('--')) {
+                if (stmt.startsWith("--")) {
                     return false;
                 }
 
-                if (statement.startsWith('/*')) {
+                if (stmt.startsWith("/*")) {
                     return false;
                 }
 
-                if (statement.startsWith('//')) {
+                if (stmt.startsWith("//")) {
                     return false;
                 }
 
                 return true;
+
             });
 
         console.log(
-            `📄 Sentencias encontradas: ${statements.length}`
+            `📊 Sentencias detectadas: ${statements.length}`
         );
 
-        // ====================================================
+        // ========================================================
         // EJECUTAR SQL
-        // ====================================================
+        // ========================================================
 
         let ejecutados = 0;
 
         for (const statement of statements) {
+
+            if (!statement) {
+                continue;
+            }
 
             try {
 
@@ -125,119 +177,152 @@ router.post('/restaurar', async (req, res) => {
             } catch (sqlError) {
 
                 console.error(
-                    '❌ Error ejecutando sentencia:',
+                    "❌ Error ejecutando sentencia:",
                     sqlError.message
                 );
 
                 console.error(
-                    'Sentencia:',
+                    "SQL:",
                     statement.substring(0, 500)
                 );
 
                 throw sqlError;
             }
+
         }
 
-        // ====================================================
+        // ========================================================
         // COMMIT
-        // ====================================================
+        // ========================================================
 
         await connection.commit();
 
+        // ========================================================
+        // REACTIVAR FOREIGN KEYS
+        // ========================================================
+
         await connection.query(
-            'SET FOREIGN_KEY_CHECKS = 1'
+            "SET FOREIGN_KEY_CHECKS = 1"
         );
 
-        // ====================================================
+        // ========================================================
         // BITÁCORA
-        // ====================================================
+        // ========================================================
 
         try {
 
-            const usuario = req.user || {
-                ID_USUARIO: 1,
-                USUARIO: 'ADMIN'
-            };
+            const usuario =
+                req.user?.USUARIO ||
+                req.usuarioActual ||
+                "ADMIN";
 
             await registrarBitacora({
-                usuario:
-                    usuario.USUARIO ||
-                    usuario.usuarioActual ||
-                    'ADMIN',
 
-                accion: 'RESTAURACION_BASE_DATOS',
+                usuario,
+
+                accion:
+                    "RESTAURACION_BASE_DATOS",
+
+                modulo:
+                    "SEGURIDAD",
 
                 descripcion:
-                    `Base de datos restaurada exitosamente. ` +
-                    `${ejecutados} sentencias ejecutadas.`,
+                    `Base de datos restaurada correctamente. Archivo: ${nombreArchivo || "backup.sql"}. Sentencias ejecutadas: ${ejecutados}`,
 
-                modulo: 'SEGURIDAD',
+                idRegistro:
+                    null,
 
-                idRegistro: null,
+                tabla:
+                    null,
 
-                tabla: null,
-
-                estado: 'EXITO',
+                estado:
+                    "EXITO",
 
                 req
+
             });
 
         } catch (bitacoraError) {
 
             console.error(
-                '⚠️ Error registrando restauración en bitácora:',
-                bitacoraError.message
+                "⚠️ Error registrando bitácora:",
+                bitacoraError
             );
+
         }
 
-        // ====================================================
+        // ========================================================
         // RESPUESTA
-        // ====================================================
+        // ========================================================
 
-        return res.json({
+        console.log(
+            `✅ Restauración completada: ${ejecutados} sentencias`
+        );
+
+        return res.status(200).json({
+
             ok: true,
+
             success: true,
+
             mensaje:
-                `Base de datos restaurada exitosamente. ` +
-                `${ejecutados} sentencias ejecutadas.`
+                `Base de datos restaurada exitosamente (${ejecutados} sentencias ejecutadas).`
+
         });
 
     } catch (error) {
 
         console.error(
-            '❌ ERROR CRÍTICO RESTAURANDO BASE DE DATOS:',
+            "❌ ERROR CRÍTICO EN RESTAURACIÓN:",
             error
         );
+
+        // ========================================================
+        // ROLLBACK
+        // ========================================================
 
         if (connection) {
 
             try {
+
                 await connection.rollback();
+
             } catch (rollbackError) {
+
                 console.error(
-                    'Error en rollback:',
-                    rollbackError.message
+                    "Error en rollback:",
+                    rollbackError
                 );
+
             }
 
             try {
+
                 await connection.query(
-                    'SET FOREIGN_KEY_CHECKS = 1'
+                    "SET FOREIGN_KEY_CHECKS = 1"
                 );
+
             } catch (fkError) {
+
                 console.error(
-                    'Error restaurando FOREIGN_KEY_CHECKS:',
-                    fkError.message
+                    "Error restaurando FOREIGN_KEY_CHECKS:",
+                    fkError
                 );
+
             }
+
         }
 
         return res.status(500).json({
+
             ok: false,
+
             success: false,
+
             mensaje:
-                'Error al restaurar la base de datos: ' +
-                (error.message || 'Error desconocido')
+                "Error al restaurar la base de datos: " +
+                (error.message || "Error desconocido")
+
         });
 
     } finally {
@@ -245,5 +330,7 @@ router.post('/restaurar', async (req, res) => {
         if (connection) {
             connection.release();
         }
+
     }
+
 });
