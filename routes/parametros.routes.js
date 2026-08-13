@@ -263,7 +263,7 @@ router.post("/restore", async (req, res) => {
             mensaje: "Error al restaurar la base de datos: " + (error.message || "Error desconocido")
         });
 
-    } finally {
+ } finally {
         if (connection) {
             connection.release();
         }
