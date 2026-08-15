@@ -458,36 +458,41 @@ body {
 }
 
 @media print {
-    /* Ocultar la barra de navegación superior, tarjetas de estadísticas y filtros */
+    /* Ocultar elementos de la interfaz de usuario que no deben salir en la impresión */
     .header,
+    .page-header,
     .stats-cards,
     .actions-header,
+    .filters,
     .table-actions,
     .footer {
         display: none !important;
     }
 
-    /* Limpiar los fondos y márgenes de la página principal para ahorrar tinta */
+    /* Limpiar fondos y márgenes generales */
     body {
         background: white !important;
         padding: 0 !important;
+        margin: 0 !important;
     }
 
     .container {
         max-width: 100% !important;
         box-shadow: none !important;
         border-radius: 0 !important;
+        margin: 0 !important;
     }
 
     .main-content {
         padding: 0 !important;
     }
 
-    /* Asegurar que la tabla ocupe todo el ancho disponible y luzca profesional */
+    /* Forzar a que la tabla ocupe toda la página de impresión correctamente */
     .table-container {
         box-shadow: none !important;
         margin: 0 !important;
         overflow: visible !important;
+        border: none !important;
     }
 
     .medicamentos-table {
@@ -496,7 +501,7 @@ body {
     }
 
     .medicamentos-table th {
-        background: #0d5b84 !important; /* Color sólido para mejor lectura al imprimir */
+        background: #0d5b84 !important;
         color: white !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
