@@ -3,6 +3,113 @@
 // Servicio para generar archivos Excel y CSV
 // ============================================================
 const xl = require('excel4node');
+
+/**
+ * Genera un archivo Excel con los datos de pacientes
+ */
+async function generarExcelPacientes(pacientes, res) {
+  try {
+    const wb = new xl.Workbook();
+    const ws = wb.addWorksheet('Pacientes');
+    const headerStyle = wb.createStyle({
+      font: { bold: true, color: '#FFFFFF', size: 12 },
+      fill: { type: 'pattern', patternType: 'solid', bgColor: '#217346', fgColor: '#217346' },
+      alignment: { horizontal: 'center', vertical: 'center' },
+    });
+    const cellStyle = wb.createStyle({ alignment: { horizontal: 'left', vertical: 'center' } });
+
+    const headers = ['ID', 'Nombre', 'Identidad', 'Teléfono', 'Correo'];
+    headers.forEach((header, index) => {
+      ws.cell(1, index + 1).string(header).style(headerStyle);
+    });
+
+    if (Array.isArray(pacientes)) {
+      pacientes.forEach((p, rowIndex) => {
+        const row = rowIndex + 2;
+        ws.cell(row, 1).number(p.ID_PACIENTE || 0).style(cellStyle);
+        ws.cell(row, 2).string(p.NOMBRE || '').style(cellStyle);
+        ws.cell(row, 3).string(p.IDENTIDAD || '').style(cellStyle);
+        ws.cell(row, 4).string(p.TELEFONO || '').style(cellStyle);
+        ws.cell(row, 5).string(p.CORREO || '').style(cellStyle);
+      });
+    }
+
+    const fecha = new Date().toISOString().split('T')[0];
+    const fileName = `Pacientes_${fecha}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+    wb.write(fileName, res);
+    return true;
+  } catch (error) {
+    console.error("❌ Error generando Excel de Pacientes:", error);
+    throw error;
+  }
+}
+
+/**
+ * Genera un archivo CSV con los datos de pacientes
+ */
+async function generarCSVPacientes(pacientes, res) {
+  try {
+    const fecha = new Date().toISOString().split('T')[0];
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=Pacientes_${fecha}.csv`);
+    
+    let csv = 'ID,Nombre,Identidad,Telefono,Correo\n';
+    if (Array.isArray(pacientes)) {
+      pacientes.forEach(p => {
+        csv += `${p.ID_PACIENTE || 0},"${p.NOMBRE || ''}","${p.IDENTIDAD || ''}","${p.TELEFONO || ''}","${p.CORREO || ''}"\n`;
+      });
+    }
+    res.status(200).send(csv);
+  } catch (error) {
+    console.error("❌ Error generando CSV de Pacientes:", error);
+    throw error;
+  }
+}
+
+/**
+ * Genera un archivo Excel con los datos de medicamentos
+ */
+async function generarExcelMedicamentos(medicamentos, res) {
+  try {
+    const wb = new xl.Workbook();
+    const ws = wb.addWorksheet('Medicamentos');
+    const headerStyle = wb.createStyle({
+      font: { bold: true, color: '#FFFFFF', size: 12 },
+      fill: { type: 'pattern', patternType: 'solid', bgColor: '#217346', fgColor: '#217346' },
+      alignment: { horizontal: 'center', vertical: 'center' },
+    });
+    const cellStyle = wb.createStyle({ alignment: { horizontal: 'left', vertical: 'center' } });
+
+    const headers = ['ID', 'Nombre', 'Descripción', 'Stock', 'Precio'];
+    headers.forEach((header, index) => {
+      ws.cell(1, index + 1).string(header).style(headerStyle);
+    });
+
+    if (Array.isArray(medicamentos)) {
+      medicamentos.forEach((m, rowIndex) => {
+        const row = rowIndex + 2;
+        ws.cell(row, 1).number(m.ID_MEDICAMENTO || 0).style(cellStyle);
+        ws.cell(row, 2).string(m.NOMBRE || '').style(cellStyle);
+        ws.cell(row, 3).string(m.DESCRIPCION || '').style(cellStyle);
+        ws.cell(row, 4).number(m.STOCK || 0).style(cellStyle);
+        ws.cell(row, 5).number(parseFloat(m.PRECIO) || 0).style(cellStyle);
+      });
+    }
+
+    const fecha = new Date().toISOString().split('T')[0];
+    const fileName = `Medicamentos_${fecha}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+    wb.write(fileName, res);
+    return true;
+  } catch (error) {
+    console.error("❌ Error generando Excel de Medicamentos:", error);
+    throw error;
+  }
+}
+
 /**
  * Genera un archivo Excel con los datos de preclínica
  * @param {Array} preclinicas - Lista de preclínicas
@@ -91,7 +198,6 @@ async function generarExcelPreclinica(preclinicas, res) {
   }
 }
 
-// Asegúrate de exportar todas las funciones juntas al final del archivo:
 module.exports = {
   generarExcelPacientes,
   generarCSVPacientes,
