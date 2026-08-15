@@ -180,7 +180,7 @@
         }
     }
 
-    // ============================================================
+   // ============================================================
     // API SERVICES
     // ============================================================
     const API = {
@@ -189,6 +189,24 @@
             if (!res.ok) throw new Error("HTTP " + res.status);
             return await res.json();
         },
+
+        async cargarPreclinicaPorCita(idCita) {
+            try {
+                const respuesta = await fetch(`/preclinica/por-cita/${idCita}`);
+                
+                if (respuesta.status === 404) {
+                    limpiarFormularioPreclinica();
+                    return;
+                }
+
+                const resultado = await respuesta.json();
+                if (resultado.success) {
+                    llenarFormularioPreclinica(resultado.preclinica);
+                }
+            } catch (error) {
+                console.error("Error de red al buscar la preclínica:", error);
+            }
+        }, // <-- No olvides la coma para separar este método del siguiente
 
         async obtenerConsulta(idCita, signal) {
             const res = await fetch(`/consultaMedica/por-cita/${idCita}`, { credentials: "same-origin", signal });
