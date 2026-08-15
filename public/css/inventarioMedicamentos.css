@@ -456,20 +456,30 @@ body {
         flex-direction: column;
     }
 }
-
 @media print {
-    /* Ocultar elementos de la interfaz de usuario que no deben salir en la impresión */
-    .header,
-    .page-header,
-    .stats-cards,
-    .actions-header,
-    .filters,
-    .table-actions,
-    .footer {
-        display: none !important;
+    /* Ocultar absolutamente todo lo que esté dentro del body por defecto */
+    body * {
+        visibility: hidden !important;
     }
 
-    /* Limpiar fondos y márgenes generales */
+    /* Hacer visible únicamente la sección de la tabla y su contenedor */
+    .table-container, 
+    .table-container * {
+        visibility: visible !important;
+    }
+
+    /* Reposicionar la tabla para que comience desde la esquina superior izquierda al imprimir */
+    .table-container {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    /* Limpiar fondos y márgenes de la página */
     body {
         background: white !important;
         padding: 0 !important;
@@ -481,20 +491,14 @@ body {
         box-shadow: none !important;
         border-radius: 0 !important;
         margin: 0 !important;
+        background: white !important;
     }
 
     .main-content {
         padding: 0 !important;
     }
 
-    /* Forzar a que la tabla ocupe toda la página de impresión correctamente */
-    .table-container {
-        box-shadow: none !important;
-        margin: 0 !important;
-        overflow: visible !important;
-        border: none !important;
-    }
-
+    /* Estilos limpios para la tabla en papel/PDF */
     .medicamentos-table {
         min-width: 100% !important;
         border: 1px solid #ddd;
