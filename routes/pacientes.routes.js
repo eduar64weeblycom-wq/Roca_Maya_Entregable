@@ -9,7 +9,7 @@ const logError = (error, context) => {
 };
 
 // ============================================================
-// GET /pacientes -> Vista
+// GET /pacientes -> VistaH
 // ============================================================
 router.get("/", async (req, res) => {
   try {
