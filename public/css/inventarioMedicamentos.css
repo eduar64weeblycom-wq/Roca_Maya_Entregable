@@ -456,3 +456,55 @@ body {
         flex-direction: column;
     }
 }
+
+@media print {
+    /* Ocultar la barra de navegación superior, tarjetas de estadísticas y filtros */
+    .header,
+    .stats-cards,
+    .actions-header,
+    .table-actions,
+    .footer {
+        display: none !important;
+    }
+
+    /* Limpiar los fondos y márgenes de la página principal para ahorrar tinta */
+    body {
+        background: white !important;
+        padding: 0 !important;
+    }
+
+    .container {
+        max-width: 100% !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+
+    .main-content {
+        padding: 0 !important;
+    }
+
+    /* Asegurar que la tabla ocupe todo el ancho disponible y luzca profesional */
+    .table-container {
+        box-shadow: none !important;
+        margin: 0 !important;
+        overflow: visible !important;
+    }
+
+    .medicamentos-table {
+        min-width: 100% !important;
+        border: 1px solid #ddd;
+    }
+
+    .medicamentos-table th {
+        background: #0d5b84 !important; /* Color sólido para mejor lectura al imprimir */
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .medicamentos-table tr:nth-child(even) {
+        background: #f8f9fa !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
