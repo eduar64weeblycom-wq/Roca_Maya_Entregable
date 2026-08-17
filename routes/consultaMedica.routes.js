@@ -222,6 +222,9 @@ router.get("/api/cita-detalle/:idCita", async (req, res) => {
   }
 });
 
+// ============================================================
+//  CORREGIDO: GET /api/historial-rapido/:idPaciente
+// ============================================================
 router.get("/api/historial-rapido/:idPaciente", async (req, res) => {
   try {
     const idPaciente = Number(req.params.idPaciente);
@@ -249,7 +252,6 @@ router.get("/api/historial-rapido/:idPaciente", async (req, res) => {
       LIMIT 1
     `, [idPaciente]);
 
-    // Si el paciente no tiene historial, devolver campos vacíos
     if (rows.length === 0) {
       return res.json({
         success: true,
@@ -279,6 +281,7 @@ router.get("/api/historial-rapido/:idPaciente", async (req, res) => {
     });
   }
 });
+
 router.get("/api/imprimir-consulta/:idConsulta", async (req, res) => {
   const { idConsulta } = req.params;
 
@@ -474,7 +477,7 @@ async function getOrCreateMedicamento(nombre, usuarioCreacion = 'SISTEMA') {
   );
   if (rows.length > 0) return rows[0].ID_MEDICAMENTO;
 
-  console.log(`🆕 Creando nuevo medicamento: "${nombreLimpio}"`);
+  console.log( Creando nuevo medicamento: "${nombreLimpio}"`);
   const [result] = await pool.query(`
     INSERT INTO tbl_inventario_medicamentos (
       NOMBRE_MEDICAMENTO, NOMBRE_GENERICO,
@@ -487,7 +490,7 @@ async function getOrCreateMedicamento(nombre, usuarioCreacion = 'SISTEMA') {
 }
 
 // ============================================================
-// POST /nueva - Crear o actualizar consulta (UPSERT)
+//  CORREGIDO: POST /nueva - Crear o actualizar consulta (UPSERT)
 // ============================================================
 router.post("/nueva", async (req, res) => {
   const connection = await pool.getConnection();
@@ -495,8 +498,7 @@ router.post("/nueva", async (req, res) => {
     await connection.beginTransaction();
 
     const body = req.body;
-    console.log("📥 Body recibido en /nueva (UPSERT):", JSON.stringify(body, null, 2));
-    console.log("💊 Medicamentos recibidos:", body.medicamentos ? JSON.stringify(body.medicamentos) : 'Ninguno');
+    console.log(" Body recibido en /nueva (UPSERT):", JSON.stringify(body, null, 2));
 
     const idCita = body.idCita || body.citaId || body.ID_CITA;
     let idPaciente = body.idPaciente || body.pacienteId || body.ID_PACIENTE;
@@ -591,7 +593,7 @@ router.post("/nueva", async (req, res) => {
           idConsulta
         ]
       );
-      console.log(`✅ Consulta #${idConsulta} actualizada para cita #${idCita}`);
+      console.log(` Consulta #${idConsulta} actualizada para cita #${idCita}`);
     } else {
       const [result] = await connection.query(
         `INSERT INTO tbl_consulta_medica (
@@ -610,7 +612,7 @@ router.post("/nueva", async (req, res) => {
         ]
       );
       idConsulta = result.insertId;
-      console.log(`✅ Nueva consulta #${idConsulta} creada para cita #${idCita}`);
+      console.log(` Nueva consulta #${idConsulta} creada para cita #${idCita}`);
     }
 
     if (estadoCita === "PRECLINICA") {
@@ -618,7 +620,7 @@ router.post("/nueva", async (req, res) => {
         `UPDATE tbl_citas SET ESTADO = 'CONSULTA_MEDICA', USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW() WHERE ID_CITA = ?`,
         [usuarioCreacion, idCita]
       );
-      console.log(`🔄 Cita #${idCita} actualizada de PRECLINICA a CONSULTA_MEDICA`);
+      console.log(` Cita #${idCita} actualizada de PRECLINICA a CONSULTA_MEDICA`);
     } else {
       await connection.query(
         `UPDATE tbl_citas SET USUARIO_MODIFICACION = ?, FECHA_MODIFICACION = NOW() WHERE ID_CITA = ?`,
@@ -632,10 +634,10 @@ router.post("/nueva", async (req, res) => {
     await connection.query("DELETE FROM tbl_prescripcion WHERE ID_CONSULTA = ?", [idConsulta]);
 
     if (body.medicamentos && Array.isArray(body.medicamentos) && body.medicamentos.length > 0) {
-      console.log(`💊 Insertando ${body.medicamentos.length} medicamentos...`);
+      console.log(` Insertando ${body.medicamentos.length} medicamentos...`);
       for (const med of body.medicamentos) {
         if (!med.nombre || med.nombre.trim() === '') {
-          console.warn('⚠️ Medicamento sin nombre, omitido');
+          console.warn(' Medicamento sin nombre, omitido');
           continue;
         }
         const idMed = await getOrCreateMedicamento(med.nombre, usuarioCreacion);
@@ -656,15 +658,15 @@ router.post("/nueva", async (req, res) => {
             ]
           );
         } else {
-          console.warn(`⚠️ No se pudo obtener/crear medicamento: ${med.nombre}`);
+          console.warn(` No se pudo obtener/crear medicamento: ${med.nombre}`);
         }
       }
     } else {
-      console.log(`⏭️ No se recibieron medicamentos para guardar.`);
+      console.log(` No se recibieron medicamentos para guardar.`);
     }
 
     // ============================================================
-    // GUARDAR HISTORIAL (solo si se envían campos Y tienen contenido)
+    //  CORREGIDO: GUARDAR HISTORIAL EN tbl_historial_medico
     // ============================================================
     const camposHistorial = {
       ALERGIAS: body.ALERGIAS,
@@ -708,8 +710,9 @@ router.post("/nueva", async (req, res) => {
         }
       }
 
+      //  Usar tbl_historial_medico
       const [existeHistorial] = await connection.query(
-        "SELECT ID_HISTORIAL FROM tbl_especialidades WHERE ID_PACIENTE = ?",
+        "SELECT ID_HISTORIAL FROM tbl_historial_medico WHERE ID_PACIENTE = ?",
         [idPaciente]
       );
 
@@ -720,28 +723,28 @@ router.post("/nueva", async (req, res) => {
           setClauses.push(`${key} = ?`);
           values.push(val);
         }
-        setClauses.push(`FECHA_ACTUALIZACION = CURRENT_TIMESTAMP`);
+        setClauses.push(`FECHA_MODIFICACION = CURRENT_TIMESTAMP`);
         setClauses.push(`USUARIO_MODIFICACION = ?`);
         values.push(usuarioCreacion);
         values.push(idPaciente);
         await connection.query(
-          `UPDATE tbl_especialidades SET ${setClauses.join(', ')} WHERE ID_PACIENTE = ?`,
+          `UPDATE tbl_historial_medico SET ${setClauses.join(', ')} WHERE ID_PACIENTE = ?`,
           values
         );
-        console.log(`📝 Historial actualizado para paciente ${idPaciente}`);
+        console.log(` Historial actualizado para paciente ${idPaciente}`);
       } else {
         const columnas = ['ID_PACIENTE', ...Object.keys(historialUpdates)];
         const placeholders = columnas.map(() => '?').join(', ');
         const valores = [idPaciente, ...Object.values(historialUpdates)];
         await connection.query(
-          `INSERT INTO tbl_especialidades (${columnas.join(', ')}, USUARIO_CREACION, FECHA_ACTUALIZACION)
-           VALUES (${placeholders}, ?, CURRENT_TIMESTAMP)`,
+          `INSERT INTO tbl_historial_medico (${columnas.join(', ')}, USUARIO_CREACION, FECHA_REGISTRO)
+           VALUES (${placeholders}, ?, NOW())`,
           [...valores, usuarioCreacion]
         );
-        console.log(`📝 Historial creado para paciente ${idPaciente}`);
+        console.log(` Historial creado para paciente ${idPaciente}`);
       }
     } else {
-      console.log(`⏭️ No se enviaron datos de historial, no se modifica.`);
+      console.log(` No se enviaron datos de historial, no se modifica.`);
     }
 
     // ============================================================
@@ -778,7 +781,7 @@ router.post("/nueva", async (req, res) => {
 
   } catch (err) {
     await connection.rollback();
-    console.error("❌ Error en POST /consultaMedica/nueva:", err);
+    console.error(" Error en POST /consultaMedica/nueva:", err);
     try {
       await registrarBitacora({
         usuario: req.user?.USUARIO || 'SISTEMA',
@@ -811,7 +814,7 @@ router.post("/actualizar", async (req, res) => {
     const body = req.body;
     const idConsulta = body.idConsulta;
 
-    console.log("📥 Body recibido en /actualizar:", JSON.stringify(body, null, 2));
+    console.log(" Body recibido en /actualizar:", JSON.stringify(body, null, 2));
 
     if (!idConsulta) {
       await connection.rollback();
@@ -958,7 +961,6 @@ router.get("/por-cita/:idCita", async (req, res) => {
     `, [idCita]);
 
     if (consultaRows.length === 0) {
-      // Cambio clave: Retornar 200 con consulta null para que el frontend no marque error
       return res.json({ success: true, consulta: null, message: "No se encontró consulta previa para esta cita" });
     }
 
@@ -977,6 +979,7 @@ router.get("/por-cita/:idCita", async (req, res) => {
     res.status(500).json({ success: false, error: "Error al obtener consulta por cita: " + err.message });
   }
 });
+
 // ============================================================
 // GET /preclinica/por-cita/:idCita - Obtener preclínica
 // ============================================================
@@ -1000,7 +1003,7 @@ router.get("/preclinica/por-cita/:idCita", async (req, res) => {
 });
 
 // ============================================================
-// GET /api/cita/:idCita - Obtener cita con preclínica e historial
+//  CORREGIDO: GET /api/cita/:idCita - Obtener cita con preclínica e historial
 // ============================================================
 router.get("/api/cita/:idCita", async (req, res) => {
   const { idCita } = req.params;
@@ -1028,11 +1031,13 @@ router.get("/api/cita/:idCita", async (req, res) => {
       SELECT * FROM tbl_preclinica WHERE ID_CITA = ? ORDER BY FECHA_REGISTRO DESC LIMIT 1
     `, [idCita]);
 
+    // tbl_historial_medico
     const [historialRows] = await pool.query(`
       SELECT ALERGIAS, ENFERMEDADES_CRONICAS, CIRUGIAS_PREVIAS,
         MEDICAMENTOS_ACTUALES, ANTECEDENTES_FAMILIARES, HABITOS,
         VACUNAS, NOTAS_IMPORTANTES
-      FROM tbl_especialidades WHERE ID_PACIENTE = ?
+      FROM tbl_historial_medico
+      WHERE ID_PACIENTE = ?
     `, [cita.ID_PACIENTE]);
 
     const [consultasPrevias] = await pool.query(`
@@ -1173,7 +1178,7 @@ router.put("/api/consulta/:idConsulta", async (req, res) => {
 });
 
 // ============================================================
-// GET /api/historial/:idPaciente - Obtener historial médico
+// ✅ CORREGIDO: GET /api/historial/:idPaciente - Obtener historial médico
 // ============================================================
 router.get("/api/historial/:idPaciente", async (req, res) => {
   const { idPaciente } = req.params;
@@ -1181,8 +1186,9 @@ router.get("/api/historial/:idPaciente", async (req, res) => {
     const [historialRows] = await pool.query(`
       SELECT ALERGIAS, ENFERMEDADES_CRONICAS, CIRUGIAS_PREVIAS,
         MEDICAMENTOS_ACTUALES, ANTECEDENTES_FAMILIARES, HABITOS,
-        VACUNAS, NOTAS_IMPORTANTES, FECHA_ACTUALIZACION
-      FROM tbl_especialidades WHERE ID_PACIENTE = ?
+        VACUNAS, NOTAS_IMPORTANTES, FECHA_REGISTRO, FECHA_MODIFICACION
+      FROM tbl_historial_medico
+      WHERE ID_PACIENTE = ?
     `, [idPaciente]);
 
     res.json({
@@ -1197,7 +1203,7 @@ router.get("/api/historial/:idPaciente", async (req, res) => {
 });
 
 // ============================================================
-// POST /api/historial/:idPaciente - Guardar/actualizar historial
+// ✅ CORREGIDO: POST /api/historial/:idPaciente - Guardar/actualizar historial
 // ============================================================
 router.post("/api/historial/:idPaciente", async (req, res) => {
   const { idPaciente } = req.params;
@@ -1207,7 +1213,7 @@ router.post("/api/historial/:idPaciente", async (req, res) => {
     const usuarioModificacion = req.user?.USUARIO || 'SISTEMA';
 
     const [existe] = await pool.query(
-      "SELECT ID_HISTORIAL FROM tbl_especialidades WHERE ID_PACIENTE = ?",
+      "SELECT ID_HISTORIAL FROM tbl_historial_medico WHERE ID_PACIENTE = ?",
       [idPaciente]
     );
 
@@ -1225,11 +1231,11 @@ router.post("/api/historial/:idPaciente", async (req, res) => {
 
     if (existe.length > 0) {
       await pool.query(`
-        UPDATE tbl_especialidades SET
+        UPDATE tbl_historial_medico SET
           ALERGIAS = ?, ENFERMEDADES_CRONICAS = ?, CIRUGIAS_PREVIAS = ?,
           MEDICAMENTOS_ACTUALES = ?, ANTECEDENTES_FAMILIARES = ?,
           HABITOS = ?, VACUNAS = ?, NOTAS_IMPORTANTES = ?,
-          FECHA_ACTUALIZACION = CURRENT_TIMESTAMP, USUARIO_MODIFICACION = ?
+          FECHA_MODIFICACION = CURRENT_TIMESTAMP, USUARIO_MODIFICACION = ?
         WHERE ID_PACIENTE = ?
       `, [
         JSON.stringify(toArray(datos.ALERGIAS)),
@@ -1245,11 +1251,11 @@ router.post("/api/historial/:idPaciente", async (req, res) => {
       ]);
     } else {
       await pool.query(`
-        INSERT INTO tbl_especialidades (
+        INSERT INTO tbl_historial_medico (
           ID_PACIENTE, ALERGIAS, ENFERMEDADES_CRONICAS, CIRUGIAS_PREVIAS,
           MEDICAMENTOS_ACTUALES, ANTECEDENTES_FAMILIARES, HABITOS, VACUNAS,
-          NOTAS_IMPORTANTES, USUARIO_CREACION, FECHA_ACTUALIZACION
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+          NOTAS_IMPORTANTES, USUARIO_CREACION, FECHA_REGISTRO
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `, [
         idPaciente,
         JSON.stringify(toArray(datos.ALERGIAS)),
@@ -1331,7 +1337,7 @@ router.post("/api/cambiar-estado", async (req, res) => {
 });
 
 // ============================================================
-// POST /auto-cerrar - Ejecutar auto-cierre manualmente (CON LOGS)
+// POST /auto-cerrar - Ejecutar auto-cierre manualmente
 // ============================================================
 router.post("/auto-cerrar", async (req, res) => {
   try {
@@ -1355,7 +1361,7 @@ router.post("/auto-cerrar", async (req, res) => {
 });
 
 // ============================================================
-// GET /test-auto-cerrar - Ruta de prueba (SIN autenticación)
+// GET /test-auto-cerrar - Ruta de prueba
 // ============================================================
 router.get("/test-auto-cerrar", async (req, res) => {
   try {
@@ -1371,7 +1377,7 @@ router.get("/test-auto-cerrar", async (req, res) => {
 });
 
 // ============================================================
-// API: OBTENER MEDICAMENTOS DE CONSULTA
+// GET /api/medicamentos/:idConsulta - Obtener medicamentos de consulta
 // ============================================================
 router.get("/api/medicamentos/:idConsulta", async (req, res) => {
     try {
