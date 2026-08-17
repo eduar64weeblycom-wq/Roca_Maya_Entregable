@@ -477,7 +477,7 @@ async function getOrCreateMedicamento(nombre, usuarioCreacion = 'SISTEMA') {
   );
   if (rows.length > 0) return rows[0].ID_MEDICAMENTO;
 
-  console.log( Creando nuevo medicamento: "${nombreLimpio}"`);
+  console.log(` Creando nuevo medicamento: "${nombreLimpio}"`);
   const [result] = await pool.query(`
     INSERT INTO tbl_inventario_medicamentos (
       NOMBRE_MEDICAMENTO, NOMBRE_GENERICO,
@@ -1395,5 +1395,4 @@ router.get("/api/medicamentos/:idConsulta", async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
-
 module.exports = router;
