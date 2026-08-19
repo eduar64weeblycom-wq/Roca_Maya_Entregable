@@ -295,6 +295,68 @@
             justify-content: center;
             align-items: center;
         }
+        /* ==================== ESTILOS PARA IMPRESIÓN (SOLO TABLA) ==================== */
+@media print {
+    /* 1. Ocultar absolutamente todo en la página */
+    body * {
+        visibility: hidden !important;
+    }
+
+    /* 2. Mostrar únicamente el contenedor de la tabla y sus elementos */
+    .table-container,
+    .table-container * {
+        visibility: visible !important;
+    }
+
+    /* 3. Posicionar la tabla en la parte superior izquierda del papel/PDF */
+    .table-container {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    /* 4. Ocultar la última columna (Acciones / Botones editar, eliminar, etc.) */
+    #tablaMedicamentos th:last-child,
+    #tablaMedicamentos td:last-child {
+        display: none !important;
+    }
+
+    /* 5. Limpiar el fondo del documento */
+    body {
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .contenedor-principal {
+        background: white !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 6. Mantener colores de cabecera y filas en el PDF */
+    .table {
+        width: 100% !important;
+        border: 1px solid #dee2e6 !important;
+    }
+
+    .table thead th {
+        background: #2c5aa0 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .table tbody tr {
+        page-break-inside: avoid;
+    }
+}
     </style>
 </head>
 <body>
