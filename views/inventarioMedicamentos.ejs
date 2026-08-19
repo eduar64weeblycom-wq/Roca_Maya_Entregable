@@ -1127,10 +1127,65 @@ document.getElementById('btnExportarExcel').addEventListener('click', function (
             filtrarTabla();
         });
 
-           // ==================== IMPRIMIR ====================
-        document.getElementById('btnImprimir').addEventListener('click', function () {
-            window.print();
-        });
+        // ==================== IMPRESIÓN PERSONALIZADA ESTILO REPORTE ====================
+document.getElementById('btnImprimir').addEventListener('click', function () {
+    const filasVisibles = document.querySelectorAll('#tbodyMedicamentos tr.fila-medicamento');
+    let htmlFilas = '';
+    let contador = 0;
+
+    filasVisibles.forEach(fila => {
+        if (fila.style.display !== 'none') {
+            contador++;
+            const nombre = fila.querySelector('td:nth-child(1)').innerText.trim();
+            const generico = fila.querySelector('td:nth-child(2)').innerText.trim();
+            const laboratorio = fila.querySelector('td:nth-child(3)').innerText.trim();
+            const lote = fila.querySelector('td:nth-child(4)').innerText.trim();
+            const presentacion = fila.querySelector('td:nth-child(5)').innerText.trim();
+            const stock = fila.querySelector('td:nth-child(6)').innerText.trim();
+            const precio = fila.querySelector('td:nth-child(7)').innerText.trim();
+            const vencimiento = fila.querySelector('td:nth-child(8)').innerText.trim().split('\n')[0];
+            const estado = fila.querySelector('td:nth-child(9)').innerText.trim();
+
+            htmlFilas += '<tr>' +
+                '<td style="text-align: center;">' + contador + '</td>' +
+                '<td><strong>' + nombre + '</strong></td>' +
+                '<td>' + generico + '</td>' +
+                '<td>' + laboratorio + '</td>' +
+                '<td>' + lote + '</td>' +
+                '<td>' + presentacion + '</td>' +
+                '<td style="text-align: center;">' + stock + '</td>' +
+                '<td style="text-align: right;">' + precio + '</td>' +
+                '<td style="text-align: center;">' + vencimiento + '</td>' +
+                '<td style="text-align: center;">' + estado + '</td>' +
+                '</tr>';
+        }
+    });
+
+    if (contador === 0) {
+        Swal.fire('Atención', 'No hay registros visibles para imprimir en este momento.', 'warning');
+        return;
+    }
+
+    const fechaActual = new Date().toLocaleDateString('es-ES', { 
+        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+    });
+
+    const ventanaImpresion = window.open('', '_blank', 'width=1000,height=700');
+    
+    let contenidoHtml = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Inventario - Clínicas Roca Maya</title>' +
+        '<style>body { font-family: sans-serif; color: #333; margin: 20px; }' +
+        'table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }' +
+        'th, td { border: 1px solid #ddd; padding: 8px; }' +
+        'th { background-color: #0d5b84; color: white; }</style></head><body>' +
+        '<h2>Inventario General de Medicamentos</h2>' +
+        '<table><thead><tr><th>#</th><th>Nombre</th><th>Genérico</th><th>Laboratorio</th><th>Lote</th><th>Presentación</th><th>Stock</th><th>Precio</th><th>Vencimiento</th><th>Estado</th></tr></thead>' +
+        '<tbody>' + htmlFilas + '</tbody></table>' +
+        '<p>Total: ' + contador + ' | Generado: ' + fechaActual + '</p>' +
+        '<script>window.onload = function() { window.print(); }</script></body></html>';
+
+    ventanaImpresion.document.write(contenidoHtml);
+    ventanaImpresion.document.close();
+});
     </script>
 </body>
 </html>
