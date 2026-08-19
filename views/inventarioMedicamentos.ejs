@@ -1126,8 +1126,7 @@ document.getElementById('btnExportarExcel').addEventListener('click', function (
             document.getElementById('filterStock').value = '';
             filtrarTabla();
         });
-
-        // ==================== IMPRESIÓN PERSONALIZADA ESTILO REPORTE ====================
+// ==================== IMPRESIÓN PERSONALIZADA ESTILO REPORTE ====================
 document.getElementById('btnImprimir').addEventListener('click', function () {
     const filasVisibles = document.querySelectorAll('#tbodyMedicamentos tr.fila-medicamento');
     let htmlFilas = '';
@@ -1172,20 +1171,33 @@ document.getElementById('btnImprimir').addEventListener('click', function () {
 
     const ventanaImpresion = window.open('', '_blank', 'width=1000,height=700');
     
-    let contenidoHtml = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Inventario - Clínicas Roca Maya</title>' +
-        '<style>body { font-family: sans-serif; color: #333; margin: 20px; }' +
+    const contenidoHtml = '<!DOCTYPE html>' +
+        '<html lang="es">' +
+        '<head>' +
+        '<meta charset="UTF-8">' +
+        '<title>Inventario - Clínicas Roca Maya</title>' +
+        '<style>' +
+        'body { font-family: sans-serif; color: #333; margin: 20px; }' +
         'table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }' +
         'th, td { border: 1px solid #ddd; padding: 8px; }' +
-        'th { background-color: #0d5b84; color: white; }</style></head><body>' +
+        'th { background-color: #0d5b84; color: white; }' +
+        '</style>' +
+        '</head>' +
+        '<body>' +
         '<h2>Inventario General de Medicamentos</h2>' +
-        '<table><thead><tr><th>#</th><th>Nombre</th><th>Genérico</th><th>Laboratorio</th><th>Lote</th><th>Presentación</th><th>Stock</th><th>Precio</th><th>Vencimiento</th><th>Estado</th></tr></thead>' +
-        '<tbody>' + htmlFilas + '</tbody></table>' +
+        '<table>' +
+        '<thead>' +
+        '<tr>' +
+        '<th>#</th><th>Nombre</th><th>Genérico</th><th>Laboratorio</th><th>Lote</th><th>Presentación</th><th>Stock</th><th>Precio</th><th>Vencimiento</th><th>Estado</th>' +
+        '</tr>' +
+        '</thead>' +
+        '<tbody>' + htmlFilas + '</tbody>' +
+        '</table>' +
         '<p>Total: ' + contador + ' | Generado: ' + fechaActual + '</p>' +
-        '<script>window.onload = function() { window.print(); }</script></body></html>';
+        '<script>window.onload = function() { window.print(); };<\/script>' +
+        '</body>' +
+        '</html>';
 
     ventanaImpresion.document.write(contenidoHtml);
     ventanaImpresion.document.close();
 });
-    </script>
-</body>
-</html>
