@@ -709,50 +709,57 @@
                 limpiarMedicamentos();
             }
 
-            // Preclínica
-            if (preclinicaData && preclinicaData.success && preclinicaData.preclinica) {
-                if (typeof window.Preclinica !== 'undefined' && typeof window.Preclinica.renderizarCampos === 'function') {
-                    await window.Preclinica.renderizarCampos(idCita, '#preclinicaFields');
-                } else {
-                    // Fallback manual
-                    const p = preclinicaData.preclinica;
-                    const set = (id, val) => {
-                        const el = $(id);
-                        if (el) el.value = val == null ? "" : String(val);
-                    };
-                    set("temperatura", p.TEMPERATURA ?? p.temperatura);
-                    set("presionSistolica", p.PRESION_SISTOLICA ?? p.presionSistolica);
-                    set("presionDiastolica", p.PRESION_DIASTOLICA ?? p.presionDiastolica);
-                    set("frecuenciaCardiaca", p.FRECUENCIA_CARDIACA ?? p.frecuenciaCardiaca);
-                    set("frecuenciaRespiratoria", p.FRECUENCIA_RESPIRATORIA ?? p.frecuenciaRespiratoria);
-                    set("saturacionOxigeno", p.SATURACION_OXIGENO ?? p.saturacionOxigeno);
-                    set("peso", p.PESO ?? p.peso);
-                    set("talla", p.TALLA ?? p.talla);
-                    set("glucosa", p.GLUCOSA ?? p.glucosa);
-                    set("perimetroAbdominal", p.PERIMETRO_ABDOMINAL ?? p.perimetroAbdominal);
-                    set("observaciones", p.OBSERVACIONES ?? p.observaciones);
-                    if ($("estadoGeneral")) $("estadoGeneral").value = p.ESTADO_GENERAL || p.estadoGeneral || "BUENO";
-                    const peso = parseFloat(p.PESO ?? p.peso) || 0;
-                    const talla = parseFloat(p.TALLA ?? p.talla) || 0;
-                    if (peso && talla && $("imc")) {
-                        const imc = peso / (talla * talla);
-                        if (Number.isFinite(imc)) $("imc").value = imc.toFixed(2);
-                    }
-                }
-            } else {
-                // No hay preclínica, limpiar campos
-                const mensaje = document.getElementById('preclinicaMensaje');
-                if (mensaje) {
-                    mensaje.textContent = 'No hay preclínica registrada para esta cita.';
-                    mensaje.style.color = '#6c757d';
-                }
-                const ids = ["temperatura", "presionSistolica", "presionDiastolica",
-                    "peso", "talla", "imc", "frecuenciaCardiaca", "frecuenciaRespiratoria",
-                    "saturacionOxigeno", "glucosa", "perimetroAbdominal", "observaciones"
-                ];
-                ids.forEach(id => { const el = $(id); if (el) el.value = ""; });
-                if ($("estadoGeneral")) $("estadoGeneral").value = "BUENO";
-            }
+           // Preclínica (usa los datos ya obtenidos → evita doble fetch)
+if (preclinicaData && preclinicaData.success && preclinicaData.preclinica) {
+    const p = preclinicaData.preclinica;
+    const set = (id, val) => {
+        const el = $(id);
+        if (el) el.value = val == null ? "" : String(val);
+    };
+
+    set("temperatura", p.TEMPERATURA ?? p.temperatura);
+    set("presionSistolica", p.PRESION_SISTOLICA ?? p.presionSistolica);
+    set("presionDiastolica", p.PRESION_DIASTOLICA ?? p.presionDiastolica);
+    set("frecuenciaCardiaca", p.FRECUENCIA_CARDIACA ?? p.frecuenciaCardiaca);
+    set("frecuenciaRespiratoria", p.FRECUENCIA_RESPIRATORIA ?? p.frecuenciaRespiratoria);
+    set("saturacionOxigeno", p.SATURACION_OXIGENO ?? p.saturacionOxigeno);
+    set("peso", p.PESO ?? p.peso);
+    set("talla", p.TALLA ?? p.talla);
+    set("glucosa", p.GLUCOSA ?? p.glucosa);
+    set("perimetroAbdominal", p.PERIMETRO_ABDOMINAL ?? p.perimetroAbdominal);
+    set("observaciones", p.OBSERVACIONES ?? p.observaciones);
+
+    if ($("estadoGeneral")) {
+        $("estadoGeneral").value = p.ESTADO_GENERAL || p.estadoGeneral || "BUENO";
+    }
+
+    // Calcular IMC
+    const peso = parseFloat(p.PESO ?? p.peso) || 0;
+    const talla = parseFloat(p.TALLA ?? p.talla) || 0;
+    if (peso && talla && $("imc")) {
+        const imc = peso / (talla * talla);
+        if (Number.isFinite(imc)) $("imc").value = imc.toFixed(2);
+    }
+
+    const mensaje = document.getElementById('preclinicaMensaje');
+    if (mensaje) {
+        mensaje.textContent = 'Preclínica cargada correctamente.';
+        mensaje.style.color = '#28a745';
+    }
+} else {
+    // No hay preclínica → limpiar campos
+    const mensaje = document.getElementById('preclinicaMensaje');
+    if (mensaje) {
+        mensaje.textContent = 'No hay preclínica registrada para esta cita.';
+        mensaje.style.color = '#6c757d';
+    }
+    const ids = ["temperatura", "presionSistolica", "presionDiastolica",
+        "peso", "talla", "imc", "frecuenciaCardiaca", "frecuenciaRespiratoria",
+        "saturacionOxigeno", "glucosa", "perimetroAbdominal", "observaciones"
+    ];
+    ids.forEach(id => { const el = $(id); if (el) el.value = ""; });
+    if ($("estadoGeneral")) $("estadoGeneral").value = "BUENO";
+}
 
             // Historial rápido
             if (idPaciente && historialData && historialData.success) {
