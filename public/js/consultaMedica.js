@@ -13,6 +13,7 @@
 
     // Control de carga y caché
     let cargandoDatos = false;
+    let cargaActualPromise = null;
     let abortController = null;
     const historialCache = new Map();
     const preclinicaCache = new Map();
@@ -180,7 +181,7 @@
         }
     }
 
-   // ============================================================
+      // ============================================================
     // API SERVICES
     // ============================================================
     const API = {
@@ -189,24 +190,6 @@
             if (!res.ok) throw new Error("HTTP " + res.status);
             return await res.json();
         },
-
-        async cargarPreclinicaPorCita(idCita) {
-            try {
-                const respuesta = await fetch(`/preclinica/por-cita/${idCita}`);
-                
-                if (respuesta.status === 404) {
-                    limpiarFormularioPreclinica();
-                    return;
-                }
-
-                const resultado = await respuesta.json();
-                if (resultado.success) {
-                    llenarFormularioPreclinica(resultado.preclinica);
-                }
-            } catch (error) {
-                console.error("Error de red al buscar la preclínica:", error);
-            }
-        }, // <-- No olvides la coma para separar este método del siguiente
 
         async obtenerConsulta(idCita, signal) {
             const res = await fetch(`/consultaMedica/por-cita/${idCita}`, { credentials: "same-origin", signal });
@@ -282,7 +265,6 @@
             return await res.json();
         }
     };
-
     // ============================================================
     // CARGA INICIAL Y RENDER
     // ============================================================
@@ -597,25 +579,25 @@
     // ============================================================
     // CARGAR TODOS LOS DATOS DE UNA CITA (UNIFICADO)
     // ============================================================
-    async function cargarTodosLosDatosDeCita(idCita, idPaciente, idConsultaExistente) {
-        if (cargandoDatos) {
-            console.warn('Ya se están cargando datos, se omite nueva solicitud');
-            return;
-        }
+async function cargarTodosLosDatosDeCita(idCita, idPaciente, idConsultaExistente) {
+    if (cargaActualPromise) {
+        console.warn('Ya se están cargando datos, se omite nueva solicitud');
+        return cargaActualPromise;
+    }
 
-        // Cancelar peticiones anteriores
-        if (abortController) {
-            abortController.abort();
-        }
-        abortController = new AbortController();
-        const signal = abortController.signal;
+    if (abortController) {
+        abortController.abort();
+    }
+    abortController = new AbortController();
+    const signal = abortController.signal;
 
-        cargandoDatos = true;
+    cargandoDatos = true;
 
+    cargaActualPromise = (async () => {
         try {
             const promises = [];
 
-            // 1. Obtener consulta (si no existe, devuelve null)
+            // 1. Consulta
             promises.push(
                 API.obtenerConsulta(idCita, signal).catch(err => {
                     if (err.name === 'AbortError') throw err;
@@ -624,7 +606,7 @@
                 })
             );
 
-            // 2. Obtener preclínica (con caché)
+            // 2. Preclínica (con caché)
             if (preclinicaCache.has(idCita)) {
                 promises.push(Promise.resolve(preclinicaCache.get(idCita)));
             } else {
@@ -642,7 +624,7 @@
                 );
             }
 
-            // 3. Obtener historial rápido (con caché por paciente)
+            // 3. Historial rápido
             if (idPaciente) {
                 if (historialCache.has(idPaciente)) {
                     promises.push(Promise.resolve(historialCache.get(idPaciente)));
@@ -662,46 +644,43 @@
                 promises.push(Promise.resolve(null));
             }
 
-            // 4. Obtener medicamentos (solo si existe consulta)
-            let medicamentosPromise;
+            // 4. Medicamentos
             if (idConsultaExistente) {
-                medicamentosPromise = API.cargarMedicamentos(idConsultaExistente, signal).catch(err => {
-                    if (err.name === 'AbortError') throw err;
-                    console.warn('Error cargando medicamentos:', err);
-                    return null;
-                });
+                promises.push(
+                    API.cargarMedicamentos(idConsultaExistente, signal).catch(err => {
+                        if (err.name === 'AbortError') throw err;
+                        console.warn('Error cargando medicamentos:', err);
+                        return null;
+                    })
+                );
             } else {
-                medicamentosPromise = Promise.resolve(null);
+                promises.push(Promise.resolve(null));
             }
-            promises.push(medicamentosPromise);
 
-            // Ejecutar todas en paralelo
             const [consultaData, preclinicaData, historialData, medicamentosData] = await Promise.all(promises);
 
-            // Llenar el formulario con los datos obtenidos
+            // ===== CONSULTA =====
             if (consultaData && consultaData.success && consultaData.consulta) {
                 llenarModalConConsulta(consultaData.consulta);
                 const idConsulta = consultaData.consulta.ID_CONSULTA || consultaData.consulta.idConsulta;
                 const btnImprimir = document.getElementById('btnImprimirConsulta');
                 if (btnImprimir) btnImprimir.dataset.idConsulta = idConsulta;
 
-                // Mostrar botón finalizar si la cita no está finalizada
                 const cita = citas.find(c => String(c.ID_CITA) === String(idCita));
                 const estado = cita ? String(cita.ESTADO || "").toUpperCase() : "";
-                if (estado !== 'FINALIZADA') {
-                    const btnFinalizar = document.getElementById('btnFinalizarConsulta');
-                    if (btnFinalizar) btnFinalizar.style.display = 'inline-flex';
-                } else {
-                    const btnFinalizar = document.getElementById('btnFinalizarConsulta');
-                    if (btnFinalizar) btnFinalizar.style.display = 'none';
+                const btnFinalizar = document.getElementById('btnFinalizarConsulta');
+                if (btnFinalizar) {
+                    btnFinalizar.style.display = estado !== 'FINALIZADA' ? 'inline-flex' : 'none';
                 }
             } else {
-                // No hay consulta, limpiar campos
                 if ($("idConsulta")) $("idConsulta").value = "";
                 ["motivoConsulta", "sintomasConsulta", "examenFisicoConsulta",
                     "diagnosticoPrincipal", "tratamiento", "recomendaciones",
                     "examenesComplementariosConsulta"
-                ].forEach(campo => { const el = $(campo); if (el) el.value = ""; });
+                ].forEach(campo => {
+                    const el = $(campo);
+                    if (el) el.value = "";
+                });
                 const btnImprimir = document.getElementById('btnImprimirConsulta');
                 if (btnImprimir) btnImprimir.dataset.idConsulta = '';
                 const btnFinalizar = document.getElementById('btnFinalizarConsulta');
@@ -709,69 +688,68 @@
                 limpiarMedicamentos();
             }
 
-           // Preclínica (usa los datos ya obtenidos → evita doble fetch)
-if (preclinicaData && preclinicaData.success && preclinicaData.preclinica) {
-    const p = preclinicaData.preclinica;
-    const set = (id, val) => {
-        const el = $(id);
-        if (el) el.value = val == null ? "" : String(val);
-    };
+            // ===== PRECLÍNICA (sin doble fetch) =====
+            if (preclinicaData && preclinicaData.success && preclinicaData.preclinica) {
+                const p = preclinicaData.preclinica;
+                const set = (id, val) => {
+                    const el = $(id);
+                    if (el) el.value = val == null ? "" : String(val);
+                };
+                set("temperatura", p.TEMPERATURA ?? p.temperatura);
+                set("presionSistolica", p.PRESION_SISTOLICA ?? p.presionSistolica);
+                set("presionDiastolica", p.PRESION_DIASTOLICA ?? p.presionDiastolica);
+                set("frecuenciaCardiaca", p.FRECUENCIA_CARDIACA ?? p.frecuenciaCardiaca);
+                set("frecuenciaRespiratoria", p.FRECUENCIA_RESPIRATORIA ?? p.frecuenciaRespiratoria);
+                set("saturacionOxigeno", p.SATURACION_OXIGENO ?? p.saturacionOxigeno);
+                set("peso", p.PESO ?? p.peso);
+                set("talla", p.TALLA ?? p.talla);
+                set("glucosa", p.GLUCOSA ?? p.glucosa);
+                set("perimetroAbdominal", p.PERIMETRO_ABDOMINAL ?? p.perimetroAbdominal);
+                set("observaciones", p.OBSERVACIONES ?? p.observaciones);
+                if ($("estadoGeneral")) $("estadoGeneral").value = p.ESTADO_GENERAL || p.estadoGeneral || "BUENO";
 
-    set("temperatura", p.TEMPERATURA ?? p.temperatura);
-    set("presionSistolica", p.PRESION_SISTOLICA ?? p.presionSistolica);
-    set("presionDiastolica", p.PRESION_DIASTOLICA ?? p.presionDiastolica);
-    set("frecuenciaCardiaca", p.FRECUENCIA_CARDIACA ?? p.frecuenciaCardiaca);
-    set("frecuenciaRespiratoria", p.FRECUENCIA_RESPIRATORIA ?? p.frecuenciaRespiratoria);
-    set("saturacionOxigeno", p.SATURACION_OXIGENO ?? p.saturacionOxigeno);
-    set("peso", p.PESO ?? p.peso);
-    set("talla", p.TALLA ?? p.talla);
-    set("glucosa", p.GLUCOSA ?? p.glucosa);
-    set("perimetroAbdominal", p.PERIMETRO_ABDOMINAL ?? p.perimetroAbdominal);
-    set("observaciones", p.OBSERVACIONES ?? p.observaciones);
+                const peso = parseFloat(p.PESO ?? p.peso) || 0;
+                const talla = parseFloat(p.TALLA ?? p.talla) || 0;
+                if (peso && talla && $("imc")) {
+                    const imc = peso / (talla * talla);
+                    if (Number.isFinite(imc)) $("imc").value = imc.toFixed(2);
+                }
 
-    if ($("estadoGeneral")) {
-        $("estadoGeneral").value = p.ESTADO_GENERAL || p.estadoGeneral || "BUENO";
-    }
+                const mensaje = document.getElementById('preclinicaMensaje');
+                if (mensaje) {
+                    mensaje.textContent = 'Preclínica cargada correctamente.';
+                    mensaje.style.color = '#28a745';
+                }
+            } else {
+                const mensaje = document.getElementById('preclinicaMensaje');
+                if (mensaje) {
+                    mensaje.textContent = 'No hay preclínica registrada para esta cita.';
+                    mensaje.style.color = '#6c757d';
+                }
+                ["temperatura", "presionSistolica", "presionDiastolica",
+                    "peso", "talla", "imc", "frecuenciaCardiaca", "frecuenciaRespiratoria",
+                    "saturacionOxigeno", "glucosa", "perimetroAbdominal", "observaciones"
+                ].forEach(id => {
+                    const el = $(id);
+                    if (el) el.value = "";
+                });
+                if ($("estadoGeneral")) $("estadoGeneral").value = "BUENO";
+            }
 
-    // Calcular IMC
-    const peso = parseFloat(p.PESO ?? p.peso) || 0;
-    const talla = parseFloat(p.TALLA ?? p.talla) || 0;
-    if (peso && talla && $("imc")) {
-        const imc = peso / (talla * talla);
-        if (Number.isFinite(imc)) $("imc").value = imc.toFixed(2);
-    }
-
-    const mensaje = document.getElementById('preclinicaMensaje');
-    if (mensaje) {
-        mensaje.textContent = 'Preclínica cargada correctamente.';
-        mensaje.style.color = '#28a745';
-    }
-} else {
-    // No hay preclínica → limpiar campos
-    const mensaje = document.getElementById('preclinicaMensaje');
-    if (mensaje) {
-        mensaje.textContent = 'No hay preclínica registrada para esta cita.';
-        mensaje.style.color = '#6c757d';
-    }
-    const ids = ["temperatura", "presionSistolica", "presionDiastolica",
-        "peso", "talla", "imc", "frecuenciaCardiaca", "frecuenciaRespiratoria",
-        "saturacionOxigeno", "glucosa", "perimetroAbdominal", "observaciones"
-    ];
-    ids.forEach(id => { const el = $(id); if (el) el.value = ""; });
-    if ($("estadoGeneral")) $("estadoGeneral").value = "BUENO";
-}
-
-            // Historial rápido
+            // ===== HISTORIAL MÉDICO =====
             if (idPaciente && historialData && historialData.success) {
                 renderHistorialRapido(historialData);
             } else if (idPaciente) {
                 const container = document.getElementById('historialRapidoContenido');
-                if (container) container.innerHTML = `<p class="text-muted">No se pudo cargar el historial</p>`;
-                document.getElementById('historialRapidoPaciente').style.display = 'block';
+                if (container) {
+                    container.innerHTML = `<p class="text-muted" style="font-size:0.85rem;">No se pudo cargar el historial del paciente.</p>`;
+                }
+                const cont = document.getElementById('historialRapidoPaciente');
+                if (cont) cont.style.display = 'block';
             }
 
-            // Medicamentos
-            if (medicamentosData && medicamentosData.success && medicamentosData.medicamentos && medicamentosData.medicamentos.length > 0) {
+            // ===== MEDICAMENTOS =====
+            if (medicamentosData && medicamentosData.success && medicamentosData.medicamentos?.length > 0) {
                 limpiarMedicamentos();
                 medicamentosData.medicamentos.forEach(med => {
                     agregarFilaMedicamento(
@@ -793,169 +771,162 @@ if (preclinicaData && preclinicaData.success && preclinicaData.preclinica) {
             }
             console.error('Error cargando datos de la cita:', err);
             mostrarError('Error cargando datos de la cita: ' + err.message);
-        } finally {
+         } finally {
             cargandoDatos = false;
             abortController = null;
+            cargaActualPromise = null;
         }
-    }
+    })();
+
+    return cargaActualPromise;
+}   // ← esta es la última llave de cargarTodosLosDatosDeCita
 
     // ============================================================
     // HISTORIAL RÁPIDO (RENDER)
     // ============================================================
     function renderHistorialRapido(data) {
-        const container = document.getElementById('historialRapidoContenido');
-        if (!container) return;
+    const container = document.getElementById('historialRapidoContenido');
+    const historialContainer = document.getElementById('historialRapidoPaciente');
+    
+    if (!container || !historialContainer) return;
 
-        const historialContainer = document.getElementById('historialRapidoPaciente');
-        if (historialContainer) historialContainer.style.display = 'block';
+    historialContainer.style.display = 'block';
 
-        let html = '';
+    let html = '';
 
-        if (data.historial) {
-            const h = data.historial;
-            if (h.ALERGIAS) {
-                const alergias = parseJSONField(h.ALERGIAS);
-                if (alergias.length > 0) {
-                    html += `<div style="margin-bottom:8px;"><strong style="color:#dc3545;"> Alergias:</strong>
-                            <span class="badge bg-danger">${escapeHtml(alergias.join(', '))}</span></div>`;
-                }
-            }
-            if (h.MEDICAMENTOS_ACTUALES) {
-                const medicamentos = parseJSONField(h.MEDICAMENTOS_ACTUALES);
-                if (medicamentos.length > 0) {
-                    html += `<div style="margin-bottom:8px;"><strong style="color:#28a745;"> Medicamentos actuales:</strong>
-                            <span class="badge bg-success">${escapeHtml(medicamentos.join(', '))}</span></div>`;
-                }
-            }
-            if (h.ENFERMEDADES_CRONICAS) {
-                const cronicas = parseJSONField(h.ENFERMEDADES_CRONICAS);
-                if (cronicas.length > 0) {
-                    html += `<div style="margin-bottom:8px;"><strong style="color:#fd7e14;"> Enfermedades crónicas:</strong>
-                            <span class="badge bg-warning text-dark">${escapeHtml(cronicas.join(', '))}</span></div>`;
-                }
-            }
-        }
+    // Datos clínicos (alergias, medicamentos, enfermedades)
+    if (data.historial) {
+        const h = data.historial;
 
-        if (data.consultas && data.consultas.length > 0) {
-            html += `<div style="margin-top:8px; margin-bottom:8px;">
-                    <strong><i class="fas fa-notes-medical"></i> Historial de Consultas:</strong>
-                    <span class="badge bg-secondary" style="font-size:0.65rem;">Click para expandir</span>
-                </div>
-                <div style="max-height:350px; overflow-y:auto; margin-top:4px;">`;
-
-            data.consultas.forEach((consulta) => {
-                const fecha = new Date(consulta.FECHA_CONSULTA).toLocaleDateString('es-ES', {
-                    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
-                });
-                const tipo = consulta.TIPO_CONSULTA || 'GENERAL';
-                const diagnostico = consulta.DIAGNOSTICO_PRINCIPAL || 'N/A';
-                const tratamiento = consulta.TRATAMIENTO || 'N/A';
-                const idConsulta = consulta.ID_CONSULTA;
-
-                html += `
-                    <div class="historial-item" data-id="${idConsulta}" style="border:1px solid #e9ecef; border-radius:6px; margin-bottom:6px; padding:8px 12px; cursor:pointer; transition:all 0.2s; background:white;"
-                         onmouseover="this.style.borderColor='#2c7be5'; this.style.boxShadow='0 2px 8px rgba(44,123,229,0.1)'"
-                         onmouseout="this.style.borderColor='#e9ecef'; this.style.boxShadow='none'">
-                        <div class="historial-contenido">
-                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
-                                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                                    <span style="font-weight:600; color:#1a3c6e;">${fecha}</span>
-                                    <span class="badge bg-info" style="font-size:0.65rem;">${tipo}</span>
-                                    <span style="color:#495057; font-size:0.9rem;">${escapeHtml(diagnostico)}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:6px;">
-                                    <span style="font-size:0.7rem; color:#2c7be5;"><i class="fas fa-search"></i> Click para expandir</span>
-                                    <i class="fas fa-chevron-down expand-icon" style="color:#2c7be5; font-size:0.7rem;"></i>
-                                </div>
-                            </div>
-                            <div style="color:#6c757d; font-size:0.8rem; margin-top:2px;">Tratamiento: ${escapeHtml(tratamiento)}</div>
-                        </div>
+        const alergias = parseJSONField(h.ALERGIAS || h.alergias);
+        if (alergias.length > 0) {
+            html += `
+                <div style="margin-bottom:10px;">
+                    <strong style="color:#dc3545;"><i class="fas fa-exclamation-triangle"></i> Alergias:</strong>
+                    <div style="margin-top:4px;">
+                        ${alergias.map(a => `<span class="badge" style="background:#f8d7da;color:#721c24;margin:2px;">${escapeHtml(a)}</span>`).join('')}
                     </div>
-                `;
-            });
-            html += `</div>`;
-        } else {
-            html += `<p class="text-muted" style="font-size:0.85rem;">No hay consultas previas registradas.</p>`;
+                </div>`;
         }
 
-        container.innerHTML = html;
-        document.getElementById('historialRapidoPaciente').style.display = 'block';
+        const medicamentos = parseJSONField(h.MEDICAMENTOS_ACTUALES || h.medicamentos_actuales);
+        if (medicamentos.length > 0) {
+            html += `
+                <div style="margin-bottom:10px;">
+                    <strong style="color:#28a745;"><i class="fas fa-pills"></i> Medicamentos actuales:</strong>
+                    <div style="margin-top:4px;">
+                        ${medicamentos.map(m => `<span class="badge" style="background:#d4edda;color:#155724;margin:2px;">${escapeHtml(m)}</span>`).join('')}
+                    </div>
+                </div>`;
+        }
 
-        document.querySelectorAll('.historial-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const id = this.dataset.id;
-                if (id) verDetalleConsultaCompleta(id);
-            });
+        const cronicas = parseJSONField(h.ENFERMEDADES_CRONICAS || h.enfermedades_cronicas);
+        if (cronicas.length > 0) {
+            html += `
+                <div style="margin-bottom:10px;">
+                    <strong style="color:#856404;"><i class="fas fa-heartbeat"></i> Enfermedades crónicas:</strong>
+                    <div style="margin-top:4px;">
+                        ${cronicas.map(c => `<span class="badge" style="background:#fff3cd;color:#856404;margin:2px;">${escapeHtml(c)}</span>`).join('')}
+                    </div>
+                </div>`;
+        }
+    }
+
+    // Consultas previas
+    const consultasPrevias = data.consultas || data.historialConsultas || data.consultasPrevias || [];
+    
+    if (Array.isArray(consultasPrevias) && consultasPrevias.length > 0) {
+        html += `<div style="margin-top:12px; border-top:1px solid #dee2e6; padding-top:10px;">
+                    <strong style="color:#1a3c6e;"><i class="fas fa-notes-medical"></i> Consultas previas (${consultasPrevias.length})</strong>
+                 </div>`;
+
+        consultasPrevias.forEach((c, idx) => {
+            const fecha = c.FECHA_CONSULTA || c.fecha || c.FECHA_CITA || '';
+            const diagnostico = c.DIAGNOSTICO_PRINCIPAL || c.diagnostico || c.DIAGNOSTICO || 'Sin diagnóstico';
+            const motivo = c.MOTIVO || c.motivo || '';
+
+            html += `
+                <div class="historial-item" style="margin-top:8px; padding:10px; background:white; border:1px solid #e9ecef; border-radius:6px; cursor:pointer;" 
+                     onclick="const det = this.querySelector('.historial-detalle'); det.style.display = det.style.display === 'none' ? 'block' : 'none'">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong style="font-size:0.9rem;">${formatearFecha(fecha)}</strong>
+                            <div style="font-size:0.8rem; color:#495057; margin-top:2px;">${escapeHtml(diagnostico)}</div>
+                        </div>
+                        <i class="fas fa-chevron-down" style="color:#6c757d; font-size:0.8rem;"></i>
+                    </div>
+                    <div class="historial-detalle" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #dee2e6; font-size:0.85rem;">
+                        ${motivo ? `<div><strong>Motivo:</strong> ${escapeHtml(motivo)}</div>` : ''}
+                        ${c.TRATAMIENTO || c.tratamiento ? `<div style="margin-top:4px;"><strong>Tratamiento:</strong> ${escapeHtml(c.TRATAMIENTO || c.tratamiento)}</div>` : ''}
+                    </div>
+                </div>`;
         });
+    } else if (!html) {
+        html = `<p class="text-muted" style="font-size:0.85rem; margin:0;">
+                    <i class="fas fa-info-circle"></i> No hay consultas previas registradas ni datos de historial clínico para este paciente.
+                </p>`;
     }
 
-    // ============================================================
-    // CARGAR CONSULTA EN MODAL (OPTIMIZADO)
-    // ============================================================
-    async function cargarConsultaEnModal(idCita) {
-        if (!idCita) return;
-        const cita = citas.find(x => String(x.ID_CITA) === String(idCita));
-        const estado = cita ? String(cita.ESTADO || "").toUpperCase() : "";
-        if (estado === "CANCELADA" || estado === "NO_ASISTIO") {
-            mostrarAlerta("error", `No se permite abrir una cita con estado ${estado}.`);
-            return;
-        }
+    container.innerHTML = html || `<p class="text-muted" style="font-size:0.85rem;">No hay información de historial disponible.</p>`;
+}
 
-        const modal = $("modalConsulta");
-        if (modal) { modal.style.display = "flex"; modal.setAttribute("aria-hidden", "false"); }
+// ============================================================
+// CARGAR CONSULTA EN MODAL (OPTIMIZADO)
+// ============================================================
+async function cargarConsultaEnModal(idCita) {
+    if (!idCita) return;
 
-        limpiarModalConsulta();
+    const cita = citas.find(x => String(x.ID_CITA) === String(idCita));
+    const estado = cita ? String(cita.ESTADO || "").toUpperCase() : "";
 
-        const selectCita = $("selectCitaConsulta");
-        if (selectCita && cita) {
-            // Guardar el ID de la cita filtrada para que llenarSelectCitas no lo sobrescriba
-            selectCita.dataset.citaFiltrada = idCita;
-            // Reconstruir el select con solo esta cita
-            selectCita.innerHTML = '';
-            const opt = document.createElement("option");
-            opt.value = idCita;
-            opt.textContent = `#${cita.ID_CITA} — ${cita.NOMBRE_PACIENTE} • ${formatearFecha(cita.FECHA_CITA)}`;
-            opt.dataset.telefono = cita.TELEFONO_PACIENTE || "";
-            opt.dataset.correo = cita.CORREO_PACIENTE || "";
-            opt.dataset.identidad = cita.IDENTIDAD_PACIENTE || "";
-            opt.dataset.estado = cita.ESTADO || "";
-            selectCita.appendChild(opt);
-            selectCita.value = idCita;
-            // No disparar 'change' para evitar duplicados; llamamos directamente a la carga unificada
-        }
-
-        // Mostrar información del paciente
-        if (cita && $("pacienteInfoConsulta")) {
-            const info = [];
-            if (cita.TELEFONO_PACIENTE) info.push("📞 " + cita.TELEFONO_PACIENTE);
-            if (cita.IDENTIDAD_PACIENTE) info.push("🪪 " + cita.IDENTIDAD_PACIENTE);
-            if (cita.CORREO_PACIENTE) info.push("✉️ " + cita.CORREO_PACIENTE);
-            $("pacienteInfoConsulta").textContent = info.join(" • ");
-        }
-
-        // Habilitar campos
-        const campos = ["motivoConsulta", "sintomasConsulta", "examenFisicoConsulta",
-            "diagnosticoPrincipal", "tratamiento", "recomendaciones",
-            "tipoConsulta", "examenesComplementariosConsulta"
-        ];
-        campos.forEach(campo => { const el = $(campo); if (el) el.disabled = false; });
-
-        // Obtener ID de consulta existente (si la hay) para cargar medicamentos
-        let idConsultaExistente = null;
-        if (consultasMap[idCita]) {
-            idConsultaExistente = consultasMap[idCita].ID_CONSULTA || consultasMap[idCita].idConsulta;
-        }
-
-        // Cargar todos los datos en una sola llamada unificada
-        await cargarTodosLosDatosDeCita(idCita, cita ? cita.ID_PACIENTE : null, idConsultaExistente);
-
-        // Enfocar diagnóstico
-        setTimeout(() => {
-            const d = $("diagnosticoPrincipal");
-            if (d) d.focus();
-            resetearEstilosBotonesModal();
-        }, 200);
+    if (estado === "CANCELADA" || estado === "NO_ASISTIO") {
+        mostrarAlerta("error", "No se permite abrir una cita cancelada o marcada como No Asistió.");
+        return;
     }
+
+    // Abrir el modal
+    const modal = $("modalConsulta");
+    if (!modal) return;
+    modal.style.display = "flex";
+    modal.setAttribute("aria-hidden", "false");
+
+    // Limpiar antes de cargar
+    limpiarModalConsulta();
+    aplicarEstadoPreclinica();
+    setTimeout(resetearEstilosBotonesModal, 50);
+
+    // Pre-seleccionar la cita en el select
+    const selectCita = $("selectCitaConsulta");
+    if (selectCita) {
+        selectCita.dataset.citaFiltrada = "1";
+        selectCita.innerHTML = "";
+        const opt = document.createElement("option");
+        opt.value = idCita;
+        opt.textContent = cita
+            ? `#${cita.ID_CITA} — ${cita.NOMBRE_PACIENTE} • ${formatearFecha(cita.FECHA_CITA)}`
+            : `Cita #${idCita}`;
+        selectCita.appendChild(opt);
+        selectCita.value = idCita;
+    }
+
+    // Info del paciente
+    if (cita && $("pacienteInfoConsulta")) {
+        const info = [];
+        if (cita.TELEFONO_PACIENTE) info.push("Tel: " + cita.TELEFONO_PACIENTE);
+        if (cita.IDENTIDAD_PACIENTE) info.push("ID: " + cita.IDENTIDAD_PACIENTE);
+        $("pacienteInfoConsulta").textContent = info.join(" • ");
+    }
+
+    // Datos necesarios
+    const idPaciente = cita ? (cita.ID_PACIENTE || cita.id_paciente) : null;
+    const consultaExistente = consultasMap[idCita];
+    const idConsultaExistente = consultaExistente
+        ? (consultaExistente.ID_CONSULTA || consultaExistente.idConsulta)
+        : null;
+
+    // Cargar todo en paralelo (consulta + preclínica + historial + medicamentos)
+    await cargarTodosLosDatosDeCita(idCita, idPaciente, idConsultaExistente);
+}
 
     // ============================================================
     // LLENAR MODAL CON CONSULTA (CON MAYÚSCULAS)
@@ -2573,7 +2544,7 @@ if (preclinicaData && preclinicaData.success && preclinicaData.preclinica) {
             });
         }
 
-        window.cargarDatos = cargarDatos;
+              window.cargarDatos = cargarDatos;
         window.imprimirListadoConsulta = imprimirListadoConsulta;
         window.exportarExcelConsulta = exportarExcelConsulta;
         window.limpiarFiltrosConsulta = limpiarFiltros;
